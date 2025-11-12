@@ -1,143 +1,255 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.robot;
 
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
-public class Drivetrain {
-    private final Hardware hw;
-    private static final double TICKS_PER_REV = 537.7;
-    private static final double TICKS_PER_CM = TICKS_PER_REV / (Hardware.WHEEL_DIAMETER_CM * Math.PI);
-    private static final double TIMEOUT_SECONDS = 5.0;
+@TeleOp(name="Main TeleOp", group="LinearOpMode")
+public class MainTeleOp extends LinearOpMode {
 
-    private ElapsedTime runtime = new ElapsedTime();
+    // Create hardware object
+    Hardware robotHardware = new Hardware();
+    Intake robotIntake;
+    Storage robotStorage;
+    Outtake robotOuttake;
 
-    public Drivetrain(Hardware hw) {
-        this.hw = hw;
-        initializeMotors();
+    private double prevFrontLeftPower = 0.0;
+    private double prevFrontRightPower = 0.0;
+    private double prevBackLeftPower = 0.0;
+    private double prevBackRightPower = 0.0;
+
+    @Override
+    public void runOpMode() throws InterruptedException {
+
+        // Initialize hardware
+        robotHardware.initialize(hardwareMap);
+        robotIntake = new Intake(robotHardware);
+        robotStorage = new Storage(robotHardware);
+        robotOuttake = new Outtake(robotHardware);
+
+        initializeDrivetrainForTeleOp();
+
+        telemetry.addData("Status", "INITIALIZED");
+        telemetry.addData("Drive Mode", "Ready for TeleOp");
+        telemetry.update();
+
+        waitForStart();
+
+        boolean fieldCentric = true;
+
+        boolean home1prevState = false;
+        boolean options1prevState = false;
+        boolean options2prevState = false;
+        boolean dpu2prevState = false;
+        boolean dpd2prevState = false;
+        boolean a2prevState = false;
+        boolean b2prevState = false;
+        boolean y2prevState = false;
+
+        // Auto shoot sequence tracking
+        boolean isIntakeRunning = false;
+        boolean isAutoShooting = false;
+        double spoolUpEndTime = 0;
+        double outtakePower = 0;
+
+        robotHardware.imu.resetYaw();
+
+        // Start OpMode loop
+        while (opModeIsActive()) {
+            //      Gamepad 1 inputs
+            double ly1 = -gamepad1.left_stick_y; // forward/backward driving
+            double lx1 = gamepad1.left_stick_x; // strafing
+            double rx1 = gamepad1.right_stick_x; // turning
+            boolean home1state = gamepad1.guide; // reset yaw value on gyro
+            boolean options1state = gamepad1.options; // field centric toggle
+            double lt1state = gamepad1.left_trigger; // slow mode
+
+            //      Gamepad 2 inputs
+            double ly2 = gamepad2.left_stick_y;
+            double ry2 = -gamepad2.right_stick_y;
+            double lt2state = gamepad2.left_trigger;
+            double rt2state = gamepad2.right_trigger;
+            boolean rb2state = gamepad2.right_bumper;
+            boolean a2state = gamepad2.a; // storage on/off
+            boolean b2state = gamepad2.b; // outtake preset for close shoot
+            boolean y2state = gamepad2.y; // outtake preset for far shoot
+            boolean options2state = gamepad2.options;
+            boolean dpu2 = gamepad2.dpad_up; //
+            boolean dpd2 = gamepad2.dpad_down;
+
+            double imuHeading = robotHardware.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+
+            //      Drivetrain Control
+            //Field centric toggle
+            if (home1state && !home1prevState && fieldCentric) {
+                robotHardware.imu.resetYaw();
+            } home1prevState = home1state;
+
+            if (options1state && !options1prevState) {
+                fieldCentric = !fieldCentric;
+            } options1prevState = options1state;
+
+            updateDriveBase(ly1, lx1, rx1, lt1state, imuHeading, fieldCentric);
+
+            //      Intake Control
+            robotIntake.update();
+
+            if (ly2 >= 0.3) {
+                robotIntake.run(1.0);
+            } else if (ly2 <= -0.3) {
+                robotIntake.run(-1.0);
+            } else {
+                if (!robotIntake.isTimedRunActive) {robotIntake.run(0.0);}
+                robotIntake.run(0.0);
+                if (a2state && !a2prevState) {robotIntake.runForTime(1.0, 5.0);}
+            }
+            a2prevState = a2state;
+
+            //      Storage Control
+            robotStorage.update();
+
+            if (rt2state >= 0.3 && !rb2state) {
+                robotStorage.run(1.0);
+            } else if (rb2state && rt2state < 0.3) {
+                robotStorage.run(-1.0);
+            } else {
+                robotStorage.run(0.0);
+            }
+
+            //      Outtake presets & auto shoot
+            final double spoolUpTime = 5000;
+            final double storageTime = 3000 ;
+            double currentOuttakePower;
+
+            // Start auto shoot sequence
+            if (((b2state && !b2prevState) || (y2state && !y2prevState)) && !isAutoShooting) {
+                isAutoShooting = true;
+                spoolUpEndTime = robotHardware.timer.milliseconds() + spoolUpTime;
+            }
+
+            if (isAutoShooting) {
+                // Check if spool up time has passed
+                if (robotHardware.timer.milliseconds() >= spoolUpEndTime) {
+                    robotStorage.runForTime(1.0, storageTime / 1000.0);
+                    isAutoShooting = false;
+                }
+
+                // Set outtake power based on which preset is active
+                if (b2state) {
+                    currentOuttakePower = robotOuttake.setPreset("close");
+                } else if (y2state) {
+                    currentOuttakePower = robotOuttake.setPreset("far");
+                } else {
+                    isAutoShooting = false;
+                    currentOuttakePower = robotOuttake.setPreset("idle");
+                }
+            } else {
+                // Manual preset control
+                if (b2state) {
+                    currentOuttakePower = robotOuttake.setPreset("close");
+                } else if (y2state) {
+                    currentOuttakePower = robotOuttake.setPreset("far");
+                } else {
+                    currentOuttakePower = robotOuttake.setPreset("idle");
+                }
+            }
+
+            // Fine tune active preset
+            if (dpu2 && !dpu2prevState) {
+                robotOuttake.tuneActivePreset(0.03);
+            } else if (dpd2 && !dpd2prevState) {
+                robotOuttake.tuneActivePreset(-0.03);
+            }
+
+            robotOuttake.run(currentOuttakePower);
+
+            // Reset outtake presets
+            if (options2state && !options2prevState) {
+                robotOuttake.reset();
+            }
+
+            // Update previous states
+            options2prevState = options2state;
+            dpu2prevState = dpu2;
+            dpd2prevState = dpd2;
+            b2prevState = b2state;
+            y2prevState = y2state;
+
+            telemetry.addData("Status", "Running");
+            telemetry.addData("Field Centric", fieldCentric ? "ON" : "OFF");
+            telemetry.addData("Auto-Shooting", isAutoShooting ? "ACTIVE" : "IDLE");
+            telemetry.addData("Outtake Motor Power", currentOuttakePower);
+            telemetry.addData("Target Velocity (tps)", robotOuttake.getTargetTps());
+            telemetry.addData("Actual Velocity (tps)", robotHardware.outtakeMotor.getVelocity());
+            telemetry.addData("IMU Heading (deg)", Math.toDegrees(imuHeading));
+            telemetry.update();
+        }
     }
 
-    private void initializeMotors() {
-        setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    private void initializeDrivetrainForTeleOp() {
+        robotHardware.frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robotHardware.frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robotHardware.backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robotHardware.backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        // Set zero power behavior
-        hw.frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        hw.frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        hw.backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        hw.backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        robotHardware.frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        robotHardware.frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        robotHardware.backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        robotHardware.backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        robotHardware.frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        robotHardware.frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        robotHardware.backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        robotHardware.backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        robotHardware.frontLeft.setPower(0);
+        robotHardware.frontRight.setPower(0);
+        robotHardware.backLeft.setPower(0);
+        robotHardware.backRight.setPower(0);
     }
 
-    public void move(double cm, double power) {
-        if (cm == 0) return;
+    private void updateDriveBase(double ly, double lx, double rx, double lt1state, double imuHeading, boolean fieldCentric) {
+        double speedMultiplier = (lt1state > 0.5) ? 0.3 : 1.0;
 
-        // Calculate target position
-        int ticks = (int) (cm * TICKS_PER_CM);
+        double adjLy, adjLx;
 
-        // Reset encoders to ensure clean start
-        setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        // Set target positions for all motors
-        hw.frontLeft.setTargetPosition(ticks);
-        hw.frontRight.setTargetPosition(ticks);
-        hw.backLeft.setTargetPosition(ticks);
-        hw.backRight.setTargetPosition(ticks);
-
-        // Switch to RUN_TO_POSITION mode
-        setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        // Set power (always positive in RUN_TO_POSITION)
-        double absPower = Math.abs(power);
-        hw.frontLeft.setPower(absPower);
-        hw.frontRight.setPower(absPower);
-        hw.backLeft.setPower(absPower);
-        hw.backRight.setPower(absPower);
-
-        // Wait for movement to complete with timeout
-        runtime.reset();
-        while (isBusy() && runtime.seconds() < TIMEOUT_SECONDS) {
-            // Optional: Add telemetry here for debugging
+        if (fieldCentric) {
+            adjLx = lx * Math.cos(-imuHeading) - ly * Math.sin(-imuHeading);
+            adjLy = lx * Math.sin(-imuHeading) + ly * Math.cos(-imuHeading);
+        } else {
+            adjLx = lx;
+            adjLy = ly;
         }
 
-        // Stop all motors
-        stopMotors();
+        double frontLeftPower = (adjLy + adjLx + rx) * speedMultiplier;
+        double frontRightPower = (adjLy - adjLx - rx) * speedMultiplier;
+        double backLeftPower = (adjLy - adjLx + rx) * speedMultiplier;
+        double backRightPower = (adjLy + adjLx - rx) * speedMultiplier;
 
-        // Return to encoder mode for future operations
-        setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    }
+        double maxPower = Math.max(Math.abs(frontLeftPower), Math.abs(frontRightPower));
+        maxPower = Math.max(maxPower, Math.abs(backLeftPower));
+        maxPower = Math.max(maxPower, Math.abs(backRightPower));
 
-    public void turn(double angle, double power) {
-        if (angle == 0) return;
-
-        // Switch to run without encoder for turning
-        setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        // Reset IMU yaw
-        hw.imu.resetYaw();
-
-        // Determine turn direction
-        double turnPower = angle > 0 ? Math.abs(power) : -Math.abs(power);
-
-        // Set motor powers for turning
-        hw.frontLeft.setPower(turnPower);
-        hw.backLeft.setPower(turnPower);
-        hw.frontRight.setPower(-turnPower);
-        hw.backRight.setPower(-turnPower);
-
-        // Wait for turn to complete with timeout
-        runtime.reset();
-        while (Math.abs(getYaw()) < Math.abs(angle) && runtime.seconds() < TIMEOUT_SECONDS) {
-            // Optional: Add telemetry here for debugging
+        if (maxPower > 1.0) {
+            frontLeftPower /= maxPower;
+            frontRightPower /= maxPower;
+            backLeftPower /= maxPower;
+            backRightPower /= maxPower;
         }
 
-        // Stop all motors
-        stopMotors();
+        // Acceleration smoothing
+        final double RAMP_RATE = 0.05;
 
-        // Return to encoder mode
-        setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    }
+        prevFrontLeftPower += Math.max(-RAMP_RATE, Math.min(RAMP_RATE, frontLeftPower - prevFrontLeftPower));
+        prevFrontRightPower += Math.max(-RAMP_RATE, Math.min(RAMP_RATE, frontRightPower - prevFrontRightPower));
+        prevBackLeftPower += Math.max(-RAMP_RATE, Math.min(RAMP_RATE, backLeftPower - prevBackLeftPower));
+        prevBackRightPower += Math.max(-RAMP_RATE, Math.min(RAMP_RATE, backRightPower - prevBackRightPower));
 
-    public void stopMotors() {
-        hw.frontLeft.setPower(0);
-        hw.frontRight.setPower(0);
-        hw.backLeft.setPower(0);
-        hw.backRight.setPower(0);
-    }
-
-    private void setPower(double power) {
-        hw.frontLeft.setPower(power);
-        hw.frontRight.setPower(power);
-        hw.backLeft.setPower(power);
-        hw.backRight.setPower(power);
-    }
-
-    private void setMode(DcMotor.RunMode mode) {
-        hw.frontLeft.setMode(mode);
-        hw.frontRight.setMode(mode);
-        hw.backLeft.setMode(mode);
-        hw.backRight.setMode(mode);
-    }
-
-
-    private boolean isBusy() {
-        return hw.frontLeft.isBusy() ||
-                hw.frontRight.isBusy() ||
-                hw.backLeft.isBusy() ||
-                hw.backRight.isBusy();
-    }
-
-
-    private double getYaw() {
-        return hw.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
-    }
-
-    public int[] getMotorPositions() {
-        return new int[] {
-                hw.frontLeft.getCurrentPosition(),
-                hw.frontRight.getCurrentPosition(),
-                hw.backLeft.getCurrentPosition(),
-                hw.backRight.getCurrentPosition()
-        };
+        robotHardware.frontLeft.setPower(prevFrontLeftPower);
+        robotHardware.frontRight.setPower(prevFrontRightPower);
+        robotHardware.backLeft.setPower(prevBackLeftPower);
+        robotHardware.backRight.setPower(prevBackRightPower);
     }
 }

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.robot;
 
 // motors
 
@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class Hardware {
-    public static final double WHEEL_DIAMETER_CM = 9.6;//asd asd as d
+    public static final double WHEEL_DIAMETER_CM = 9.6;//change this
     public static final double OUTTAKE_TPR = 537.7;
     public static final double OUTTAKE_MAX_RPM = 312.0 * 0.85;
     public DcMotor frontLeft, frontRight, backLeft, backRight, intakeMotor;

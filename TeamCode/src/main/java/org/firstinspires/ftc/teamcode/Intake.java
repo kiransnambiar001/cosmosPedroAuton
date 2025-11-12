@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.robot;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -11,21 +11,21 @@ public class Intake {
     private double stopTimeInSeconds = 0;
 
     public Intake(Hardware hardware) {
-        this.robotHardware = hardware;
+        robotHardware = hardware;
     }
 
     public void runForTime(double power, double durationSeconds) {
         if (!isTimedRunActive) {
-            this.isTimedRunActive = true;
-            this.timer.reset();
-            this.stopTimeInSeconds = durationSeconds;
-            this.robotHardware.intakeMotor.setPower(power);
+            isTimedRunActive = true;
+            timer.reset();
+            stopTimeInSeconds = durationSeconds;
+            robotHardware.intakeMotor.setPower(power);
         }
     }
 
     public void run(double power) {
-        this.isTimedRunActive = false;
-        this.robotHardware.intakeMotor.setPower(power);
+        isTimedRunActive = false;
+        robotHardware.intakeMotor.setPower(power);
     }
 
     public void update()

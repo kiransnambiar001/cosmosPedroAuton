@@ -1,13 +1,11 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.robot;
 
 public class Outtake {
 
     private final Hardware robotHardware;
     private final double startingCloseShotPower = 0.32;
     private final double startingFarShotPower = 0.53;
-    private final double idlePower = 0.07
-
-            ;
+    private final double idlePower = 0.07;
     private final double maxPower = 0.8;
     private double  closeShotPower = 0.32;
     private double farShotPower = 0.53;
@@ -16,30 +14,30 @@ public class Outtake {
     private String currentPreset = "";
 
     public Outtake(Hardware hardware) {
-        this.robotHardware = hardware;
+        robotHardware = hardware;
     }
 
     public double setPreset(String presetName) {
-        this.currentPreset = presetName; // Remember which preset is active
+        currentPreset = presetName; // Remember which preset is active
 
         if (presetName.equals("close")) {
-            return this.closeShotPower;
+            return closeShotPower;
         } else if (presetName.equals("far")) {
-            return this.farShotPower;
+            return farShotPower;
         } else {
-            return this.idlePower;
+            return idlePower;
         }
     }
 
     public void tuneActivePreset(double tuneAmount) {
-        if (this.currentPreset.equals("close")) {
-            this.closeShotPower += tuneAmount;
-        } else if (this.currentPreset.equals("far")) {
-            this.farShotPower += tuneAmount;
+        if (currentPreset.equals("close")) {
+            closeShotPower += tuneAmount;
+        } else if (currentPreset.equals("far")) {
+            farShotPower += tuneAmount;
         }
 
-        this.closeShotPower = Math.max(idlePower, Math.min(maxPower, this.closeShotPower));
-        this.farShotPower = Math.max(idlePower, Math.min(maxPower, this.farShotPower));
+        closeShotPower = Math.max(idlePower, Math.min(maxPower, closeShotPower));
+        farShotPower = Math.max(idlePower, Math.min(maxPower, farShotPower));
     }
     public void run(double powerPercentage) {
         double targetRpm = powerPercentage * Hardware.OUTTAKE_MAX_RPM;
@@ -53,7 +51,7 @@ public class Outtake {
     }
     public void reset()
     {
-        this.closeShotPower = startingCloseShotPower;
-        this.farShotPower = startingFarShotPower;
+        closeShotPower = startingCloseShotPower;
+        farShotPower = startingFarShotPower;
     }
 }
