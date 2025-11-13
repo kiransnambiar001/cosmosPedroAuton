@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.robot;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -29,20 +29,16 @@ public class MainTeleOp extends LinearOpMode {
         robotStorage = new Storage(robotHardware);
         robotOuttake = new Outtake(robotHardware);
 
-        // CRITICAL: Ensure drivetrain motors are in the correct mode for TeleOp
         initializeDrivetrainForTeleOp();
 
-        // Update telemetry to show INITIALIZED status
         telemetry.addData("Status", "INITIALIZED");
         telemetry.addData("Drive Mode", "Ready for TeleOp");
         telemetry.update();
 
-        // Wait for user to press start button
         waitForStart();
 
         boolean fieldCentric = true;
 
-        // Button state tracking
         boolean home1prevState = false;
         boolean options1prevState = false;
         boolean options2prevState = false;
@@ -52,7 +48,7 @@ public class MainTeleOp extends LinearOpMode {
         boolean b2prevState = false;
         boolean y2prevState = false;
 
-        // Auto-shoot sequence tracking
+        // Auto shoot sequence tracking
         boolean isIntakeRunning = false;
         boolean isAutoShooting = false;
         double spoolUpEndTime = 0;
@@ -62,7 +58,7 @@ public class MainTeleOp extends LinearOpMode {
 
         // Start OpMode loop
         while (opModeIsActive()) {
-            // ===== GAMEPAD 1 INPUTS =====
+            //      Gamepad 1 inputs
             double ly1 = -gamepad1.left_stick_y; // forward/backward driving
             double lx1 = gamepad1.left_stick_x; // strafing
             double rx1 = gamepad1.right_stick_x; // turning
@@ -70,7 +66,7 @@ public class MainTeleOp extends LinearOpMode {
             boolean options1state = gamepad1.options; // field centric toggle
             double lt1state = gamepad1.left_trigger; // slow mode
 
-            // ===== GAMEPAD 2 INPUTS =====
+            //      Gamepad 2 inputs
             double ly2 = gamepad2.left_stick_y;
             double ry2 = -gamepad2.right_stick_y;
             double lt2state = gamepad2.left_trigger;
@@ -85,8 +81,8 @@ public class MainTeleOp extends LinearOpMode {
 
             double imuHeading = robotHardware.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
-            // ===== DRIVETRAIN CONTROL =====
-            // Field centric toggle
+            //      Drivetrain Control
+            //Field centric toggle
             if (home1state && !home1prevState && fieldCentric) {
                 robotHardware.imu.resetYaw();
             } home1prevState = home1state;
@@ -97,7 +93,7 @@ public class MainTeleOp extends LinearOpMode {
 
             updateDriveBase(ly1, lx1, rx1, lt1state, imuHeading, fieldCentric);
 
-            // ===== INTAKE CONTROL =====
+            //      Intake Control
             robotIntake.update();
 
             if (ly2 >= 0.3) {
@@ -111,7 +107,7 @@ public class MainTeleOp extends LinearOpMode {
             }
             a2prevState = a2state;
 
-            // ===== STORAGE CONTROL =====
+            //      Storage Control
             robotStorage.update();
 
             if (rt2state >= 0.3 && !rb2state) {
@@ -122,19 +118,19 @@ public class MainTeleOp extends LinearOpMode {
                 robotStorage.run(0.0);
             }
 
-            // ===== OUTTAKE PRESETS & AUTO-SHOOT =====
-            final double spoolUpTime = 5000; // 1.5 seconds
-            final double storageTime = 3000 ; // 0.75 seconds
+            //      Outtake presets & auto shoot
+            final double spoolUpTime = 5000;
+            final double storageTime = 3000 ;
             double currentOuttakePower;
 
-            // Start auto-shoot sequence
+            // Start auto shoot sequence
             if (((b2state && !b2prevState) || (y2state && !y2prevState)) && !isAutoShooting) {
                 isAutoShooting = true;
                 spoolUpEndTime = robotHardware.timer.milliseconds() + spoolUpTime;
             }
 
             if (isAutoShooting) {
-                // Check if spool-up time has elapsed
+                // Check if spool up time has passed
                 if (robotHardware.timer.milliseconds() >= spoolUpEndTime) {
                     robotStorage.runForTime(1.0, storageTime / 1000.0);
                     isAutoShooting = false;
@@ -160,7 +156,7 @@ public class MainTeleOp extends LinearOpMode {
                 }
             }
 
-            // Fine-tune active preset
+            // Fine tune active preset
             if (dpu2 && !dpu2prevState) {
                 robotOuttake.tuneActivePreset(0.03);
             } else if (dpd2 && !dpd2prevState) {
@@ -181,7 +177,6 @@ public class MainTeleOp extends LinearOpMode {
             b2prevState = b2state;
             y2prevState = y2state;
 
-            // ===== TELEMETRY =====
             telemetry.addData("Status", "Running");
             telemetry.addData("Field Centric", fieldCentric ? "ON" : "OFF");
             telemetry.addData("Auto-Shooting", isAutoShooting ? "ACTIVE" : "IDLE");
@@ -194,26 +189,21 @@ public class MainTeleOp extends LinearOpMode {
     }
 
     private void initializeDrivetrainForTeleOp() {
-        // Reset encoders to clear any residual targets from autonomous
         robotHardware.frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robotHardware.frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robotHardware.backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robotHardware.backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        // Set to RUN_WITHOUT_ENCODER for direct power control in TeleOp
-        // This is more responsive than RUN_USING_ENCODER for manual driving
         robotHardware.frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         robotHardware.frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         robotHardware.backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         robotHardware.backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        // Set zero power behavior to brake for better control
         robotHardware.frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         robotHardware.frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         robotHardware.backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         robotHardware.backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // Initialize all motors to zero power
         robotHardware.frontLeft.setPower(0);
         robotHardware.frontRight.setPower(0);
         robotHardware.backLeft.setPower(0);
@@ -221,12 +211,10 @@ public class MainTeleOp extends LinearOpMode {
     }
 
     private void updateDriveBase(double ly, double lx, double rx, double lt1state, double imuHeading, boolean fieldCentric) {
-        // Speed multiplier for slow mode
         double speedMultiplier = (lt1state > 0.5) ? 0.3 : 1.0;
 
         double adjLy, adjLx;
 
-        // Apply field-centric transformation if enabled
         if (fieldCentric) {
             adjLx = lx * Math.cos(-imuHeading) - ly * Math.sin(-imuHeading);
             adjLy = lx * Math.sin(-imuHeading) + ly * Math.cos(-imuHeading);
@@ -235,13 +223,11 @@ public class MainTeleOp extends LinearOpMode {
             adjLy = ly;
         }
 
-        // Calculate motor powers for mecanum drive
         double frontLeftPower = (adjLy + adjLx + rx) * speedMultiplier;
         double frontRightPower = (adjLy - adjLx - rx) * speedMultiplier;
         double backLeftPower = (adjLy - adjLx + rx) * speedMultiplier;
         double backRightPower = (adjLy + adjLx - rx) * speedMultiplier;
 
-        // Normalize powers if any exceed 1.0
         double maxPower = Math.max(Math.abs(frontLeftPower), Math.abs(frontRightPower));
         maxPower = Math.max(maxPower, Math.abs(backLeftPower));
         maxPower = Math.max(maxPower, Math.abs(backRightPower));
@@ -261,7 +247,6 @@ public class MainTeleOp extends LinearOpMode {
         prevBackLeftPower += Math.max(-RAMP_RATE, Math.min(RAMP_RATE, backLeftPower - prevBackLeftPower));
         prevBackRightPower += Math.max(-RAMP_RATE, Math.min(RAMP_RATE, backRightPower - prevBackRightPower));
 
-        // Set motor powers
         robotHardware.frontLeft.setPower(prevFrontLeftPower);
         robotHardware.frontRight.setPower(prevFrontRightPower);
         robotHardware.backLeft.setPower(prevBackLeftPower);
