@@ -55,7 +55,7 @@ public class RobotAutonGoalSideBlue extends LinearOpMode {
             ShootPreloaded = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(26.254, 117.571), new Pose(56.184, 86.766))
+                            new BezierLine(new Pose(15.183, 128.580), new Pose(56.184, 86.766))
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(145), Math.toRadians(135))
                     .build();
@@ -63,7 +63,7 @@ public class RobotAutonGoalSideBlue extends LinearOpMode {
             GotoGPP = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(56.184, 86.766), new Pose(61.435, 62.612))
+                            new BezierLine(new Pose(56.184, 86.766), new Pose(44.600, 84.217))
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(180))
                     .build();
@@ -71,7 +71,7 @@ public class RobotAutonGoalSideBlue extends LinearOpMode {
             PickupGPP = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(61.435, 62.612), new Pose(21.528, 62.612))
+                            new BezierLine(new Pose(44.600, 84.217), new Pose(15.183, 83.506))
                     )
                     .setTangentHeadingInterpolation()
                     .build();
@@ -80,9 +80,9 @@ public class RobotAutonGoalSideBlue extends LinearOpMode {
                     .pathBuilder()
                     .addPath(
                             new BezierCurve(
-                                    new Pose(21.528, 62.612),
-                                    new Pose(42.882, 44.059),
-                                    new Pose(18.203, 45.985)
+                                    new Pose(15.183, 83.506),
+                                    new Pose(28.468, 70.695),
+                                    new Pose(13.048, 70.221)
                             )
                     )
                     .setConstantHeadingInterpolation(Math.toRadians(180))
@@ -91,7 +91,7 @@ public class RobotAutonGoalSideBlue extends LinearOpMode {
             ShootGPP = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(18.203, 45.985), new Pose(56.184, 86.591))
+                            new BezierLine(new Pose(13.048, 70.221), new Pose(56.184, 86.591))
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(135))
                     .build();
