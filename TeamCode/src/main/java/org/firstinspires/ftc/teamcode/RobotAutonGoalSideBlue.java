@@ -4,12 +4,16 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
@@ -18,29 +22,89 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 @SuppressWarnings("FieldCanBeLocal") // android studio bugging
 public class RobotAutonGoalSideBlue extends LinearOpMode {
 
+    public DcMotorEx outtakeMotor;
+    public DcMotor intakeMotor;
+
     private final ElapsedTime timer = new ElapsedTime(); // runtime
-
-    private final Pose startPose = new Pose(X,Y,heainfd_in_radians); // TODO: ADD COORDINATES
-    private final Pose shootPose = new Pose(x,y,Math.toRadians(0));
-    private final Pose grabPose = new Pose(x,y,Math.toRadians(0));
-    private final Pose pickupPose = new Pose(x,y,Math.toRadians(0));
-    private final Pose offlinePose = new Pose(x,y,Math.toRadians(0));
-
-    // variables for paths
-    private PathChain shootPreloadedPath;
-    private PathChain grabPrepPath;
-    private PathChain pickupBallsPath;
-    private PathChain finishPickupPath;
-    private PathChain shootGrabbedPath;
-    private PathChain goOffLaunchLine;
-
-
     // other vars
     private Pose currentPose;
-    private Follower follower;
+    public Follower follower;
     private TelemetryManager panelsTelemetry;
     private int pathState;
 
+    private int beforeOuttakeState;
+    private double outtakeMaxPower = ((256.2*0.7)/60)*537.7; // 0.7 power percentage
+    private int outtakeRunTime;
+
+    private int beforeIntakeState;
+    private int intakeRunTime;
+    private double intakeMaxPower = 1;
+
+    private double previousTime;
+    private Paths paths;
+
+    public static class Paths {
+        public PathChain ShootPreloaded;
+        public PathChain GotoGPP;
+        public PathChain PickupGPP;
+        public PathChain HitLever;
+        public PathChain ShootGPP;
+        public PathChain GoOffLine;
+
+        public Paths(Follower follower) {
+            ShootPreloaded = follower
+                    .pathBuilder()
+                    .addPath(
+                            new BezierLine(new Pose(26.254, 117.571), new Pose(56.184, 86.766))
+                    )
+                    .setLinearHeadingInterpolation(Math.toRadians(145), Math.toRadians(135))
+                    .build();
+
+            GotoGPP = follower
+                    .pathBuilder()
+                    .addPath(
+                            new BezierLine(new Pose(56.184, 86.766), new Pose(61.435, 62.612))
+                    )
+                    .setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(180))
+                    .build();
+
+            PickupGPP = follower
+                    .pathBuilder()
+                    .addPath(
+                            new BezierLine(new Pose(61.435, 62.612), new Pose(21.528, 62.612))
+                    )
+                    .setTangentHeadingInterpolation()
+                    .build();
+
+            HitLever = follower
+                    .pathBuilder()
+                    .addPath(
+                            new BezierCurve(
+                                    new Pose(21.528, 62.612),
+                                    new Pose(42.882, 44.059),
+                                    new Pose(18.203, 45.985)
+                            )
+                    )
+                    .setConstantHeadingInterpolation(Math.toRadians(180))
+                    .build();
+
+            ShootGPP = follower
+                    .pathBuilder()
+                    .addPath(
+                            new BezierLine(new Pose(18.203, 45.985), new Pose(56.184, 86.591))
+                    )
+                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(135))
+                    .build();
+
+            GoOffLine = follower
+                    .pathBuilder()
+                    .addPath(
+                            new BezierLine(new Pose(56.184, 86.591), new Pose(86.000, 114.000))
+                    )
+                    .setConstantHeadingInterpolation(Math.toRadians(135))
+                    .build();
+        }
+    }
 
     private void log(String caption, Object... text) {
         if (text.length == 1) {
@@ -59,11 +123,19 @@ public class RobotAutonGoalSideBlue extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+
+        intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
+        outtakeMotor = hardwareMap.get(DcMotorEx.class, "outtakeMotor");
+        intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        outtakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        intakeMotor.setDirection(DcMotor.Direction.FORWARD);
+        outtakeMotor.setDirection(DcMotor.Direction.FORWARD);
+
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
         // init pp follower
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(startPose);
+        follower.setStartingPose(new Pose(72, 8, Math.toRadians(90)));
 
         log("Status", "INITIALIZED");
         telemetry.update();
@@ -76,58 +148,85 @@ public class RobotAutonGoalSideBlue extends LinearOpMode {
         follower.update();
         panelsTelemetry.update();
         currentPose = follower.getPose();
-        buildPaths();
+        paths = new Paths(follower);
 
         while (opModeIsActive()) {
             follower.update();
             panelsTelemetry.update();
             currentPose = follower.getPose();
+            updatePath(timer.milliseconds());
+
+            // telemetry
+            log("Status", "RUNNING");
+            log("Path State", pathState);
+            if (pathState == 0) {log("Path Name", "Shoot Preloaded");}
+            else if (pathState == 1) {log("Path Name", "Go to GPP");}
+            else if (pathState == 2) {log("Path Name", "Pickup GPP");}
+            else if (pathState == 3) {log("Path Name", "Hit Lever");}
+            else if (pathState == 4) {log("Path Name", "Shoot GPP");}
+            else if (pathState == 5) {log("Path Name", "Go Off Line");}
+            else if (pathState == 10) {log("Path Name", "Shooting (Outtake)");}
+            else if (pathState == 11) {log("Path Name", "Grabbing (Intake)");}
+            else if (pathState == -1) {log("Path Name", "Autonomous Finished!");}
+            log("Current Pose", currentPose);
+            telemetry.update();
         }
     }
 
-    public void buildPaths() {
-        path1 = follower.pathBuilder()
-                .addPath(new BezierLine(startPose,pose1))
-                .setLinearHeadingInterpolation(startPose.getHeading(),pose1.getHeading())
-                .build();
-        path2 = follower.pathBuilder()
-                .addPath(new BezierLine(pose1,pose2))
-                .setLinearHeadingInterpolation(pose1.getHeading(),pose2.getHeading())
-                .build();
-        path3 = follower.pathBuilder()
-                .addPath(new BezierLine(pose2,pose3))
-                .setLinearHeadingInterpolation(pose2.getHeading(),pose3.getHeading())
-                .build();
-        path4 = follower.pathBuilder()
-                .addPath(new BezierLine(pose3,pose4))
-                .setLinearHeadingInterpolation(pose3.getHeading(),pose4.getHeading())
-                .build();
-    }
-
-    public void updatePath() {
+    public void updatePath(double currentTime) {
         switch (pathState) {
             case 0:
-                follower.followPath(path1);
-                pathState = 1;
+                follower.followPath(paths.ShootPreloaded);
+                pathState = 10; // shoot
+                beforeOuttakeState = 0;
+                previousTime = currentTime;
+                outtakeMotor.setVelocity(outtakeMaxPower);
                 break;
             case 1:
                 if (!follower.isBusy()) {
-                    follower.followPath(path2);
+                    follower.followPath(paths.GotoGPP);
                     pathState = 2;
                 }
                 break;
             case 2:
                 if (!follower.isBusy()) {
-                    follower.followPath(path3);
-                    pathState = 3;
+                    follower.followPath(paths.PickupGPP);
+                    pathState = 11; // intake
+                    beforeIntakeState = 2;
+                    previousTime = currentTime;
+                    intakeMotor.setPower(intakeMaxPower);
                 }
                 break;
             case 3:
                 if (!follower.isBusy()) {
-                    follower.followPath(path4);
-                    pathState = -1;
+                    follower.followPath(paths.HitLever);
+                    pathState = 4;
                 }
                 break;
+            case 4:
+                if (!follower.isBusy()) {
+                    follower.followPath(paths.ShootGPP);
+                    pathState = 10; // shoot
+                    beforeOuttakeState = 4;
+                    previousTime = currentTime;
+                    outtakeMotor.setVelocity(outtakeMaxPower);
+                }
+                break;
+            case 5:
+                if (!follower.isBusy()) {
+                    follower.followPath(paths.GoOffLine);
+                    pathState = -1;
+                }
+            case 10:
+                if (currentTime >= outtakeRunTime+previousTime) {
+                    outtakeMotor.setVelocity(0);
+                    pathState = beforeOuttakeState+1;
+                }
+            case 11:
+                if (currentTime >= intakeRunTime+previousTime) {
+                    intakeMotor.setPower(0);
+                    pathState = beforeIntakeState+1;
+                }
         }
     }
 }
