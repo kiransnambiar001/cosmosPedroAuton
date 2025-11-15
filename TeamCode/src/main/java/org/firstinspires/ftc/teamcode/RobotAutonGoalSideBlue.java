@@ -33,11 +33,9 @@ public class RobotAutonGoalSideBlue extends LinearOpMode {
     private int pathState;
 
     private int beforeOuttakeState;
-    private double outtakeMaxPower = ((256.2*0.7)/60)*537.7; // 0.7 power percentage
-    private int outtakeRunTime;
+    private double outtakeMaxPower = ((256.2*0.4)/60)*537.7; // 0.7 power percentage
+    private int outtakeRunTime = 3000;
 
-    private int beforeIntakeState;
-    private int intakeRunTime;
     private double intakeMaxPower = 1;
 
     private double previousTime;
@@ -123,7 +121,7 @@ public class RobotAutonGoalSideBlue extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-
+        // init intake and outtake
         intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
         outtakeMotor = hardwareMap.get(DcMotorEx.class, "outtakeMotor");
         intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -191,15 +189,14 @@ public class RobotAutonGoalSideBlue extends LinearOpMode {
             case 2:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.PickupGPP);
-                    pathState = 11; // intake
-                    beforeIntakeState = 2;
-                    previousTime = currentTime;
+                    pathState = 2;
                     intakeMotor.setPower(intakeMaxPower);
                 }
                 break;
             case 3:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.HitLever);
+                    intakeMotor.setPower(0);
                     pathState = 4;
                 }
                 break;
@@ -221,11 +218,6 @@ public class RobotAutonGoalSideBlue extends LinearOpMode {
                 if (currentTime >= outtakeRunTime+previousTime) {
                     outtakeMotor.setVelocity(0);
                     pathState = beforeOuttakeState+1;
-                }
-            case 11:
-                if (currentTime >= intakeRunTime+previousTime) {
-                    intakeMotor.setPower(0);
-                    pathState = beforeIntakeState+1;
                 }
         }
     }
