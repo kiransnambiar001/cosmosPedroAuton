@@ -52,7 +52,10 @@ public class MainTeleOp extends LinearOpMode {
         boolean isIntakeRunning = false;
         boolean isAutoShooting = false;
         double spoolUpEndTime = 0;
-        double outtakePower = 0;
+        double currentOuttakePower = 0;
+
+        boolean farToggle = false;
+        boolean closeToggle = false;
 
         robotHardware.imu.resetYaw();
 
@@ -120,41 +123,43 @@ public class MainTeleOp extends LinearOpMode {
 
             //      Outtake presets & auto shoot
             final double spoolUpTime = 5000;
-            final double storageTime = 3000 ;
-            double currentOuttakePower;
+            final double storageTime = 3000;
 
             // Start auto shoot sequence
-            if (((b2state && !b2prevState) || (y2state && !y2prevState)) && !isAutoShooting) {
-                isAutoShooting = true;
-                spoolUpEndTime = robotHardware.timer.milliseconds() + spoolUpTime;
-            }
+            if (b2state && !b2prevState) {
+                closeToggle = !closeToggle;
+                if (closeToggle) {farToggle = false; currentOuttakePower = robotOuttake.setPreset("close");}
+            } else if (y2state && y2prevState) {
+                farToggle = !farToggle;
+                if (farToggle) {closeToggle = false; currentOuttakePower = robotOuttake.setPreset("far");}
+            } else if (!farToggle && !closeToggle) {currentOuttakePower = robotOuttake.setPreset("idle");}
 
-            if (isAutoShooting) {
-                // Check if spool up time has passed
-                if (robotHardware.timer.milliseconds() >= spoolUpEndTime) {
-                    robotStorage.runForTime(1.0, storageTime / 1000.0);
-                    isAutoShooting = false;
-                }
-
-                // Set outtake power based on which preset is active
-                if (b2state) {
-                    currentOuttakePower = robotOuttake.setPreset("close");
-                } else if (y2state) {
-                    currentOuttakePower = robotOuttake.setPreset("far");
-                } else {
-                    isAutoShooting = false;
-                    currentOuttakePower = robotOuttake.setPreset("idle");
-                }
-            } else {
-                // Manual preset control
-                if (b2state) {
-                    currentOuttakePower = robotOuttake.setPreset("close");
-                } else if (y2state) {
-                    currentOuttakePower = robotOuttake.setPreset("far");
-                } else {
-                    currentOuttakePower = robotOuttake.setPreset("idle");
-                }
-            }
+//            if (isAutoShooting) {
+//                // Check if spool up time has passed
+//                if (robotHardware.timer.milliseconds() >= spoolUpEndTime) {
+//                    robotStorage.runForTime(1.0, storageTime / 1000.0);
+//                    isAutoShooting = false;
+//                }
+//
+//                // Set outtake power based on which preset is active
+//                if (b2state) {
+//                    currentOuttakePower = robotOuttake.setPreset("close");
+//                } else if (y2state) {
+//                    currentOuttakePower = robotOuttake.setPreset("far");
+//                } else {
+//                    isAutoShooting = false;
+//                    currentOuttakePower = robotOuttake.setPreset("idle");
+//                }
+//            } else {
+//                // Manual preset control
+//                if (b2state) {
+//                    currentOuttakePower = robotOuttake.setPreset("close");
+//                } else if (y2state) {
+//                    currentOuttakePower = robotOuttake.setPreset("far");
+//                } else {
+//                    currentOuttakePower = robotOuttake.setPreset("idle");
+//                }
+//            }
 
             // Fine tune active preset
             if (dpu2 && !dpu2prevState) {
