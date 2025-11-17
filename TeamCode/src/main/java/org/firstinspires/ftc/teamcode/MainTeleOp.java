@@ -52,7 +52,6 @@ public class MainTeleOp extends LinearOpMode {
         boolean isIntakeRunning = false;
         boolean isAutoShooting = false;
         double spoolUpEndTime = 0;
-        double outtakePower = 0;
 
         robotHardware.imu.resetYaw();
 
