@@ -12,7 +12,7 @@ public class MainTeleOp extends LinearOpMode {
     // Create hardware object
     Hardware robotHardware = new Hardware();
     Intake robotIntake;
-    Storage robotStorage;
+    CRServoStorage robotStorage;
     Outtake robotOuttake;
 
     private double prevFrontLeftPower = 0.0;
@@ -26,7 +26,7 @@ public class MainTeleOp extends LinearOpMode {
         // Initialize hardware
         robotHardware.initialize(hardwareMap);
         robotIntake = new Intake(robotHardware);
-        robotStorage = new Storage(robotHardware);
+        robotStorage = new CRServoStorage(robotHardware);
         robotOuttake = new Outtake(robotHardware);
 
         initializeDrivetrainForTeleOp();
