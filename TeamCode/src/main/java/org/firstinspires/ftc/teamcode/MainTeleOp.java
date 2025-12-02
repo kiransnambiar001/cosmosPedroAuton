@@ -19,6 +19,7 @@ public class MainTeleOp extends LinearOpMode {
     private double prevFrontRightPower = 0.0;
     private double prevBackLeftPower = 0.0;
     private double prevBackRightPower = 0.0;
+    private double fcoefficient = 0.0001;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -82,6 +83,7 @@ public class MainTeleOp extends LinearOpMode {
             boolean dpu2 = gamepad2.dpad_up; //
             boolean dpd2 = gamepad2.dpad_down;
 
+
             double imuHeading = robotHardware.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
             //      Drivetrain Control
@@ -105,7 +107,7 @@ public class MainTeleOp extends LinearOpMode {
                 robotIntake.run(-1.0);
             } else {
                 if (!robotIntake.isTimedRunActive) {robotIntake.run(0.0);}
-                robotIntake.run(0.0);
+//TODO          robotIntake.run(0.0);
                 if (a2state && !a2prevState) {robotIntake.runForTime(1.0, 5.0);}
             }
             a2prevState = a2state;
@@ -189,6 +191,7 @@ public class MainTeleOp extends LinearOpMode {
             telemetry.addData("Target Velocity (tps)", robotOuttake.getTargetTps());
             telemetry.addData("Actual Velocity (tps)", robotHardware.outtakeMotor.getVelocity());
             telemetry.addData("IMU Heading (deg)", Math.toDegrees(imuHeading));
+            telemetry.addData("F Coefficient", fcoefficient);
             telemetry.update();
         }
     }

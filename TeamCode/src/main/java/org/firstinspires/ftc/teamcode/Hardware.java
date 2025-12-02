@@ -48,8 +48,12 @@ public class Hardware {
         backRight.setDirection(DcMotor.Direction.FORWARD);
         intakeMotor.setDirection(DcMotor.Direction.FORWARD);
         outtakeMotor.setDirection(DcMotor.Direction.FORWARD);
-        storageLeft.setDirection(CRServo.Direction.FORWARD);
-        storageRight.setDirection(CRServo.Direction.REVERSE);
+        storageLeft.setDirection(CRServo.Direction.REVERSE);
+        storageRight.setDirection(CRServo.Direction.FORWARD);
+
+        // pidf constants for outtake motor
+//        outtakeMotor.setVelocityPIDFCoefficients(0,0,0,0.013);
+        // TODO: f value is 0.013
 
         // Initialize the IMU
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(

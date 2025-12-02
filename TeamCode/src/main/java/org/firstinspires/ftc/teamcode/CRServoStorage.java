@@ -6,8 +6,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 
 public class CRServoStorage {
-    public CRServo servoLeft;
-    public CRServo servoRight;
+    public CRServo storageLeft;
+    public CRServo storageRight;
     private double speed = 5;
 
 
@@ -19,22 +19,22 @@ public class CRServoStorage {
 
 
     public CRServoStorage(Hardware robotHardware) {
-        this.servoLeft = robotHardware.storageLeft;
-        this.servoRight = robotHardware.storageRight;
+        this.storageLeft = robotHardware.storageLeft;
+        this.storageRight = robotHardware.storageRight;
     }
 
 
     public void run(double speed) {
         this.speed = speed;
-        servoLeft.setPower(this.speed); servoRight.setPower(this.speed);
+        storageLeft.setPower(this.speed); storageRight.setPower(this.speed);
     }
 
 
     public void runForTime(double time) {
         this.isBusy = true;
 
-        servoLeft.setPower(this.speed);
-        servoRight.setPower(this.speed);
+        storageLeft.setPower(this.speed);
+        storageRight.setPower(this.speed);
 
 
         this.duration = time;
@@ -43,7 +43,7 @@ public class CRServoStorage {
 
 
     boolean turnOffAllMotors() { // returns if the function overrided a runForTime() function
-        servoLeft.setPower(0); servoRight.setPower(0);
+        storageLeft.setPower(0); storageRight.setPower(0);
         if (this.isBusy) {this.isBusy = false; return true;}
         else {return false;}
     }
@@ -51,7 +51,7 @@ public class CRServoStorage {
 
     public void update() {
         if (this.timer.milliseconds() >= this.duration && isBusy) {
-            servoLeft.setPower(0); servoRight.setPower(0);
+            storageLeft.setPower(0); storageRight.setPower(0);
             this.isBusy = false;
         }
     }
