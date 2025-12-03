@@ -33,7 +33,6 @@
 //    private int pathState;
 //
 //    private int beforeOuttakeState;
-//    private double outtakeMaxPower = ((256.2*0.7)/60)*537.7; // 0.7 power percentage
 //    private double outtakeRunTime = 3000;
 //
 //    private double intakeMaxPower = 1;
