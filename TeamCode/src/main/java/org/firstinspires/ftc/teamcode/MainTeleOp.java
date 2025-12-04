@@ -19,7 +19,6 @@ public class MainTeleOp extends LinearOpMode {
     private double prevFrontRightPower = 0.0;
     private double prevBackLeftPower = 0.0;
     private double prevBackRightPower = 0.0;
-
     @Override
     public void runOpMode() throws InterruptedException {
 
@@ -49,19 +48,17 @@ public class MainTeleOp extends LinearOpMode {
         boolean y2prevState = false;
 
         // Auto shoot sequence tracking
-        boolean isIntakeRunning = false;
+        boolean isStorageRunning = false;
         boolean isAutoShooting = false;
-        double spoolUpEndTime = 0;
-        double currentOuttakePower = 0;
+        double spoolUpEndTime;
+        String currentPreset;
 
-        boolean farToggle = false;
-        boolean closeToggle = false;
 
         robotHardware.imu.resetYaw();
 
         // Start OpMode loop
         while (opModeIsActive()) {
-            //      Gamepad 1 inputs
+            //      Gamepad 1 controls
             double ly1 = -gamepad1.left_stick_y; // forward/backward driving
             double lx1 = gamepad1.left_stick_x; // strafing
             double rx1 = gamepad1.right_stick_x; // turning
@@ -69,18 +66,18 @@ public class MainTeleOp extends LinearOpMode {
             boolean options1state = gamepad1.options; // field centric toggle
             double lt1state = gamepad1.left_trigger; // slow mode
 
-            //      Gamepad 2 inputs
-            double ly2 = gamepad2.left_stick_y;
-            double ry2 = -gamepad2.right_stick_y;
-            double lt2state = gamepad2.left_trigger;
-            double rt2state = gamepad2.right_trigger;
-            boolean rb2state = gamepad2.right_bumper;
-            boolean a2state = gamepad2.a; // storage on/off
+            //      Gamepad 2 controls
+            double ly2 = gamepad2.left_stick_y; //Intake(up = in, down = out)
+            double ry2 = -gamepad2.right_stick_y; // N/A
+            double lt2state = gamepad2.left_trigger; //N/A
+            double rt2state = gamepad2.right_trigger; //Storage in
+            boolean rb2state = gamepad2.right_bumper; //Storage out
+            boolean a2state = gamepad2.a; // run intake for 5 secs
             boolean b2state = gamepad2.b; // outtake preset for close shoot
             boolean y2state = gamepad2.y; // outtake preset for far shoot
-            boolean options2state = gamepad2.options;
-            boolean dpu2 = gamepad2.dpad_up; //
-            boolean dpd2 = gamepad2.dpad_down;
+            boolean options2state = gamepad2.options; // reset the fine adjustments of the outtake
+            boolean dpu2 = gamepad2.dpad_up; // outtake speed +0.3
+            boolean dpd2 = gamepad2.dpad_down; // outtake speed -0.3
 
             double imuHeading = robotHardware.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
@@ -88,31 +85,31 @@ public class MainTeleOp extends LinearOpMode {
             //Field centric toggle
             if (home1state && !home1prevState && fieldCentric) {
                 robotHardware.imu.resetYaw();
-            } home1prevState = home1state;
+            }
+            home1prevState = home1state;
 
             if (options1state && !options1prevState) {
                 fieldCentric = !fieldCentric;
-            } options1prevState = options1state;
+            }
+            options1prevState = options1state;
 
             updateDriveBase(ly1, lx1, rx1, lt1state, imuHeading, fieldCentric);
 
             //      Intake Control
-            robotIntake.update();
-
             if (ly2 >= 0.3) {
                 robotIntake.run(1.0);
             } else if (ly2 <= -0.3) {
                 robotIntake.run(-1.0);
             } else {
-                if (!robotIntake.isTimedRunActive) {robotIntake.run(0.0);}
-                robotIntake.run(0.0);
-                if (a2state && !a2prevState) {robotIntake.runForTime(1.0, 5.0);}
+                if (a2state && !a2prevState && !isAutoShooting) {
+                    robotIntake.runForTime(1.0, 5.0);
+                }
+                if (!robotIntake.isTimedRunActive) {
+                    robotIntake.run(0.0);
+                }
             }
-            a2prevState = a2state;
 
             //      Storage Control
-            robotStorage.update();
-
             if (rt2state >= 0.3 && !rb2state) {
                 robotStorage.run(1.0);
             } else if (rb2state && rt2state < 0.3) {
@@ -122,78 +119,83 @@ public class MainTeleOp extends LinearOpMode {
             }
 
             //      Outtake presets & auto shoot
-            final double spoolUpTime = 5000;
-            final double storageTime = 3000;
+            final int storageTime = 3000;
+            double spoolUpTime = 0;
 
-            // Start auto shoot sequence
+            //      Start auto shoot sequence
             if (b2state && !b2prevState) {
-                closeToggle = !closeToggle;
-                if (closeToggle) {farToggle = false; currentOuttakePower = robotOuttake.setPreset("close");}
-            } else if (y2state && y2prevState) {
-                farToggle = !farToggle;
-                if (farToggle) {closeToggle = false; currentOuttakePower = robotOuttake.setPreset("far");}
-            } else if (!farToggle && !closeToggle) {currentOuttakePower = robotOuttake.setPreset("idle");}
+                isAutoShooting = true;
+                currentPreset = "close";
+                spoolUpTime = 2000;
+            } else if (y2state && !y2prevState) {
+                isAutoShooting = true;
+                currentPreset = "far";
+                spoolUpTime = 4000;
+            }
+            if (isAutoShooting) {
+                spoolUpEndTime = robotHardware.timer.milliseconds() + spoolUpTime;
+                robotStorage.runForTime(1.0, storageTime);
+                if (robotHardware.timer.milliseconds() >= spoolUpEndTime) {
 
-//            if (isAutoShooting) {
-//                // Check if spool up time has passed
-//                if (robotHardware.timer.milliseconds() >= spoolUpEndTime) {
-//                    robotStorage.runForTime(1.0, storageTime / 1000.0);
-//                    isAutoShooting = false;
-//                }
-//
-//                // Set outtake power based on which preset is active
-//                if (b2state) {
-//                    currentOuttakePower = robotOuttake.setPreset("close");
-//                } else if (y2state) {
-//                    currentOuttakePower = robotOuttake.setPreset("far");
-//                } else {
-//                    isAutoShooting = false;
-//                    currentOuttakePower = robotOuttake.setPreset("idle");
-//                }
-//            } else {
-//                // Manual preset control
-//                if (b2state) {
-//                    currentOuttakePower = robotOuttake.setPreset("close");
-//                } else if (y2state) {
-//                    currentOuttakePower = robotOuttake.setPreset("far");
-//                } else {
-//                    currentOuttakePower = robotOuttake.setPreset("idle");
-//                }
-//            }
-
-            // Fine tune active preset
-            if (dpu2 && !dpu2prevState) {
-                robotOuttake.tuneActivePreset(0.03);
-            } else if (dpd2 && !dpd2prevState) {
-                robotOuttake.tuneActivePreset(-0.03);
+                }
             }
 
-            robotOuttake.run(currentOuttakePower);
+            // Set outtake power based on which preset is active
+            if (b2state) {
+                currentOuttakePower = robotOuttake.setPreset("close");
+            } else if (y2state) {
+                currentOuttakePower = robotOuttake.setPreset("far");
+            } else if () {
+                isAutoShooting = false;
+                currentOuttakePower = robotOuttake.setPreset("idle");
+            } else {
+                // Manual preset control
+                if (b2state) {
+                    currentOuttakePower = robotOuttake.setPreset("close");
+                } else if (y2state) {
+                    currentOuttakePower = robotOuttake.setPreset("far");
+                } else {
+                    currentOuttakePower = robotOuttake.setPreset("idle");
+                }
+                // End of auto shoot sequence
 
-            // Reset outtake presets
-            if (options2state && !options2prevState) {
-                robotOuttake.reset();
+                // Fine tune active preset
+                if (dpu2 && !dpu2prevState) {
+                    robotOuttake.tuneActivePreset(0.03);
+                } else if (dpd2 && !dpd2prevState) {
+                    robotOuttake.tuneActivePreset(-0.03);
+                }
+
+                // Reset outtake presets
+                if (options2state && !options2prevState) {
+                    robotOuttake.reset();
+                }
+
+                // Updates
+                robotOuttake.update();
+                robotStorage.update();
+                robotIntake.update();
+
+                options2prevState = options2state;
+                dpu2prevState = dpu2;
+                dpd2prevState = dpd2;
+                b2prevState = b2state;
+                y2prevState = y2state;
+                a2prevState = a2state;
+
+                telemetry.addData("Status", "Running");
+                telemetry.addData("Field Centric", fieldCentric ? "ON" : "OFF");
+                telemetry.addData("Auto-Shooting", isAutoShooting ? "ACTIVE" : "IDLE");
+                telemetry.addData("Outtake Motor Power", robotOuttake.getPower());
+                telemetry.addData("Target Velocity (tps)", robotOuttake.getTargetTps());
+                telemetry.addData("Actual Velocity (tps)", robotHardware.outtakeMotor.getVelocity());
+                telemetry.addData("IMU Heading (deg)", Math.toDegrees(imuHeading));
+                telemetry.update();
             }
-
-            // Update previous states
-            options2prevState = options2state;
-            dpu2prevState = dpu2;
-            dpd2prevState = dpd2;
-            b2prevState = b2state;
-            y2prevState = y2state;
-
-            telemetry.addData("Status", "Running");
-            telemetry.addData("Field Centric", fieldCentric ? "ON" : "OFF");
-            telemetry.addData("Auto-Shooting", isAutoShooting ? "ACTIVE" : "IDLE");
-            telemetry.addData("Outtake Motor Power", currentOuttakePower);
-            telemetry.addData("Target Velocity (tps)", robotOuttake.getTargetTps());
-            telemetry.addData("Actual Velocity (tps)", robotHardware.outtakeMotor.getVelocity());
-            telemetry.addData("IMU Heading (deg)", Math.toDegrees(imuHeading));
-            telemetry.update();
         }
     }
 
-    private void initializeDrivetrainForTeleOp() {
+    private void initializeDrivetrainForTeleOp () {
         robotHardware.frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robotHardware.frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robotHardware.backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -215,8 +217,12 @@ public class MainTeleOp extends LinearOpMode {
         robotHardware.backRight.setPower(0);
     }
 
-    private void updateDriveBase(double ly, double lx, double rx, double lt1state, double imuHeading, boolean fieldCentric) {
+    private void updateDriveBase ( double ly, double lx, double rx, double lt1state,
+    double imuHeading, boolean fieldCentric){
         double speedMultiplier = (lt1state > 0.5) ? 0.3 : 1.0;
+        final double rxMultiplier = 0.75;
+        rx *= rxMultiplier;
+
 
         double adjLy, adjLx;
 
@@ -245,7 +251,7 @@ public class MainTeleOp extends LinearOpMode {
         }
 
         // Acceleration smoothing
-        final double RAMP_RATE = 0.05;
+        final double RAMP_RATE = 0.075;
 
         prevFrontLeftPower += Math.max(-RAMP_RATE, Math.min(RAMP_RATE, frontLeftPower - prevFrontLeftPower));
         prevFrontRightPower += Math.max(-RAMP_RATE, Math.min(RAMP_RATE, frontRightPower - prevFrontRightPower));

@@ -5,20 +5,20 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class Intake {
 
     private final Hardware robotHardware;
-    private final ElapsedTime timer = new ElapsedTime();
-    private boolean state = false;
+    private final ElapsedTime timer;
+    //private boolean state = false;
     public boolean isTimedRunActive = false;
-    private double stopTimeInSeconds = 0;
+    private double stopTimeMs = 0;
 
     public Intake(Hardware hardware) {
         robotHardware = hardware;
+        timer = robotHardware.timer;
     }
 
-    public void runForTime(double power, double durationSeconds) {
+    public void runForTime(double power, double durationMs) {
+         stopTimeMs = timer.milliseconds() + durationMs;
         if (!isTimedRunActive) {
             isTimedRunActive = true;
-            timer.reset();
-            stopTimeInSeconds = durationSeconds;
             robotHardware.intakeMotor.setPower(power);
         }
     }
@@ -30,15 +30,15 @@ public class Intake {
 
     public void update()
     {
-        if (isTimedRunActive && timer.seconds() >= stopTimeInSeconds)
+        if (isTimedRunActive && timer.milliseconds() >= stopTimeMs)
             run(0);
     }
-    public boolean getState()
-    {
-        return state;
-    }
-    public void toggle()
-    {
-        state = !state;
-    }
+//    public boolean getState()
+//    {
+//        return state;
+//    }
+//    public void toggle()
+//    {
+//        state = !state;
+//    }
 }

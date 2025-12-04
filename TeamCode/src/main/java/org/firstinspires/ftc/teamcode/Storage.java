@@ -5,19 +5,19 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class Storage {
 
     private final Hardware robotHardware;
-    private final ElapsedTime timer = new ElapsedTime();
+    private final ElapsedTime timer;
     private boolean isTimedRunActive = false;
-    private double stopTime = 0;
+
+    private double stopTime;
 
     public Storage(Hardware hardware) {
         robotHardware = hardware;
+         timer = robotHardware.timer;
     }
-
     public void runForTime(double power, double durationMs) {
         if (!isTimedRunActive) {
             isTimedRunActive = true;
-            timer.reset();
-            stopTime = timer.milliseconds() + durationMs;
+            stopTime = robotHardware.timer.milliseconds() + durationMs;
             robotHardware.storage.setPower(power);
         }
     }
@@ -26,10 +26,11 @@ public class Storage {
     public void run(double power) {
         isTimedRunActive = false;
         robotHardware.storage.setPower(power);
+
     }
 
     public void update() {
-        if (isTimedRunActive && timer.milliseconds() >= stopTime) {
+        if (isTimedRunActive && robotHardware.timer.milliseconds() >= stopTime) {
             run(0);
         }
     }
