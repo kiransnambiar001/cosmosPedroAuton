@@ -12,20 +12,22 @@ public class MainTeleOp extends LinearOpMode {
     // Create hardware object
     Hardware robotHardware = new Hardware();
     Intake robotIntake;
-    Storage robotStorage;
+    CRServoStorage robotStorage;
     Outtake robotOuttake;
 
     private double prevFrontLeftPower = 0.0;
     private double prevFrontRightPower = 0.0;
     private double prevBackLeftPower = 0.0;
     private double prevBackRightPower = 0.0;
+    private double fcoefficient = 0.0001;
+
     @Override
     public void runOpMode() throws InterruptedException {
 
         // Initialize hardware
         robotHardware.initialize(hardwareMap);
         robotIntake = new Intake(robotHardware);
-        robotStorage = new Storage(robotHardware);
+        robotStorage = new CRServoStorage(robotHardware);
         robotOuttake = new Outtake(robotHardware);
 
         initializeDrivetrainForTeleOp();
@@ -53,12 +55,14 @@ public class MainTeleOp extends LinearOpMode {
         double spoolUpEndTime;
         String currentPreset;
 
+        boolean farToggle = false;
+        boolean closeToggle = false;
 
         robotHardware.imu.resetYaw();
 
         // Start OpMode loop
         while (opModeIsActive()) {
-            //      Gamepad 1 controls
+            //      Gamepad 1 inputs
             double ly1 = -gamepad1.left_stick_y; // forward/backward driving
             double lx1 = gamepad1.left_stick_x; // strafing
             double rx1 = gamepad1.right_stick_x; // turning
@@ -85,13 +89,11 @@ public class MainTeleOp extends LinearOpMode {
             //Field centric toggle
             if (home1state && !home1prevState && fieldCentric) {
                 robotHardware.imu.resetYaw();
-            }
-            home1prevState = home1state;
+            } home1prevState = home1state;
 
             if (options1state && !options1prevState) {
                 fieldCentric = !fieldCentric;
-            }
-            options1prevState = options1state;
+            } options1prevState = options1state;
 
             updateDriveBase(ly1, lx1, rx1, lt1state, imuHeading, fieldCentric);
 
@@ -108,8 +110,11 @@ public class MainTeleOp extends LinearOpMode {
                     robotIntake.run(0.0);
                 }
             }
+            a2prevState = a2state;
 
             //      Storage Control
+            robotStorage.update();
+
             if (rt2state >= 0.3 && !rb2state) {
                 robotStorage.run(1.0);
             } else if (rb2state && rt2state < 0.3) {
@@ -190,12 +195,13 @@ public class MainTeleOp extends LinearOpMode {
                 telemetry.addData("Target Velocity (tps)", robotOuttake.getTargetTps());
                 telemetry.addData("Actual Velocity (tps)", robotHardware.outtakeMotor.getVelocity());
                 telemetry.addData("IMU Heading (deg)", Math.toDegrees(imuHeading));
+                telemetry.addData("F Coefficient", fcoefficient);
                 telemetry.update();
             }
         }
     }
 
-    private void initializeDrivetrainForTeleOp () {
+    private void initializeDrivetrainForTeleOp() {
         robotHardware.frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robotHardware.frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robotHardware.backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -217,8 +223,7 @@ public class MainTeleOp extends LinearOpMode {
         robotHardware.backRight.setPower(0);
     }
 
-    private void updateDriveBase ( double ly, double lx, double rx, double lt1state,
-    double imuHeading, boolean fieldCentric){
+    private void updateDriveBase(double ly, double lx, double rx, double lt1state, double imuHeading, boolean fieldCentric) {
         double speedMultiplier = (lt1state > 0.5) ? 0.3 : 1.0;
         final double rxMultiplier = 0.75;
         rx *= rxMultiplier;

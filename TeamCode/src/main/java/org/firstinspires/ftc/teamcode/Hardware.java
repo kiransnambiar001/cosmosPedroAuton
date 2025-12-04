@@ -18,8 +18,7 @@ public class Hardware {
     public DcMotorEx outtakeMotor;
     public IMU imu;
     public ElapsedTime timer;
-    public CRServo storage;
-
+    public CRServo storageLeft, storageRight;
     // Init hardwareMaps
 
     public void initialize(HardwareMap hardwareMap) {
@@ -31,7 +30,8 @@ public class Hardware {
         intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
         outtakeMotor = hardwareMap.get(DcMotorEx.class, "outtakeMotor");
         imu = hardwareMap.get(IMU.class, "imu");
-        storage = hardwareMap.get(CRServo.class,"storage");
+        storageLeft = hardwareMap.get(CRServo.class, "storageLeft");
+        storageRight = hardwareMap.get(CRServo.class, "storageRight");
         // Set motor zero power behavior to brake instead of move freely
         frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -48,6 +48,12 @@ public class Hardware {
         backRight.setDirection(DcMotor.Direction.FORWARD);
         intakeMotor.setDirection(DcMotor.Direction.FORWARD);
         outtakeMotor.setDirection(DcMotor.Direction.FORWARD);
+        storageLeft.setDirection(CRServo.Direction.REVERSE);
+        storageRight.setDirection(CRServo.Direction.FORWARD);
+
+        // pidf constants for outtake motor
+        outtakeMotor.setVelocityPIDFCoefficients(0,0,0,0.013);
+        // TODO: f value is 0.013
 
         // Initialize the IMU
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
