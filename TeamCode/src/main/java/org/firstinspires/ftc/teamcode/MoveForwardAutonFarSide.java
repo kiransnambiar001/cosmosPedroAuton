@@ -13,9 +13,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Driver Station OpMode list, or add a @Disabled annotation to prevent this OpMode from being
  * added to the Driver Station.
  */
-@Autonomous(name="MoveForward Auton", group="Robot")
+@Autonomous(name="FAR SIDE - MoveForward Auton", group="Robot")
 
-public class MoveForwardAuton extends LinearOpMode {
+public class MoveForwardAutonFarSide extends LinearOpMode {
 
     Hardware robotHardware = new Hardware();
     ElapsedTime timer = new ElapsedTime();

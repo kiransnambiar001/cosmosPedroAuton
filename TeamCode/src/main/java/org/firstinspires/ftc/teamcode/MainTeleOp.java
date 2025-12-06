@@ -223,6 +223,8 @@ public class MainTeleOp extends LinearOpMode {
         robotHardware.frontRight.setPower(0);
         robotHardware.backLeft.setPower(0);
         robotHardware.backRight.setPower(0);
+
+        robotHardware.imu.resetYaw();
     }
 
     private void updateDriveBase(double ly, double lx, double rx, double lt1state, double imuHeading, boolean fieldCentric) {
