@@ -3,34 +3,23 @@
 //import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 //import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 //import com.qualcomm.robotcore.hardware.DcMotor;
-//import com.bylazar.configurables.annotations.Configurable;
-//import com.bylazar.telemetry.PanelsTelemetry;
-//import com.bylazar.telemetry.TelemetryManager;
-//import com.pedropathing.follower.Follower;
-//import com.pedropathing.geometry.BezierLine;
-//import com.pedropathing.geometry.Pose;
-//import com.pedropathing.paths.HeadingInterpolator;
-//import com.pedropathing.paths.Path;
-//import com.pedropathing.paths.PathChain;
-//import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-//
-//import java.util.function.Supplier;
 //
 //import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 //
-//@TeleOp(name="PedroPathing TeleOp", group="LinearOpMode")
+//@TeleOp(name="Main TeleOp", group="LinearOpMode")
 //public class PedroPathingTeleOp extends LinearOpMode {
 //
 //    // Create hardware object
 //    Hardware robotHardware = new Hardware();
 //    Intake robotIntake;
-//    Storage robotStorage;
+//    CRServoStorage robotStorage;
 //    Outtake robotOuttake;
 //
 //    private double prevFrontLeftPower = 0.0;
 //    private double prevFrontRightPower = 0.0;
 //    private double prevBackLeftPower = 0.0;
 //    private double prevBackRightPower = 0.0;
+//    private double fcoefficient = 0.0001;
 //
 //    @Override
 //    public void runOpMode() throws InterruptedException {
@@ -38,7 +27,7 @@
 //        // Initialize hardware
 //        robotHardware.initialize(hardwareMap);
 //        robotIntake = new Intake(robotHardware);
-//        robotStorage = new Storage(robotHardware);
+//        robotStorage = new CRServoStorage(robotHardware);
 //        robotOuttake = new Outtake(robotHardware);
 //
 //        initializeDrivetrainForTeleOp();
@@ -49,7 +38,7 @@
 //
 //        waitForStart();
 //
-//        boolean fieldCentric = true;
+//        boolean fieldCentric = false;
 //
 //        boolean home1prevState = false;
 //        boolean options1prevState = false;
@@ -76,7 +65,7 @@
 //            //      Gamepad 1 inputs
 //            double ly1 = -gamepad1.left_stick_y; // forward/backward driving
 //            double lx1 = gamepad1.left_stick_x; // strafing
-//            double rx1 = gamepad1.right_stick_x; // turning
+//            double rx1 = gamepad1.right_stick_x/2; // turning (decrease by factor of 2)
 //            boolean home1state = gamepad1.guide; // reset yaw value on gyro
 //            boolean options1state = gamepad1.options; // field centric toggle
 //            double lt1state = gamepad1.left_trigger; // slow mode
@@ -90,9 +79,11 @@
 //            boolean a2state = gamepad2.a; // storage on/off
 //            boolean b2state = gamepad2.b; // outtake preset for close shoot
 //            boolean y2state = gamepad2.y; // outtake preset for far shoot
+//            boolean x2state = gamepad2.x;
 //            boolean options2state = gamepad2.options;
 //            boolean dpu2 = gamepad2.dpad_up; //
 //            boolean dpd2 = gamepad2.dpad_down;
+//
 //
 //            double imuHeading = robotHardware.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 //
@@ -117,7 +108,7 @@
 //                robotIntake.run(-1.0);
 //            } else {
 //                if (!robotIntake.isTimedRunActive) {robotIntake.run(0.0);}
-//                robotIntake.run(0.0);
+////TODO          robotIntake.run(0.0);
 //                if (a2state && !a2prevState) {robotIntake.runForTime(1.0, 5.0);}
 //            }
 //            a2prevState = a2state;
@@ -144,7 +135,12 @@
 //            } else if (y2state && y2prevState) {
 //                farToggle = !farToggle;
 //                if (farToggle) {closeToggle = false; currentOuttakePower = robotOuttake.setPreset("far");}
-//            } else if (!farToggle && !closeToggle) {currentOuttakePower = robotOuttake.setPreset("idle");}
+//            }
+//            if (x2state) {
+//                closeToggle = false;
+//                farToggle = false;
+//            }
+//            else if (!farToggle && !closeToggle) {currentOuttakePower = robotOuttake.setPreset("idle");}
 //
 ////            if (isAutoShooting) {
 ////                // Check if spool up time has passed
@@ -175,9 +171,9 @@
 //
 //            // Fine tune active preset
 //            if (dpu2 && !dpu2prevState) {
-//                robotOuttake.tuneActivePreset(0.03);
+//                robotOuttake.tuneActivePreset(0.05);
 //            } else if (dpd2 && !dpd2prevState) {
-//                robotOuttake.tuneActivePreset(-0.03);
+//                robotOuttake.tuneActivePreset(-0.05);
 //            }
 //
 //            robotOuttake.run(currentOuttakePower);
@@ -201,6 +197,7 @@
 //            telemetry.addData("Target Velocity (tps)", robotOuttake.getTargetTps());
 //            telemetry.addData("Actual Velocity (tps)", robotHardware.outtakeMotor.getVelocity());
 //            telemetry.addData("IMU Heading (deg)", Math.toDegrees(imuHeading));
+//            telemetry.addData("F Coefficient", fcoefficient);
 //            telemetry.update();
 //        }
 //    }

@@ -1,5 +1,6 @@
 //package org.firstinspires.ftc.teamcode;
 //
+//
 //import com.bylazar.configurables.annotations.Configurable;
 //import com.bylazar.telemetry.PanelsTelemetry;
 //import com.bylazar.telemetry.TelemetryManager;
@@ -17,13 +18,16 @@
 //import com.qualcomm.robotcore.util.ElapsedTime;
 //import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 //
+//
 //@Autonomous(name="RobotAutonFarBlue", group="Robot")
 //@Configurable // for Panels
 //@SuppressWarnings("FieldCanBeLocal") // android studio bugging
 //public class RobotAutonFarBlue extends LinearOpMode {
 //
+//
 //    public DcMotorEx outtakeMotor;
 //    public DcMotor intakeMotor;
+//
 //
 //    private final ElapsedTime timer = new ElapsedTime(); // runtime
 //    // other vars
@@ -32,15 +36,21 @@
 //    private TelemetryManager panelsTelemetry;
 //    private int pathState;
 //
+//
 //    private int beforeOuttakeState;
+//    public static double outtakeMaxPower = ((256.2*0.7)/60)*537.7; // 0.7 power percentage
 //    private double outtakeRunTime = 3000;
 //
-//    private double intakeMaxPower = 1;
+//
+//    public static double intakeMaxPower = 1;
+//
 //
 //    private double previousTime;
 //    private Paths paths;
 //
+//
 //    public static class Paths {
+//
 //
 //        public PathChain ShootPreloaded;
 //        public PathChain GotoPPG;
@@ -48,48 +58,61 @@
 //        public PathChain ShootPPG;
 //        public PathChain Park;
 //
+//        private Pose startPose = new Pose(56.000, 8.000, Math.toRadians(90));
+//        private Pose shootPose = new Pose(55.987, 13.759, Math.toRadians(110));
+//        private Pose ppgStartPose = new Pose(41.753, 35.500, Math.toRadians(180));
+//        private Pose ppgEndPose = new Pose(13.997, 35.500, Math.toRadians(180));
+//        private Pose parkPose = new Pose(38.669, 33.213, Math.toRadians(180));
+//
+//
 //        public Paths(Follower follower) {
 //            ShootPreloaded = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(new Pose(56.000, 8.000), new Pose(55.987, 13.759))
+//                            new BezierLine(startPose, shootPose)
 //                    )
-//                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(110))
+//                    .setLinearHeadingInterpolation(startPose.getHeading(), shootPose.getHeading())
 //                    .build();
+//
 //
 //            GotoPPG = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(new Pose(55.987, 13.759), new Pose(41.753, 35.500))
+//                            new BezierLine(shootPose, ppgStartPose)
 //                    )
-//                    .setLinearHeadingInterpolation(Math.toRadians(110), Math.toRadians(180))
+//                    .setLinearHeadingInterpolation(shootPose.getHeading(), ppgStartPose.getHeading())
 //                    .build();
+//
 //
 //            PickupPPG = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(new Pose(41.753, 35.500), new Pose(13.997, 35.500))
+//                            new BezierLine(ppgStartPose, ppgEndPose)
 //                    )
 //                    .setTangentHeadingInterpolation()
 //                    .build();
 //
+//
 //            ShootPPG = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(new Pose(13.997, 35.500), new Pose(55.987, 13.522))
+//                            new BezierLine(ppgEndPose, shootPose)
 //                    )
-//                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(110))
+//                    .setLinearHeadingInterpolation(ppgEndPose.getHeading(), shootPose.getHeading())
 //                    .build();
+//
 //
 //            Park = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(new Pose(55.987, 13.522), new Pose(38.669, 33.213))
+//                            new BezierLine(shootPose, parkPose)
 //                    )
-//                    .setLinearHeadingInterpolation(Math.toRadians(110), Math.toRadians(180))
+//                    .setLinearHeadingInterpolation(shootPose.getHeading(), parkPose.getHeading())
 //                    .build();
 //        }
 //    }
+//
+//
 //
 //
 //    private void log(String caption, Object... text) {
@@ -107,8 +130,10 @@
 //        }
 //    }
 //
+//
 //    @Override
 //    public void runOpMode() {
+//
 //
 //        intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
 //        outtakeMotor = hardwareMap.get(DcMotorEx.class, "outtakeMotor");
@@ -117,30 +142,37 @@
 //        intakeMotor.setDirection(DcMotor.Direction.FORWARD);
 //        outtakeMotor.setDirection(DcMotor.Direction.FORWARD);
 //
+//
 //        panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
+//
 //
 //        // init pp follower
 //        follower = Constants.createFollower(hardwareMap);
 //        follower.setStartingPose(new Pose(72, 8, Math.toRadians(90)));
 //
+//
 //        log("Status", "INITIALIZED");
 //        telemetry.update();
+//
 //
 //        // upon start operations
 //        waitForStart();
 //        pathState = 0;
 //        timer.reset();
 //
+//
 //        follower.update();
 //        panelsTelemetry.update();
 //        currentPose = follower.getPose();
 //        paths = new Paths(follower);
+//
 //
 //        while (opModeIsActive()) {
 //            follower.update();
 //            panelsTelemetry.update();
 //            currentPose = follower.getPose();
 //            updatePath(timer.milliseconds());
+//
 //
 //            // telemetry
 //            log("Status", "RUNNING");
@@ -157,6 +189,7 @@
 //            telemetry.update();
 //        }
 //    }
+//
 //
 //    public void updatePath(double currentTime) {
 //        switch (pathState) {

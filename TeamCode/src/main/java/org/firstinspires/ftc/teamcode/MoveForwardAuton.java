@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**
  * This file contains a minimal example of a Linear "OpMode". An OpMode is a 'program' that runs
@@ -17,6 +18,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 public class MoveForwardAuton extends LinearOpMode {
 
     Hardware robotHardware = new Hardware();
+    ElapsedTime timer = new ElapsedTime();
 
     @Override
     public void runOpMode() {
@@ -27,13 +29,14 @@ public class MoveForwardAuton extends LinearOpMode {
         telemetry.update();
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
+        timer.reset();
 
         // run until the end of the match (driver presses STOP)
-        while (opModeIsActive()) {
+        if (opModeIsActive()) {
             telemetry.addData("Status", "Running");
             telemetry.update();
             sleep(3500); // 3.5 seconds
-            drive(0.5,0.5,0.5,0.5,1000); // forward for 1 second
+            drive(0.5,0.5,0.5,0.5,1300); // forward for 1 second TODO: FUNCTION IS BLOCKING
 
         }
     }
@@ -42,11 +45,12 @@ public class MoveForwardAuton extends LinearOpMode {
         robotHardware.frontLeft.setPower(flp);
         robotHardware.frontRight.setPower(frp);
         robotHardware.backLeft.setPower(blp);
-        robotHardware.backLeft.setPower(brp);
-        sleep(millis);
+        robotHardware.backRight.setPower(brp);
+        timer.reset();
+        while (timer.milliseconds() <= millis) {sleep(10);}
         robotHardware.frontLeft.setPower(0);
         robotHardware.frontRight.setPower(0);
         robotHardware.backLeft.setPower(0);
-        robotHardware.backLeft.setPower(0);
+        robotHardware.backRight.setPower(0);
     }
 }

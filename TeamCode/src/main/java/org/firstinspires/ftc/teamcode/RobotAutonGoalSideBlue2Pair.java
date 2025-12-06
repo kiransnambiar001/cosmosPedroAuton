@@ -37,7 +37,7 @@
 //
 //    private int beforeOuttakeState;
 //    public static double outtakeMaxPower = ((256.2*0.4)/60)*537.7; // 0.7 power percentage
-//    public static int outtakeRunTime = 3000;
+//    public static double outtakeRunTime = 3000;
 //
 //
 //    public static double intakeMaxPower = 1;
@@ -182,7 +182,7 @@
 //
 //        // init pp follower
 //        follower = Constants.createFollower(hardwareMap);
-//        follower.setStartingPose(startPose);
+//        follower.setStartingPose(paths.startPose);
 //
 //
 //        log("Status", "INITIALIZED");

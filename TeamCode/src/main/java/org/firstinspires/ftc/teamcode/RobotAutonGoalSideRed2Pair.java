@@ -1,5 +1,6 @@
 //package org.firstinspires.ftc.teamcode;
 //
+//
 //import com.bylazar.configurables.annotations.Configurable;
 //import com.bylazar.telemetry.PanelsTelemetry;
 //import com.bylazar.telemetry.TelemetryManager;
@@ -15,13 +16,16 @@
 //import com.qualcomm.robotcore.util.ElapsedTime;
 //import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 //
-//@Autonomous(name="RobotAutonGoalSideRed2Pair", group="Robot")
+//
+//@Autonomous(name="RobotAutonGoalRedBlue2Pair", group="Robot")
 //@Configurable // for Panels
 //@SuppressWarnings("FieldCanBeLocal") // android studio bugging
 //public class RobotAutonGoalSideRed2Pair extends LinearOpMode {
 //
+//
 //    public DcMotorEx outtakeMotor;
 //    public DcMotor intakeMotor;
+//
 //
 //    private final ElapsedTime timer = new ElapsedTime(); // runtime
 //    // other vars
@@ -30,16 +34,21 @@
 //    private TelemetryManager panelsTelemetry;
 //    private int pathState;
 //
-//    private int beforeOuttakeState;
-//    private double outtakeMaxPower = ((256.2*0.4)/60)*537.7; // 0.7 power percentage
-//    private int outtakeRunTime = 3000;
 //
-//    private double intakeMaxPower = 1;
+//    private int beforeOuttakeState;
+//    public static double outtakeMaxPower = ((256.2*0.4)/60)*537.7; // 0.7 power percentage
+//    public static double outtakeRunTime = 3000;
+//
+//
+//    public static double intakeMaxPower = 1;
+//
 //
 //    private double previousTime;
 //    private Paths paths;
 //
+//
 //    public static class Paths {
+//
 //
 //        public PathChain ShootPreloaded;
 //        public PathChain GotoGPP;
@@ -50,76 +59,95 @@
 //        public PathChain ShootPGP;
 //        public PathChain GotoLever;
 //
+//        private Pose startPose = new Pose(20.876, 122.886, Math.toRadians(145)).mirror();
+//        private Pose shootPose = new Pose(42.000, 100.500, Math.toRadians(135)).mirror();
+//        private Pose gppStartPose = new Pose(48.000, 83.750, Math.toRadians(180)).mirror();
+//        private Pose gppEndPose = new Pose(19.800, 83.750, Math.toRadians(180)).mirror();
+//        private Pose pgpStartPose = new Pose(48.000, 60.000, Math.toRadians(180)).mirror();
+//        private Pose pgpEndPose = new Pose(20.000, 60.000, Math.toRadians(180)).mirror();
+//        private Pose leverPose = new Pose(28.000, 70.500, Math.toRadians(180)).mirror();
+//
+//
+//
 //        public Paths(Follower follower) {
 //            ShootPreloaded = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(new Pose(20.876, 122.886).mirror(), new Pose(42.000, 100.500).mirror())
+//                            new BezierLine(startPose, shootPose)
 //                    )
-//                    .setLinearHeadingInterpolation(Math.toRadians(55), Math.toRadians(45))
+//                    .setLinearHeadingInterpolation(startPose.getHeading(), shootPose.getHeading())
 //                    .build();
+//
 //
 //            GotoGPP = follower
 //                    .pathBuilder()
 //                    .addPath(
 //                            new BezierCurve(
-//                                    new Pose(42.000, 100.500).mirror(),
-//                                    new Pose(61.918, 94.181).mirror(),
-//                                    new Pose(48.000, 83.750).mirror()
+//                                    shootPose,
+//                                    new Pose(61.918, 94.181),
+//                                    gppStartPose
 //                            )
 //                    )
-//                    .setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(0))
+//                    .setLinearHeadingInterpolation(shootPose.getHeading(), gppStartPose.getHeading())
 //                    .build();
+//
 //
 //            PickupGPP = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(new Pose(48.000, 83.750).mirror(), new Pose(19.800, 83.750).mirror())
+//                            new BezierLine(gppStartPose, gppEndPose)
 //                    )
 //                    .setTangentHeadingInterpolation()
 //                    .build();
+//
 //
 //            ShootGPP = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(new Pose(19.800, 83.750).mirror(), new Pose(42.000, 100.500).mirror())
+//                            new BezierLine(gppEndPose, shootPose)
 //                    )
-//                    .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(45))
+//                    .setLinearHeadingInterpolation(gppEndPose.getHeading(), shootPose.getHeading())
 //                    .build();
+//
 //
 //            GotoPGP = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(new Pose(42.000, 100.500).mirror(), new Pose(48.000, 60.000).mirror())
+//                            new BezierLine(shootPose, pgpStartPose)
 //                    )
-//                    .setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(1))
+//                    .setLinearHeadingInterpolation(shootPose.getHeading(), pgpStartPose.getHeading())
 //                    .build();
+//
 //
 //            PickupPGP = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(new Pose(48.000, 60.000).mirror(), new Pose(20.000, 60.000).mirror())
+//                            new BezierLine(pgpStartPose, pgpEndPose)
 //                    )
 //                    .setTangentHeadingInterpolation()
 //                    .build();
 //
+//
 //            ShootPGP = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(new Pose(20.000, 60.000).mirror(), new Pose(42.000, 100.500).mirror())
+//                            new BezierLine(pgpEndPose, shootPose)
 //                    )
-//                    .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(45))
+//                    .setLinearHeadingInterpolation(pgpEndPose.getHeading(), shootPose.getHeading())
 //                    .build();
+//
 //
 //            GotoLever = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(new Pose(42.000, 100.500).mirror(), new Pose(28.000, 70.500).mirror())
+//                            new BezierLine(shootPose, leverPose)
 //                    )
-//                    .setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(0))
+//                    .setLinearHeadingInterpolation(shootPose.getHeading(), leverPose.getHeading())
 //                    .build();
 //        }
 //    }
+//
+//
 //
 //
 //    private void log(String caption, Object... text) {
@@ -137,6 +165,7 @@
 //        }
 //    }
 //
+//
 //    @Override
 //    public void runOpMode() {
 //        // init intake and outtake
@@ -147,30 +176,37 @@
 //        intakeMotor.setDirection(DcMotor.Direction.FORWARD);
 //        outtakeMotor.setDirection(DcMotor.Direction.FORWARD);
 //
+//
 //        panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
+//
 //
 //        // init pp follower
 //        follower = Constants.createFollower(hardwareMap);
 //        follower.setStartingPose(new Pose(72, 8, Math.toRadians(90)));
 //
+//
 //        log("Status", "INITIALIZED");
 //        telemetry.update();
+//
 //
 //        // upon start operations
 //        waitForStart();
 //        pathState = 0;
 //        timer.reset();
 //
+//
 //        follower.update();
 //        panelsTelemetry.update();
 //        currentPose = follower.getPose();
 //        paths = new Paths(follower);
+//
 //
 //        while (opModeIsActive()) {
 //            follower.update();
 //            panelsTelemetry.update();
 //            currentPose = follower.getPose();
 //            updatePath(timer.milliseconds());
+//
 //
 //            // telemetry
 //            log("Status", "RUNNING");
@@ -179,6 +215,7 @@
 //            telemetry.update();
 //        }
 //    }
+//
 //
 //    public void updatePath(double currentTime) {
 //        switch (pathState) {

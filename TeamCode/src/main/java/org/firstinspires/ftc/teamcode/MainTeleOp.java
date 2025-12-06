@@ -38,7 +38,7 @@ public class MainTeleOp extends LinearOpMode {
 
         waitForStart();
 
-        boolean fieldCentric = false;
+        boolean fieldCentric = true;
 
         boolean home1prevState = false;
         boolean options1prevState = false;
