@@ -52,7 +52,7 @@ public class Hardware {
         storageRight.setDirection(CRServo.Direction.FORWARD);
 
         // pidf constants for outtake motor
-//        outtakeMotor.setVelocityPIDFCoefficients(0,0,0,0.013);
+//        outtakeMotor.setVelocityPIDFCoefficients(427.2,0,149,0.013);
         // TODO: f value is 0.013
 
         // Initialize the IMU

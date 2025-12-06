@@ -129,18 +129,19 @@ public class MainTeleOp extends LinearOpMode {
             final double storageTime = 3000;
 
             // Start auto shoot sequence
-            if (b2state && !b2prevState) {
-                closeToggle = !closeToggle;
-                if (closeToggle) {farToggle = false; currentOuttakePower = robotOuttake.setPreset("close");}
-            } else if (y2state && y2prevState) {
-                farToggle = !farToggle;
-                if (farToggle) {closeToggle = false; currentOuttakePower = robotOuttake.setPreset("far");}
+            if (b2state) {
+                currentOuttakePower = robotOuttake.setPreset("close");
+//                closeToggle = !closeToggle;
+//                if (closeToggle) {farToggle = false; currentOuttakePower = robotOuttake.setPreset("close");}
+            } else if (y2state) {
+                currentOuttakePower = robotOuttake.setPreset("far");
+//                farToggle = !farToggle;
+//                if (farToggle) {closeToggle = false; currentOuttakePower = robotOuttake.setPreset("far");}
             }
-            if (x2state) {
-                closeToggle = false;
-                farToggle = false;
+            else {
+                currentOuttakePower = robotOuttake.setPreset("idle");
             }
-            else if (!farToggle && !closeToggle) {currentOuttakePower = robotOuttake.setPreset("idle");}
+//            else if (!farToggle && !closeToggle) {currentOuttakePower = robotOuttake.setPreset("idle");}
 
 //            if (isAutoShooting) {
 //                // Check if spool up time has passed
