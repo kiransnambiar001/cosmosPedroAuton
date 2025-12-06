@@ -7,20 +7,18 @@
 //import com.pedropathing.geometry.BezierCurve;
 //import com.pedropathing.geometry.BezierLine;
 //import com.pedropathing.geometry.Pose;
-//import com.pedropathing.paths.Path;
 //import com.pedropathing.paths.PathChain;
 //import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 //import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 //import com.qualcomm.robotcore.hardware.DcMotor;
 //import com.qualcomm.robotcore.hardware.DcMotorEx;
-//import com.qualcomm.robotcore.hardware.HardwareMap;
 //import com.qualcomm.robotcore.util.ElapsedTime;
 //import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 //
-//@Autonomous(name="RobotAutonFarBlue", group="Robot")
+//@Autonomous(name="RobotAutonGoalSideRed2Pair", group="Robot")
 //@Configurable // for Panels
 //@SuppressWarnings("FieldCanBeLocal") // android studio bugging
-//public class RobotAutonFarBlue extends LinearOpMode {
+//public class RobotAutonGoalSideRed2Pair extends LinearOpMode {
 //
 //    public DcMotorEx outtakeMotor;
 //    public DcMotor intakeMotor;
@@ -33,7 +31,8 @@
 //    private int pathState;
 //
 //    private int beforeOuttakeState;
-//    private double outtakeRunTime = 3000;
+//    private double outtakeMaxPower = ((256.2*0.4)/60)*537.7; // 0.7 power percentage
+//    private int outtakeRunTime = 3000;
 //
 //    private double intakeMaxPower = 1;
 //
@@ -43,50 +42,81 @@
 //    public static class Paths {
 //
 //        public PathChain ShootPreloaded;
-//        public PathChain GotoPPG;
-//        public PathChain PickupPPG;
-//        public PathChain ShootPPG;
-//        public PathChain Park;
+//        public PathChain GotoGPP;
+//        public PathChain PickupGPP;
+//        public PathChain ShootGPP;
+//        public PathChain GotoPGP;
+//        public PathChain PickupPGP;
+//        public PathChain ShootPGP;
+//        public PathChain GotoLever;
 //
 //        public Paths(Follower follower) {
 //            ShootPreloaded = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(new Pose(56.000, 8.000), new Pose(55.987, 13.759))
+//                            new BezierLine(new Pose(20.876, 122.886).mirror(), new Pose(42.000, 100.500).mirror())
 //                    )
-//                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(110))
+//                    .setLinearHeadingInterpolation(Math.toRadians(55), Math.toRadians(45))
 //                    .build();
 //
-//            GotoPPG = follower
+//            GotoGPP = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(new Pose(55.987, 13.759), new Pose(41.753, 35.500))
+//                            new BezierCurve(
+//                                    new Pose(42.000, 100.500).mirror(),
+//                                    new Pose(61.918, 94.181).mirror(),
+//                                    new Pose(48.000, 83.750).mirror()
+//                            )
 //                    )
-//                    .setLinearHeadingInterpolation(Math.toRadians(110), Math.toRadians(180))
+//                    .setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(0))
 //                    .build();
 //
-//            PickupPPG = follower
+//            PickupGPP = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(new Pose(41.753, 35.500), new Pose(13.997, 35.500))
+//                            new BezierLine(new Pose(48.000, 83.750).mirror(), new Pose(19.800, 83.750).mirror())
 //                    )
 //                    .setTangentHeadingInterpolation()
 //                    .build();
 //
-//            ShootPPG = follower
+//            ShootGPP = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(new Pose(13.997, 35.500), new Pose(55.987, 13.522))
+//                            new BezierLine(new Pose(19.800, 83.750).mirror(), new Pose(42.000, 100.500).mirror())
 //                    )
-//                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(110))
+//                    .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(45))
 //                    .build();
 //
-//            Park = follower
+//            GotoPGP = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(new Pose(55.987, 13.522), new Pose(38.669, 33.213))
+//                            new BezierLine(new Pose(42.000, 100.500).mirror(), new Pose(48.000, 60.000).mirror())
 //                    )
-//                    .setLinearHeadingInterpolation(Math.toRadians(110), Math.toRadians(180))
+//                    .setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(1))
+//                    .build();
+//
+//            PickupPGP = follower
+//                    .pathBuilder()
+//                    .addPath(
+//                            new BezierLine(new Pose(48.000, 60.000).mirror(), new Pose(20.000, 60.000).mirror())
+//                    )
+//                    .setTangentHeadingInterpolation()
+//                    .build();
+//
+//            ShootPGP = follower
+//                    .pathBuilder()
+//                    .addPath(
+//                            new BezierLine(new Pose(20.000, 60.000).mirror(), new Pose(42.000, 100.500).mirror())
+//                    )
+//                    .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(45))
+//                    .build();
+//
+//            GotoLever = follower
+//                    .pathBuilder()
+//                    .addPath(
+//                            new BezierLine(new Pose(42.000, 100.500).mirror(), new Pose(28.000, 70.500).mirror())
+//                    )
+//                    .setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(0))
 //                    .build();
 //        }
 //    }
@@ -109,7 +139,7 @@
 //
 //    @Override
 //    public void runOpMode() {
-//
+//        // init intake and outtake
 //        intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
 //        outtakeMotor = hardwareMap.get(DcMotorEx.class, "outtakeMotor");
 //        intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -145,14 +175,6 @@
 //            // telemetry
 //            log("Status", "RUNNING");
 //            log("Path State", pathState);
-//            if (pathState == 0) {log("Path Name", "Shoot Preloaded");}
-//            else if (pathState == 1) {log("Path Name", "Go to PPG");}
-//            else if (pathState == 2) {log("Path Name", "Pickup PPG");}
-//            else if (pathState == 3) {log("Path Name", "Shoot GPP");}
-//            else if (pathState == 4) {log("Path Name", "Park");}
-//            else if (pathState == 10) {log("Path Name", "Shooting (Outtake)");}
-//            else if (pathState == 11) {log("Path Name", "Grabbing (Intake)");}
-//            else if (pathState == -1) {log("Path Name", "Autonomous Finished!");}
 //            log("Current Pose", currentPose);
 //            telemetry.update();
 //        }
@@ -169,33 +191,53 @@
 //                break;
 //            case 1:
 //                if (!follower.isBusy()) {
-//                    follower.followPath(paths.GotoPPG);
+//                    follower.followPath(paths.GotoGPP);
 //                    pathState = 2;
 //                }
 //                break;
 //            case 2:
 //                if (!follower.isBusy()) {
-//                    follower.followPath(paths.PickupPPG);
-//                    pathState = 3;
-//                    intakeMotor.setPower(intakeMaxPower); // start intake
+//                    follower.followPath(paths.PickupGPP);
+//                    pathState = 2;
+//                    intakeMotor.setPower(intakeMaxPower);
 //                }
 //                break;
 //            case 3:
 //                if (!follower.isBusy()) {
-//                    follower.followPath(paths.ShootPPG);
-//                    intakeMotor.setPower(0);
+//                    follower.followPath(paths.ShootGPP);
 //                    pathState = 10; // shoot
-//                    beforeOuttakeState = 3;
+//                    beforeOuttakeState = 4;
 //                    previousTime = currentTime;
 //                    outtakeMotor.setVelocity(outtakeMaxPower);
 //                }
 //                break;
 //            case 4:
 //                if (!follower.isBusy()) {
-//                    follower.followPath(paths.Park);
-//                    pathState = -1; // terminate
+//                    follower.followPath(paths.GotoPGP);
+//                    pathState = 5;
 //                }
 //                break;
+//            case 5:
+//                if (!follower.isBusy()) {
+//                    follower.followPath(paths.PickupPGP);
+//                    pathState = 6;
+//                    intakeMotor.setPower(intakeMaxPower);
+//                }
+//                break;
+//            case 6:
+//                if (!follower.isBusy()) {
+//                    follower.followPath(paths.ShootPGP);
+//                    pathState = 10; // shoot
+//                    beforeOuttakeState = 6;
+//                    previousTime = currentTime;
+//                    outtakeMotor.setVelocity(outtakeMaxPower);
+//                }
+//                break;
+//            case 7:
+//                if (!follower.isBusy()) {
+//                    follower.followPath(paths.GotoLever);
+//                    pathState = -1;
+//                }
 //            case 10:
 //                if (currentTime >= outtakeRunTime+previousTime) {
 //                    outtakeMotor.setVelocity(0);
