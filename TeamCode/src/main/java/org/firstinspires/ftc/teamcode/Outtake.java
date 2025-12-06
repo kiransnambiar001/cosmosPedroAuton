@@ -5,7 +5,7 @@ public class Outtake {
     private final Hardware robotHardware;
     private final double startingCloseShotPower = 0.32;
     private final double startingFarShotPower = 0.53;
-    private final double idlePower = 0.07;
+    private final double idlePower = 0.05;
     private final double maxPower = 0.8;
     private double  closeShotPower = 0.32;
     private double farShotPower = 0.53;

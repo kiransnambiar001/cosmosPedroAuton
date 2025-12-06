@@ -38,7 +38,7 @@ public class MainTeleOp extends LinearOpMode {
 
         waitForStart();
 
-        boolean fieldCentric = true;
+        boolean fieldCentric = false;
 
         boolean home1prevState = false;
         boolean options1prevState = false;
@@ -65,7 +65,7 @@ public class MainTeleOp extends LinearOpMode {
             //      Gamepad 1 inputs
             double ly1 = -gamepad1.left_stick_y; // forward/backward driving
             double lx1 = gamepad1.left_stick_x; // strafing
-            double rx1 = gamepad1.right_stick_x; // turning
+            double rx1 = gamepad1.right_stick_x/2; // turning (decrease by factor of 2)
             boolean home1state = gamepad1.guide; // reset yaw value on gyro
             boolean options1state = gamepad1.options; // field centric toggle
             double lt1state = gamepad1.left_trigger; // slow mode
@@ -79,6 +79,7 @@ public class MainTeleOp extends LinearOpMode {
             boolean a2state = gamepad2.a; // storage on/off
             boolean b2state = gamepad2.b; // outtake preset for close shoot
             boolean y2state = gamepad2.y; // outtake preset for far shoot
+            boolean x2state = gamepad2.x;
             boolean options2state = gamepad2.options;
             boolean dpu2 = gamepad2.dpad_up; //
             boolean dpd2 = gamepad2.dpad_down;
@@ -134,7 +135,12 @@ public class MainTeleOp extends LinearOpMode {
             } else if (y2state && y2prevState) {
                 farToggle = !farToggle;
                 if (farToggle) {closeToggle = false; currentOuttakePower = robotOuttake.setPreset("far");}
-            } else if (!farToggle && !closeToggle) {currentOuttakePower = robotOuttake.setPreset("idle");}
+            }
+            if (x2state) {
+                closeToggle = false;
+                farToggle = false;
+            }
+            else if (!farToggle && !closeToggle) {currentOuttakePower = robotOuttake.setPreset("idle");}
 
 //            if (isAutoShooting) {
 //                // Check if spool up time has passed
@@ -165,9 +171,9 @@ public class MainTeleOp extends LinearOpMode {
 
             // Fine tune active preset
             if (dpu2 && !dpu2prevState) {
-                robotOuttake.tuneActivePreset(0.03);
+                robotOuttake.tuneActivePreset(0.05);
             } else if (dpd2 && !dpd2prevState) {
-                robotOuttake.tuneActivePreset(-0.03);
+                robotOuttake.tuneActivePreset(-0.05);
             }
 
             robotOuttake.run(currentOuttakePower);
