@@ -59,10 +59,24 @@ public class PresetPoses {
     public static final BezierLine LAUNCHSEG_CLOSER = new BezierLine(goalLaunchLineRPose, goalLaunchLineMPose);
     public static final BezierLine[] GOAL_SEGS = new BezierLine[] {LAUNCHSEG_FARB, LAUNCHSEG_FARR, LAUNCHSEG_CLOSEB, LAUNCHSEG_CLOSER};
 
+    // MAKE SURE CONSTRUCTOR GOES IN ORDER OF INCREASING DISTANCES
+    private static final double[] powerTableConstructor = new double[] {50, 0.3, 60, 0.4, 70, 0.5, 80, 0.6, 100, 0.7, 150, 0.8}; // goes in order of {distance, power, distance1, power1, distance2. power2, etc}
+    public static double[][] powerTable = new double[powerTableConstructor.length/2][2];
+
     public PresetPoses(Pose startPose, boolean isRed) {
         this.startPose = startPose;
         this.isRed = true;
         if (isRed) {for (int i=0; i<poses.length; i++) {poses[i] = poses[i].mirror();}}
+
+        // power table
+        double currentDistance = 0; double currentPower = 0;
+        for (int i = 0; i<powerTableConstructor.length; i++) {
+            if ((i%2) == 0) {currentDistance=powerTableConstructor[i];}
+            else {
+                currentPower=powerTableConstructor[i];
+                powerTable[((i+1)/2)-1] = new double[] {currentDistance, currentPower}; // add to powerTable
+            }
+        }
     }
 
     public Pose findClosestLaunchPose(Pose currentPose) {
@@ -96,6 +110,17 @@ public class PresetPoses {
                 Math.abs(goalPose.getX() - currentPose.getX())
         ); if (!isRed) {angle += Math.toRadians(90);}
         return angle;
+    }
+
+    public double getOptimalShooterPowerPercentage(Pose currentPose) {
+        double distance = currentPose.distanceFrom(goalPose); // in inches (pedropathing coords are in inches)
+        int optimalCoordinateIndex = 0;
+        double minDiff = Double.MAX_VALUE;
+        for (int i=0; i<powerTable.length; i++) {
+            double coorDist = powerTable[i][1];
+            if (minDiff > Math.abs(coorDist-distance)) {optimalCoordinateIndex = i;}
+        }
+        return powerTable[optimalCoordinateIndex][2];
     }
 
 

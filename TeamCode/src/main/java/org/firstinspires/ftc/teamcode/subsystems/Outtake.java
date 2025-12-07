@@ -39,6 +39,7 @@ public class Outtake {
         closeShotPower = Math.max(idlePower, Math.min(maxPower, closeShotPower));
         farShotPower = Math.max(idlePower, Math.min(maxPower, farShotPower));
     }
+
     public void run(double powerPercentage) {
         double targetRpm = powerPercentage * Hardware.OUTTAKE_MAX_RPM; //maxrpm=6000
         targetTps = ((targetRpm / 60.0) * 28); //* Hardware.OUTTAKE_TPR
