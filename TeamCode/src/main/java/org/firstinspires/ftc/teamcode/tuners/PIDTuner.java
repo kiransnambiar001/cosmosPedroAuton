@@ -41,7 +41,7 @@ public class PIDTuner extends OpMode {
 
     @Override
     public void init() {
-        robotHardware.initialize(hardwareMap);
+        robotHardware.initialize(hardwareMap, false);
         robotOuttake = new Outtake(robotHardware);
 
         defaultCoefficients = robotHardware.outtakeMotor.getPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER);

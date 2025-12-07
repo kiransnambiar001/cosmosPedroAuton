@@ -1,7 +1,6 @@
-package org.firstinspires.ftc.teamcode.teleop;
+package org.firstinspires.ftc.teamcode.tuners;
 
-import java.util.function.Function;
-import java.util.function.Supplier;
+
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.TelemetryManager;
@@ -9,11 +8,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.HeadingInterpolator;
-import com.pedropathing.paths.Path;
-import com.pedropathing.paths.PathChain;
+
 
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -26,7 +22,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
 @Configurable
 @TeleOp(name="Main TeleOp", group="LinearOpMode")
-public class PedroPathingTeleOp extends OpMode {
+public class PowerTableTuner extends OpMode {
 
     // Create hardware object
     Hardware robotHardware = new Hardware();
@@ -40,26 +36,19 @@ public class PedroPathingTeleOp extends OpMode {
     public PresetPoses poses = new PresetPoses(startPose, false);
     public static Pose currentPose;
     private Follower follower;
-    public boolean autoDriving = false;
-    private Supplier<PathChain> toShootPosePath;
-    private Function<Pose, PathChain> toLaunchLinePath;
     private TelemetryManager panelsTelemetry;
 
     // input vars
     boolean fieldCentric = false;
 
-    // Auto shoot sequence tracking
-    boolean isIntakeRunning = false;
-    boolean isAutoShooting = false;
-    double spoolUpEndTime = 0;
+
+    public static double outtakeOnPower = 0.3;
     double currentOuttakePower = 0;
     public static double slowModeMultiplier = 0.3;
 
     // toggles
     boolean ballCamToggle = false;
     boolean slowMode = false;
-    boolean offToggle = false;
-
 
     private void log(String caption, Object... text) {
         if (text.length == 1) {
@@ -89,16 +78,6 @@ public class PedroPathingTeleOp extends OpMode {
         follower.update();
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
-        toShootPosePath = () -> follower.pathBuilder()
-            .addPath(new Path(new BezierLine(follower::getPose, poses.closeShootPose)))
-            .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, poses.closeShootPose.getHeading(), 0.8))
-            .build();
-
-        toLaunchLinePath = (Pose targetPose) -> follower.pathBuilder()
-            .addPath(new Path(new BezierLine(follower::getPose, targetPose)))
-            .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, targetPose::getHeading, 0.8))
-            .build();
-
         telemetry.addData("Status", "INITIALIZED");
         telemetry.addData("Drive Mode", "Ready for TeleOp");
         telemetry.update();
@@ -121,19 +100,13 @@ public class PedroPathingTeleOp extends OpMode {
         slowMode = (gamepad1.right_trigger >= 0.5) ? true : false;
         boolean home1wP = gamepad1.guideWasPressed(); // reset yaw value on gyro
         boolean options1wP = gamepad1.optionsWasPressed(); // field centric toggle
-        boolean a1wP = gamepad1.aWasPressed(); // go to closest shoot pose
         boolean b1wP = gamepad1.bWasPressed(); // ball cam toggle
-        boolean x1wP = gamepad1.xWasPressed(); // go to closest launch line pose
-        boolean y1wP = gamepad1.yWasPressed(); // abort autonomous drive
 
         //      Gamepad 2 inputs
         double ly2 = gamepad2.left_stick_y; // robot intake run
         double rt2state = gamepad2.right_trigger; // storage forward
         boolean rb2state = gamepad2.right_bumper; // storage reverse
-        boolean a2wP = gamepad2.aWasPressed(); // outtake idle on/off
         boolean b2state = gamepad2.b; // outtake preset for close shoot
-        boolean y2state = gamepad2.y; // outtake preset for far shoot
-        boolean x2state = gamepad2.x; // set outtake power based on power tables
         boolean dpu2wP = gamepad2.dpadUpWasPressed(); // tune preset increment
         boolean dpd2wP = gamepad2.dpadDownWasPressed(); // tune preset decrement
 
@@ -145,18 +118,18 @@ public class PedroPathingTeleOp extends OpMode {
         if (home1wP && fieldCentric) {robotHardware.imu.resetYaw();}
         if (options1wP) {fieldCentric = !fieldCentric;}
 
-        if (!autoDriving) {
-            if (slowMode) {ly1*=slowModeMultiplier; lx1*=slowModeMultiplier; rx1*=slowModeMultiplier;}
 
-            if (fieldCentric) { // field centric
-                if (ballCamToggle) {
-                    double angle = poses.getAngleTowardsGoal(currentPose)-Math.toRadians(180);
-                    follower.setTeleOpDrive(ly1, lx1, rx1, true, angle); // point robot towards goal
-                }
-                else {follower.setTeleOpDrive(ly1, lx1, rx1, false);} // normal field centric
+        if (slowMode) {ly1*=slowModeMultiplier; lx1*=slowModeMultiplier; rx1*=slowModeMultiplier;}
+
+        if (fieldCentric) { // field centric
+            if (ballCamToggle) {
+                double angle = poses.getAngleTowardsGoal(currentPose)-Math.toRadians(180);
+                follower.setTeleOpDrive(ly1, lx1, rx1, true, angle); // point robot towards goal
             }
-            else {follower.setTeleOpDrive(ly1, lx1, rx1, true);} // rbt centric
+            else {follower.setTeleOpDrive(ly1, lx1, rx1, false);} // normal field centric
         }
+        else {follower.setTeleOpDrive(ly1, lx1, rx1, true);} // rbt centric
+
 
         //      Intake Control
         robotIntake.update();
@@ -175,33 +148,24 @@ public class PedroPathingTeleOp extends OpMode {
         else {robotStorage.run(0.0);}
 
         // outtake preset running
-        if (a2wP) {offToggle = !offToggle;}
-        else if (b2state) {currentOuttakePower = robotOuttake.setPreset("close");}
-        else if (y2state) {currentOuttakePower = robotOuttake.setPreset("far");}
-        else if (x2state) {currentOuttakePower = poses.getOptimalShooterPowerPercentage(currentPose);}
-
+        if (b2state) {currentOuttakePower = outtakeOnPower;}
         else {currentOuttakePower = robotOuttake.setPreset("idle");}
-        if (offToggle) {currentOuttakePower = 0;}
 
-        // Fine tune active preset
-        if (dpu2wP && !offToggle && !b2state) {robotOuttake.tuneActivePreset(0.05);}
-        else if (dpd2wP && !offToggle) {robotOuttake.tuneActivePreset(-0.05);}
+        // Fine tune outtakeOnPower
+        if (dpu2wP) {outtakeOnPower += 0.01;} else if (dpd2wP) {outtakeOnPower -= 0.01;}
 
         robotOuttake.run(currentOuttakePower);
 
-        // Reset outtake presets
-        if (options1wP) {robotOuttake.reset();}
-        if (a1wP) {autoDriving = true; follower.followPath(toShootPosePath.get());}
-        if (x1wP) {autoDriving = true; follower.followPath(toLaunchLinePath.apply(poses.findClosestLaunchPose(currentPose)));}
-        if (autoDriving && (y1wP || !follower.isBusy())) {follower.startTeleOpDrive(); autoDriving = false;}
 
 
         log("Status", "Running");
         log("Field Centric", fieldCentric ? "ON" : "OFF");
-        log("Auto-Shooting", isAutoShooting ? "ACTIVE" : "IDLE");
-        log("Outtake Motor Power", currentOuttakePower);
+        log("Ball Cam", ballCamToggle ? "ON" : "OFF");
+        log("Outtake Motor Current Power", currentOuttakePower);
+        log("Outtake Motor Shoot Power", outtakeOnPower);
         log("Target Velocity (tps)", robotOuttake.getTargetTps());
         log("Actual Velocity (tps)", robotHardware.outtakeMotor.getVelocity());
+        log("Distance from Goal", currentPose.distanceFrom(poses.goalPose));
         log("IMU Heading (deg)", Math.toDegrees(imuHeading));
         panelsTelemetry.update(telemetry);
 

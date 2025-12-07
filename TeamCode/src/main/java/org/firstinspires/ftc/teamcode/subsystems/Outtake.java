@@ -1,8 +1,11 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import com.qualcomm.robotcore.util.ElapsedTime;
+
 public class Outtake {
 
     private final Hardware robotHardware;
+
     private final double startingCloseShotPower = 0.32;
     private final double startingFarShotPower = 0.53;
     private final double idlePower = 0.05;
@@ -10,6 +13,11 @@ public class Outtake {
     private double  closeShotPower = 0.32;
     private double farShotPower = 0.53;
     private double targetTps = 0.0;
+
+    // runForTime() variables
+    private ElapsedTime timer = new ElapsedTime();
+    public boolean isRunningForTime = false;
+    public double runTime = 0;
 
     private String currentPreset = "";
 
@@ -50,6 +58,24 @@ public class Outtake {
     {
         return targetTps;
     }
+
+    public void runForTime(double millis, double powerPercentage) {
+        timer.reset();
+        runTime = millis;
+        isRunningForTime = true;
+        this.run(powerPercentage);
+    }
+
+    public boolean update() {
+        if (isRunningForTime && timer.milliseconds() >= runTime) {isRunningForTime = false; this.run(0); return true;}
+        return false;
+    }
+
+    public boolean abortRunForTime() {
+        if (isRunningForTime) {isRunningForTime = false; this.run(0); return true;}
+        return false;
+    }
+
     public void reset()
     {
         closeShotPower = startingCloseShotPower;

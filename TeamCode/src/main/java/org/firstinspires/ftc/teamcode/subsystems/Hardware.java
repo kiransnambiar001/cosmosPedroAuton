@@ -21,31 +21,34 @@ public class Hardware {
     public CRServo storageLeft, storageRight;
     // Init hardwareMaps
 
-    public void initialize(HardwareMap hardwareMap) {
-
-        frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
-        frontRight = hardwareMap.get(DcMotor.class, "frontRight");
-        backLeft = hardwareMap.get(DcMotor.class, "backLeft");
-        backRight = hardwareMap.get(DcMotor.class, "backRight");
+    public void initialize(HardwareMap hardwareMap, boolean isPedro) {
+        if (!isPedro) {
+            frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
+            frontRight = hardwareMap.get(DcMotor.class, "frontRight");
+            backLeft = hardwareMap.get(DcMotor.class, "backLeft");
+            backRight = hardwareMap.get(DcMotor.class, "backRight");
+            frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            frontLeft.setDirection(DcMotor.Direction.REVERSE);
+            frontRight.setDirection(DcMotor.Direction.FORWARD);
+            backLeft.setDirection(DcMotor.Direction.REVERSE);
+            backRight.setDirection(DcMotor.Direction.FORWARD);
+        }
         intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
         outtakeMotor = hardwareMap.get(DcMotorEx.class, "outtakeMotor");
         imu = hardwareMap.get(IMU.class, "imu");
         storageLeft = hardwareMap.get(CRServo.class, "storageLeft");
         storageRight = hardwareMap.get(CRServo.class, "storageRight");
         // Set motor zero power behavior to brake instead of move freely
-        frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         outtakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
 
         // Set directions for each motor
-        frontLeft.setDirection(DcMotor.Direction.REVERSE);
-        frontRight.setDirection(DcMotor.Direction.FORWARD);
-        backLeft.setDirection(DcMotor.Direction.REVERSE);
-        backRight.setDirection(DcMotor.Direction.FORWARD);
+
         intakeMotor.setDirection(DcMotor.Direction.FORWARD);
         outtakeMotor.setDirection(DcMotor.Direction.FORWARD);
         storageLeft.setDirection(CRServo.Direction.REVERSE);
@@ -65,20 +68,20 @@ public class Hardware {
         timer = new ElapsedTime();
         timer.reset();
     }
-    public void initialize(HardwareMap hardwareMap, boolean isAuton) {
-        initialize(hardwareMap);
-
-        if (isAuton) {
-            frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-            frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
-    }
+//    public void initialize(HardwareMap hardwareMap, boolean isAuton) {
+//        initialize(hardwareMap);
+//
+//        if (isAuton) {
+//            frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//            frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//            backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//            backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//
+//            frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//            frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//            backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//            backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        }
+//    }
 
 }

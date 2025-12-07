@@ -26,7 +26,7 @@ public class MoveForwardAutonGoalSide extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        robotHardware.initialize(hardwareMap);
+        robotHardware.initialize(hardwareMap, true);
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
