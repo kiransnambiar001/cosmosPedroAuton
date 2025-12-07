@@ -1,10 +1,14 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.teleop;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.subsystems.CRServoStorage;
+import org.firstinspires.ftc.teamcode.subsystems.Hardware;
+import org.firstinspires.ftc.teamcode.subsystems.Intake;
+import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
 @TeleOp(name="Main TeleOp", group="LinearOpMode")
 public class MainTeleOp extends LinearOpMode {
@@ -19,7 +23,6 @@ public class MainTeleOp extends LinearOpMode {
     private double prevFrontRightPower = 0.0;
     private double prevBackLeftPower = 0.0;
     private double prevBackRightPower = 0.0;
-    private double fcoefficient = 0.0001;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -48,6 +51,7 @@ public class MainTeleOp extends LinearOpMode {
         boolean a2prevState = false;
         boolean b2prevState = false;
         boolean y2prevState = false;
+        boolean x2prevState = false;
 
         // Auto shoot sequence tracking
         boolean isIntakeRunning = false;
@@ -57,6 +61,7 @@ public class MainTeleOp extends LinearOpMode {
 
         boolean farToggle = false;
         boolean closeToggle = false;
+        boolean offToggle = false;
 
         robotHardware.imu.resetYaw();
 
@@ -107,11 +112,12 @@ public class MainTeleOp extends LinearOpMode {
             } else if (ly2 <= -0.3) {
                 robotIntake.run(-1.0);
             } else {
-                if (!robotIntake.isTimedRunActive) {robotIntake.run(0.0);}
-//TODO          robotIntake.run(0.0);
-                if (a2state && !a2prevState) {robotIntake.runForTime(1.0, 5.0);}
+                robotIntake.run(0.0);
+//                if (!robotIntake.isTimedRunActive) {robotIntake.run(0.0);}
+////TODO          robotIntake.run(0.0);
+//                if (a2state && !a2prevState) {robotIntake.runForTime(1.0, 5.0);}
             }
-            a2prevState = a2state;
+
 
             //      Storage Control
             robotStorage.update();
@@ -138,9 +144,12 @@ public class MainTeleOp extends LinearOpMode {
 //                farToggle = !farToggle;
 //                if (farToggle) {closeToggle = false; currentOuttakePower = robotOuttake.setPreset("far");}
             }
+            else if (a2state && !a2prevState) {offToggle = !offToggle;}
             else {
                 currentOuttakePower = robotOuttake.setPreset("idle");
             }
+            if (offToggle) {currentOuttakePower = 0;}
+            a2prevState = a2state;
 //            else if (!farToggle && !closeToggle) {currentOuttakePower = robotOuttake.setPreset("idle");}
 
 //            if (isAutoShooting) {
@@ -171,9 +180,9 @@ public class MainTeleOp extends LinearOpMode {
 //            }
 
             // Fine tune active preset
-            if (dpu2 && !dpu2prevState) {
+            if (dpu2 && !dpu2prevState && !offToggle) {
                 robotOuttake.tuneActivePreset(0.05);
-            } else if (dpd2 && !dpd2prevState) {
+            } else if (dpd2 && !dpd2prevState && !offToggle) {
                 robotOuttake.tuneActivePreset(-0.05);
             }
 
@@ -198,7 +207,6 @@ public class MainTeleOp extends LinearOpMode {
             telemetry.addData("Target Velocity (tps)", robotOuttake.getTargetTps());
             telemetry.addData("Actual Velocity (tps)", robotHardware.outtakeMotor.getVelocity());
             telemetry.addData("IMU Heading (deg)", Math.toDegrees(imuHeading));
-            telemetry.addData("F Coefficient", fcoefficient);
             telemetry.update();
         }
     }

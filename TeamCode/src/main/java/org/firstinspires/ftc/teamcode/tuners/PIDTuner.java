@@ -1,23 +1,34 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.tuners;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+
+import org.firstinspires.ftc.teamcode.subsystems.Hardware;
+import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
 @TeleOp(name="PID Tuner", group="LinearOpMode")
 public class PIDTuner extends LinearOpMode {
     Hardware robotHardware = new Hardware();
     Outtake robotOuttake;
 
-    private double pVal = 427.2;
-    private double iVal = 0;
-    private double dVal = 149;
-    private double fVal = 0.013;
+    private double pVal, fVal, dVal, iVal;
+
+
+
 
     @Override
     public void runOpMode() throws InterruptedException {
         robotHardware.initialize(hardwareMap);
         robotOuttake = new Outtake(robotHardware);
+
+        PIDFCoefficients coefficients = robotHardware.outtakeMotor.getPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        fVal = coefficients.f;
+        dVal = coefficients.d;
+        iVal = coefficients.i;
+        pVal = coefficients.p;
 
         waitForStart();
 
@@ -27,6 +38,7 @@ public class PIDTuner extends LinearOpMode {
         boolean dpd2prevState = false;
         boolean dpr2prevState = false;
         boolean dpl2prevState = false;
+
 
         while (opModeIsActive()) {
             boolean rb2 = gamepad2.right_bumper; // pval+
@@ -39,17 +51,17 @@ public class PIDTuner extends LinearOpMode {
             double lt2 = gamepad2.left_trigger;
 
 
-            if (rb2 && !rb2prevState) {pVal += 1;} rb2prevState = rb2;
-            if (lb2 && !lb2prevState) {pVal -= 1;} lb2prevState = lb2;
+            if (rb2 && !rb2prevState) {pVal += 0.01;} rb2prevState = rb2;
+            if (lb2 && !lb2prevState) {pVal -= 0.01;} lb2prevState = lb2;
 
-            if (dpu2 && !dpu2prevState) {dVal += 1;} dpu2prevState = dpu2;
-            if (dpd2 && !dpd2prevState) {dVal -= 1;} dpd2prevState = dpd2;
+            if (dpu2 && !dpu2prevState) {dVal += 0.01;} dpu2prevState = dpu2;
+            if (dpd2 && !dpd2prevState) {dVal -= 0.01;} dpd2prevState = dpd2;
 
-            if (dpr2 && !dpr2prevState) {iVal += 1;} dpr2prevState = dpr2;
-            if (dpl2 && !dpl2prevState) {iVal -= 1;} dpl2prevState = dpl2;
+            if (dpr2 && !dpr2prevState) {iVal += 0.01;} dpr2prevState = dpr2;
+            if (dpl2 && !dpl2prevState) {iVal -= 0.01;} dpl2prevState = dpl2;
 
 
-            robotHardware.outtakeMotor.setVelocityPIDFCoefficients(pVal,iVal,dVal,fVal);
+//            robotHardware.outtakeMotor.setVelocityPIDFCoefficients(pVal,iVal,dVal,fVal);
 
             if (rt2 >0.5) {robotOuttake.run(0.1);}
             else if (lt2 > 0.5) {robotOuttake.run(0.05);}

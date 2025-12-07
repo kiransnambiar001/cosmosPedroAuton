@@ -1,4 +1,5 @@
-//package org.firstinspires.ftc.teamcode;
+//package org.firstinspires.ftc.teamcode.auton;
+//
 //
 //
 //import com.bylazar.configurables.annotations.Configurable;
@@ -17,9 +18,10 @@
 //import com.qualcomm.robotcore.hardware.HardwareMap;
 //import com.qualcomm.robotcore.util.ElapsedTime;
 //import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+//import org.firstinspires.ftc.teamcode.pedroPathing.PresetPoses;
 //
 //
-//@Autonomous(name="RobotAutonFarBlue", group="Robot")
+//@Autonomous(name="FAR SIDE BLUE - Auton", group="Robot")
 //@Configurable // for Panels
 //@SuppressWarnings("FieldCanBeLocal") // android studio bugging
 //public class RobotAutonFarBlue extends LinearOpMode {
@@ -59,35 +61,32 @@
 //        public PathChain Park;
 //
 //        private Pose startPose = new Pose(56.000, 8.000, Math.toRadians(90));
-//        private Pose shootPose = new Pose(55.987, 13.759, Math.toRadians(110));
-//        private Pose ppgStartPose = new Pose(41.753, 35.500, Math.toRadians(180));
-//        private Pose ppgEndPose = new Pose(13.997, 35.500, Math.toRadians(180));
-//        private Pose parkPose = new Pose(38.669, 33.213, Math.toRadians(180));
+//        private PresetPoses poses = new PresetPoses(startPose, false);
 //
 //
 //        public Paths(Follower follower) {
 //            ShootPreloaded = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(startPose, shootPose)
+//                            new BezierLine(startPose, poses.farShootPose)
 //                    )
-//                    .setLinearHeadingInterpolation(startPose.getHeading(), shootPose.getHeading())
+//                    .setLinearHeadingInterpolation(startPose.getHeading(), poses.farShootPose.getHeading())
 //                    .build();
 //
 //
 //            GotoPPG = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(shootPose, ppgStartPose)
+//                            new BezierLine(poses.farShootPose, poses.ppgStartPose)
 //                    )
-//                    .setLinearHeadingInterpolation(shootPose.getHeading(), ppgStartPose.getHeading())
+//                    .setLinearHeadingInterpolation(poses.farShootPose.getHeading(), poses.ppgStartPose.getHeading())
 //                    .build();
 //
 //
 //            PickupPPG = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(ppgStartPose, ppgEndPose)
+//                            new BezierLine(poses.ppgStartPose, poses.ppgEndPose)
 //                    )
 //                    .setTangentHeadingInterpolation()
 //                    .build();
@@ -96,18 +95,18 @@
 //            ShootPPG = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(ppgEndPose, shootPose)
+//                            new BezierLine(poses.ppgEndPose, poses.farShootPose)
 //                    )
-//                    .setLinearHeadingInterpolation(ppgEndPose.getHeading(), shootPose.getHeading())
+//                    .setLinearHeadingInterpolation(poses.ppgEndPose.getHeading(), poses.farShootPose.getHeading())
 //                    .build();
 //
 //
 //            Park = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(shootPose, parkPose)
+//                            new BezierLine(poses.farShootPose, poses.parkPose)
 //                    )
-//                    .setLinearHeadingInterpolation(shootPose.getHeading(), parkPose.getHeading())
+//                    .setLinearHeadingInterpolation(PresetPoses.farShootPose.getHeading(), poses.parkPose.getHeading())
 //                    .build();
 //        }
 //    }

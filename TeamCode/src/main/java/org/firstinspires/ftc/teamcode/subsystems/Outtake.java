@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.subsystems;
 
 public class Outtake {
 
@@ -40,8 +40,8 @@ public class Outtake {
         farShotPower = Math.max(idlePower, Math.min(maxPower, farShotPower));
     }
     public void run(double powerPercentage) {
-        double targetRpm = powerPercentage * Hardware.OUTTAKE_MAX_RPM;
-        targetTps = (targetRpm / 60.0) * Hardware.OUTTAKE_TPR;
+        double targetRpm = powerPercentage * Hardware.OUTTAKE_MAX_RPM; //maxrpm=6000
+        targetTps = ((targetRpm / 60.0) * 28); //* Hardware.OUTTAKE_TPR
 
         robotHardware.outtakeMotor.setVelocity(targetTps);
     }

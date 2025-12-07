@@ -1,4 +1,4 @@
-//package org.firstinspires.ftc.teamcode;
+//package org.firstinspires.ftc.teamcode.auton;
 //
 //
 //import com.bylazar.configurables.annotations.Configurable;
@@ -15,12 +15,13 @@
 //import com.qualcomm.robotcore.hardware.DcMotorEx;
 //import com.qualcomm.robotcore.util.ElapsedTime;
 //import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+//import org.firstinspires.ftc.teamcode.pedroPathing.PresetPoses;
 //
 //
-//@Autonomous(name="RobotAutonGoalSideBlue2Pair", group="Robot")
+//@Autonomous(name="GOAL SIDE RED - 2Pair Auton", group="Robot")
 //@Configurable // for Panels
 //@SuppressWarnings("FieldCanBeLocal") // android studio bugging
-//public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
+//public class RobotAutonGoalSideRed2Pair extends LinearOpMode {
 //
 //
 //    public DcMotorEx outtakeMotor;
@@ -60,12 +61,8 @@
 //        public PathChain GotoLever;
 //
 //        public Pose startPose = new Pose(20.876, 122.886, Math.toRadians(145));
-//        private Pose shootPose = new Pose(42.000, 100.500, Math.toRadians(135));
-//        private Pose gppStartPose = new Pose(48.000, 83.750, Math.toRadians(180));
-//        private Pose gppEndPose = new Pose(19.800, 83.750, Math.toRadians(180));
-//        private Pose pgpStartPose = new Pose(48.000, 60.000, Math.toRadians(180));
-//        private Pose pgpEndPose = new Pose(20.000, 60.000, Math.toRadians(180));
-//        private Pose leverPose = new Pose(28.000, 70.500, Math.toRadians(180));
+//
+//        public PresetPoses poses = new PresetPoses(startPose, true);
 //
 //
 //
@@ -73,9 +70,9 @@
 //            ShootPreloaded = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(startPose, shootPose)
+//                            new BezierLine(startPose, poses.closeShootPose)
 //                    )
-//                    .setLinearHeadingInterpolation(startPose.getHeading(), shootPose.getHeading())
+//                    .setLinearHeadingInterpolation(startPose.getHeading(), poses.closeShootPose.getHeading())
 //                    .build();
 //
 //
@@ -83,19 +80,19 @@
 //                    .pathBuilder()
 //                    .addPath(
 //                            new BezierCurve(
-//                                    shootPose,
+//                                    poses.closeShootPose,
 //                                    new Pose(61.918, 94.181),
-//                                    gppStartPose
+//                                    poses.gppStartPose
 //                            )
 //                    )
-//                    .setLinearHeadingInterpolation(shootPose.getHeading(), gppStartPose.getHeading())
+//                    .setLinearHeadingInterpolation(poses.closeShootPose.getHeading(), poses.gppStartPose.getHeading())
 //                    .build();
 //
 //
 //            PickupGPP = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(gppStartPose, gppEndPose)
+//                            new BezierLine(poses.gppStartPose, poses.gppEndPose)
 //                    )
 //                    .setTangentHeadingInterpolation()
 //                    .build();
@@ -104,25 +101,25 @@
 //            ShootGPP = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(gppEndPose, shootPose)
+//                            new BezierLine(poses.gppEndPose, poses.closeShootPose)
 //                    )
-//                    .setLinearHeadingInterpolation(gppEndPose.getHeading(), shootPose.getHeading())
+//                    .setLinearHeadingInterpolation(poses.gppEndPose.getHeading(), poses.closeShootPose.getHeading())
 //                    .build();
 //
 //
 //            GotoPGP = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(shootPose, pgpStartPose)
+//                            new BezierLine(poses.closeShootPose, poses.pgpStartPose)
 //                    )
-//                    .setLinearHeadingInterpolation(shootPose.getHeading(), pgpStartPose.getHeading())
+//                    .setLinearHeadingInterpolation(poses.closeShootPose.getHeading(), poses.pgpStartPose.getHeading())
 //                    .build();
 //
 //
 //            PickupPGP = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(pgpStartPose, pgpEndPose)
+//                            new BezierLine(poses.pgpStartPose, poses.pgpEndPose)
 //                    )
 //                    .setTangentHeadingInterpolation()
 //                    .build();
@@ -131,18 +128,18 @@
 //            ShootPGP = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(pgpEndPose, shootPose)
+//                            new BezierLine(poses.pgpEndPose, poses.closeShootPose)
 //                    )
-//                    .setLinearHeadingInterpolation(pgpEndPose.getHeading(), shootPose.getHeading())
+//                    .setLinearHeadingInterpolation(poses.pgpEndPose.getHeading(), poses.closeShootPose.getHeading())
 //                    .build();
 //
 //
 //            GotoLever = follower
 //                    .pathBuilder()
 //                    .addPath(
-//                            new BezierLine(shootPose, leverPose)
+//                            new BezierLine(poses.closeShootPose, poses.parkLeverPose)
 //                    )
-//                    .setLinearHeadingInterpolation(shootPose.getHeading(), leverPose.getHeading())
+//                    .setLinearHeadingInterpolation(poses.closeShootPose.getHeading(), poses.parkLeverPose.getHeading())
 //                    .build();
 //        }
 //    }

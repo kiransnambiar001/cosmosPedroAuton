@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.subsystems;
 
 // motors
 
@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class Hardware {
     public static final double WHEEL_DIAMETER_CM = 9.6;//change this
     public static final double OUTTAKE_TPR = 537.7;
-    public static final double OUTTAKE_MAX_RPM = 312.0 * 0.85;
+    public static final double OUTTAKE_MAX_RPM = 6000;
     public DcMotor frontLeft, frontRight, backLeft, backRight, intakeMotor;
     public DcMotorEx outtakeMotor;
     public IMU imu;
@@ -52,7 +52,7 @@ public class Hardware {
         storageRight.setDirection(CRServo.Direction.FORWARD);
 
         // pidf constants for outtake motor
-//        outtakeMotor.setVelocityPIDFCoefficients(427.2,0,149,0.013);
+//        outtakeMotor.setVelocityPIDFCoefficients(0.01d,0d,0d,0.00052d);
         // TODO: f value is 0.013
 
         // Initialize the IMU
