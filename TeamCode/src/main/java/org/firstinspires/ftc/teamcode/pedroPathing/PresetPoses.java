@@ -28,22 +28,20 @@ import com.pedropathing.paths.PathPoint;
 public class PresetPoses {
 
     // robot poses
-    public static boolean isRed = true;
-    public static Pose startPose;
-    public static Pose goalPose = new Pose(12.6, 135.5);
-    public static Pose closeShootPose = new Pose(20.876, 122.886, Math.toRadians(145));
-    public static Pose farShootPose = new Pose(56.000, 8.000, Math.toRadians(90));;
-    public static Pose gppStartPose = new Pose(48.000, 83.750, Math.toRadians(180));
-    public static Pose gppEndPose = new Pose(19.800, 83.750, Math.toRadians(180));
-    public static Pose pgpStartPose = new Pose(48.000, 60.000, Math.toRadians(180));
-    public static Pose pgpEndPose = new Pose(20.000, 60.000, Math.toRadians(180));
-    public static Pose parkLeverPose = new Pose(28.000, 70.500, Math.toRadians(180));
-    public static Pose ppgStartPose = new Pose(41.753, 35.500, Math.toRadians(180));
-    public static Pose ppgEndPose = new Pose(13.997, 35.500, Math.toRadians(180));
-    public static Pose parkPose = new Pose(38.669, 33.213, Math.toRadians(180));
-    public static Pose[] poses = new Pose[] {
-            startPose, closeShootPose, farShootPose, gppStartPose, gppEndPose, pgpStartPose, pgpEndPose, parkLeverPose, ppgStartPose, ppgEndPose, parkPose, goalPose
-    };
+    public boolean isRed = true;
+    public Pose startPose;
+    public Pose goalPose = new Pose(12.6, 135.5);
+    public Pose closeShootPose = new Pose(20.876, 122.886, Math.toRadians(145));
+    public Pose farShootPose = new Pose(56.000, 8.000, Math.toRadians(90));;
+    public Pose gppStartPose = new Pose(48.000, 83.750, Math.toRadians(180));
+    public Pose gppEndPose = new Pose(19.800, 83.750, Math.toRadians(180));
+    public Pose pgpStartPose = new Pose(48.000, 60.000, Math.toRadians(180));
+    public Pose pgpEndPose = new Pose(20.000, 60.000, Math.toRadians(180));
+    public Pose parkLeverPose = new Pose(28.000, 70.500, Math.toRadians(180));
+    public Pose ppgStartPose = new Pose(41.753, 35.500, Math.toRadians(180));
+    public Pose ppgEndPose = new Pose(13.997, 35.500, Math.toRadians(180));
+    public Pose parkPose = new Pose(38.669, 33.213, Math.toRadians(180));
+
 
     // launch line poses
     public static final Pose goalLaunchLineBPose = new Pose(48.4, 94.9);
@@ -64,11 +62,23 @@ public class PresetPoses {
     public static double[][] powerTable = new double[powerTableConstructor.length/2][2];
 
     public PresetPoses(Pose startPose, boolean isRed) {
-        this.startPose = startPose;
         this.isRed = true;
-        if (isRed) {for (int i=0; i<poses.length; i++) {poses[i] = poses[i].mirror();}}
+        if (isRed) {
+            this.startPose = startPose.mirror();
+            goalPose = goalPose.mirror();
+            closeShootPose = closeShootPose.mirror();
+            farShootPose = farShootPose.mirror();
+            gppStartPose = gppStartPose.mirror();
+            gppEndPose = gppEndPose.mirror();
+            pgpStartPose = pgpStartPose.mirror();
+            pgpEndPose = pgpEndPose.mirror();
+            parkLeverPose = parkLeverPose.mirror();
+            ppgStartPose = pgpStartPose.mirror();
+            ppgEndPose = pgpEndPose.mirror();
+            parkPose = parkPose.mirror();
+        } else {this.startPose = startPose;}
 
-        // power table
+            // power table
         double currentDistance = 0; double currentPower = 0;
         for (int i = 0; i<powerTableConstructor.length; i++) {
             if ((i%2) == 0) {currentDistance=powerTableConstructor[i];}
@@ -76,7 +86,7 @@ public class PresetPoses {
                 currentPower=powerTableConstructor[i];
                 powerTable[((i+1)/2)-1] = new double[] {currentDistance, currentPower}; // add to powerTable
             }
-        }
+        }   
     }
 
     public Pose findClosestLaunchPose(Pose currentPose) {
@@ -122,6 +132,4 @@ public class PresetPoses {
         }
         return powerTable[optimalCoordinateIndex][2];
     }
-
-
 }
