@@ -107,7 +107,7 @@ public class PresetPoses {
         double angle = Math.atan2(
                 Math.abs(closestPose.getY() - currentPose.getY()),
                 Math.abs(closestPose.getX() - currentPose.getX())
-        ); if (!isRed) {angle += Math.toRadians(90);}
+        ); if (!isRed) {angle = (Math.toRadians(90)-angle) + Math.toRadians(90);}
 
         closestPose = closestPose.setHeading(angle - Math.toRadians(180));
 
@@ -118,7 +118,7 @@ public class PresetPoses {
         double angle = Math.atan2(
                 Math.abs(goalPose.getY() - currentPose.getY()),
                 Math.abs(goalPose.getX() - currentPose.getX())
-        ); if (!isRed) {angle += Math.toRadians(90);}
+        ); if (!isRed) {angle = (Math.toRadians(90)-angle) + Math.toRadians(90);}
         return angle;
     }
 
