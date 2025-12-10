@@ -17,16 +17,26 @@ public class Storage {
     public void runForTime(double power, double durationMs) {
         if (!isTimedRunActive) {
             isTimedRunActive = true;
-            stopTime = robotHardware.timer.milliseconds() + durationMs;
-            robotHardware.storage.setPower(power);
+            stopTime = timer.milliseconds() + durationMs;
+            robotHardware.storageLeft.setPower(power);
+            robotHardware.storageRight.setPower(power);
         }
     }
 
 
     public void run(double power) {
         isTimedRunActive = false;
-        robotHardware.storage.setPower(power);
+        robotHardware.storageLeft.setPower(power);
+        robotHardware.storageRight.setPower(power);
 
+
+    }
+    public boolean getState()
+    {
+        if(robotHardware.storageLeft.getPower() == 0 && robotHardware.storageRight.getPower() == 0)
+            return false;
+        else
+            return true;
     }
 
     public void update() {

@@ -7,19 +7,34 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 @TeleOp(name="Main TeleOp", group="LinearOpMode")
-public class MainTeleOp extends LinearOpMode {
+public class MainTeleOp extends LinearOpMode
+{
 
     // Create hardware object
     Hardware robotHardware = new Hardware();
     Intake robotIntake;
-    CRServoStorage robotStorage;
+    Storage robotStorage;
+
     Outtake robotOuttake;
 
     private double prevFrontLeftPower = 0.0;
     private double prevFrontRightPower = 0.0;
     private double prevBackLeftPower = 0.0;
     private double prevBackRightPower = 0.0;
-    private double fcoefficient = 0.0001;
+    private final double fcoefficient = 0.0001;
+
+    //auto shoot
+    final double storageTime = 1900;
+    double spoolUpTime = 0;
+    double shootingTime = 0;
+    double gracePeriod = 2500;
+    double spoolUpEndTime = 0;
+    double shootingEndTime = 0;
+    double autoShootSequenceEndTime = 0;
+    boolean isAutoShooting = false;
+    String autoShootPreset = "close";
+    String autoShootState;
+
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -27,7 +42,7 @@ public class MainTeleOp extends LinearOpMode {
         // Initialize hardware
         robotHardware.initialize(hardwareMap);
         robotIntake = new Intake(robotHardware);
-        robotStorage = new CRServoStorage(robotHardware);
+        robotStorage = new Storage(robotHardware);
         robotOuttake = new Outtake(robotHardware);
 
         initializeDrivetrainForTeleOp();
@@ -48,15 +63,6 @@ public class MainTeleOp extends LinearOpMode {
         boolean a2prevState = false;
         boolean b2prevState = false;
         boolean y2prevState = false;
-
-        // Auto shoot sequence tracking
-        boolean isStorageRunning = false;
-        boolean isAutoShooting = false;
-        double spoolUpEndTime;
-        String currentPreset;
-
-        boolean farToggle = false;
-        boolean closeToggle = false;
 
         robotHardware.imu.resetYaw();
 
@@ -79,6 +85,7 @@ public class MainTeleOp extends LinearOpMode {
             boolean a2state = gamepad2.a; // run intake for 5 secs
             boolean b2state = gamepad2.b; // outtake preset for close shoot
             boolean y2state = gamepad2.y; // outtake preset for far shoot
+            boolean x2state = gamepad2.x; // reverse outtake motor
             boolean options2state = gamepad2.options; // reset the fine adjustments of the outtake
             boolean dpu2 = gamepad2.dpad_up; // outtake speed +0.3
             boolean dpd2 = gamepad2.dpad_down; // outtake speed -0.3
@@ -89,11 +96,11 @@ public class MainTeleOp extends LinearOpMode {
             //Field centric toggle
             if (home1state && !home1prevState && fieldCentric) {
                 robotHardware.imu.resetYaw();
-            } home1prevState = home1state;
+            }
 
             if (options1state && !options1prevState) {
                 fieldCentric = !fieldCentric;
-            } options1prevState = options1state;
+            }
 
             updateDriveBase(ly1, lx1, rx1, lt1state, imuHeading, fieldCentric);
 
@@ -103,18 +110,15 @@ public class MainTeleOp extends LinearOpMode {
             } else if (ly2 <= -0.3) {
                 robotIntake.run(-1.0);
             } else {
-                if (a2state && !a2prevState && !isAutoShooting) {
+                if (a2state && !a2prevState) {
                     robotIntake.runForTime(1.0, 5.0);
                 }
                 if (!robotIntake.isTimedRunActive) {
                     robotIntake.run(0.0);
                 }
             }
-            a2prevState = a2state;
 
             //      Storage Control
-            robotStorage.update();
-
             if (rt2state >= 0.3 && !rb2state) {
                 robotStorage.run(1.0);
             } else if (rb2state && rt2state < 0.3) {
@@ -122,46 +126,28 @@ public class MainTeleOp extends LinearOpMode {
             } else {
                 robotStorage.run(0.0);
             }
-
             //      Outtake presets & auto shoot
-            final int storageTime = 3000;
-            double spoolUpTime = 0;
-
-            //      Start auto shoot sequence
             if (b2state && !b2prevState) {
-                isAutoShooting = true;
-                currentPreset = "close";
-                spoolUpTime = 2000;
+                if(!isAutoShooting)
+                    initializeAutoShoot("close");
+                else
+                {
+                    autoShootSequenceEndTime = robotHardware.timer.milliseconds() + shootingTime + gracePeriod;
+                    if (autoShootState.equals("gracePeriod"))
+                        robotStorage.runForTime(1.0, storageTime);
+                }
             } else if (y2state && !y2prevState) {
-                isAutoShooting = true;
-                currentPreset = "far";
-                spoolUpTime = 4000;
+                if(!isAutoShooting)
+                    initializeAutoShoot("far");
+                else {
+                    autoShootSequenceEndTime = robotHardware.timer.milliseconds() + shootingTime + gracePeriod;
+                    if (autoShootState.equals("gracePeriod"))
+                        robotStorage.runForTime(1.0, storageTime);
+                }
             }
             if (isAutoShooting) {
-                spoolUpEndTime = robotHardware.timer.milliseconds() + spoolUpTime;
-                robotStorage.runForTime(1.0, storageTime);
-                if (robotHardware.timer.milliseconds() >= spoolUpEndTime) {
-
-                }
+                runAutoShoot();
             }
-
-            // Set outtake power based on which preset is active
-            if (b2state) {
-                currentOuttakePower = robotOuttake.setPreset("close");
-            } else if (y2state) {
-                currentOuttakePower = robotOuttake.setPreset("far");
-            } else if () {
-                isAutoShooting = false;
-                currentOuttakePower = robotOuttake.setPreset("idle");
-            } else {
-                // Manual preset control
-                if (b2state) {
-                    currentOuttakePower = robotOuttake.setPreset("close");
-                } else if (y2state) {
-                    currentOuttakePower = robotOuttake.setPreset("far");
-                } else {
-                    currentOuttakePower = robotOuttake.setPreset("idle");
-                }
                 // End of auto shoot sequence
 
                 // Fine tune active preset
@@ -182,6 +168,8 @@ public class MainTeleOp extends LinearOpMode {
                 robotIntake.update();
 
                 options2prevState = options2state;
+                home1prevState = home1state;
+                options1prevState = options1state;
                 dpu2prevState = dpu2;
                 dpd2prevState = dpd2;
                 b2prevState = b2state;
@@ -197,10 +185,45 @@ public class MainTeleOp extends LinearOpMode {
                 telemetry.addData("IMU Heading (deg)", Math.toDegrees(imuHeading));
                 telemetry.addData("F Coefficient", fcoefficient);
                 telemetry.update();
-            }
         }
     }
+    private void initializeAutoShoot(String currentPreset)
+    {
+        autoShootPreset = currentPreset;
+        if(autoShootPreset.equals("close"))
+            spoolUpTime = 2000;
+        else if(autoShootPreset.equals("far"))
+            spoolUpTime = 4000;
+        shootingTime = 1200;
+        spoolUpEndTime = robotHardware.timer.milliseconds() + spoolUpTime;
+        shootingEndTime = spoolUpEndTime + shootingTime;
+        autoShootSequenceEndTime = shootingEndTime + gracePeriod;
+        isAutoShooting = true;
+        autoShootState = "spoolingUp";
+    }
+    private void runAutoShoot()
+    {
+        robotOuttake.run(autoShootPreset);
+        if(robotHardware.timer.milliseconds() >= spoolUpEndTime && robotHardware.timer.milliseconds() < shootingEndTime)
+        {
+            autoShootState = "shooting";
+            robotStorage.runForTime(1.0, storageTime);
+        }
 
+        if(robotHardware.timer.milliseconds() >= shootingEndTime && robotHardware.timer.milliseconds() < autoShootSequenceEndTime)
+        {
+            robotStorage.run(0.0);
+            autoShootState = "gracePeriod";
+        }
+
+        if(robotHardware.timer.milliseconds() >= autoShootSequenceEndTime)
+        {
+            robotOuttake.run("idle");
+            robotStorage.run(0.0);
+            isAutoShooting = false;
+            autoShootState = "idle";
+        }
+    }
     private void initializeDrivetrainForTeleOp() {
         robotHardware.frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robotHardware.frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -223,12 +246,11 @@ public class MainTeleOp extends LinearOpMode {
         robotHardware.backRight.setPower(0);
     }
 
-    private void updateDriveBase(double ly, double lx, double rx, double lt1state, double imuHeading, boolean fieldCentric) {
+    private void
+    updateDriveBase(double ly, double lx, double rx, double lt1state, double imuHeading, boolean fieldCentric) {
         double speedMultiplier = (lt1state > 0.5) ? 0.3 : 1.0;
         final double rxMultiplier = 0.75;
         rx *= rxMultiplier;
-
-
         double adjLy, adjLx;
 
         if (fieldCentric) {
