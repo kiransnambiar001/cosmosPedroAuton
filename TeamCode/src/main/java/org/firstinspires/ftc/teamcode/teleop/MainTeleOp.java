@@ -1,10 +1,14 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.teleop;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.subsystems.CRServoStorage;
+import org.firstinspires.ftc.teamcode.subsystems.Hardware;
+import org.firstinspires.ftc.teamcode.subsystems.Intake;
+import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
 @TeleOp(name="Main TeleOp", group="LinearOpMode")
 public class MainTeleOp extends LinearOpMode
@@ -13,8 +17,7 @@ public class MainTeleOp extends LinearOpMode
     // Create hardware object
     Hardware robotHardware = new Hardware();
     Intake robotIntake;
-    Storage robotStorage;
-
+    CRServoStorage robotStorage;
     Outtake robotOuttake;
 
     private double prevFrontLeftPower = 0.0;
@@ -40,9 +43,9 @@ public class MainTeleOp extends LinearOpMode
     public void runOpMode() throws InterruptedException {
 
         // Initialize hardware
-        robotHardware.initialize(hardwareMap);
+        robotHardware.initialize(hardwareMap, false);
         robotIntake = new Intake(robotHardware);
-        robotStorage = new Storage(robotHardware);
+        robotStorage = new CRServoStorage(robotHardware);
         robotOuttake = new Outtake(robotHardware);
 
         initializeDrivetrainForTeleOp();
@@ -63,15 +66,23 @@ public class MainTeleOp extends LinearOpMode
         boolean a2prevState = false;
         boolean b2prevState = false;
         boolean y2prevState = false;
+        boolean x2prevState = false;
 
-        robotHardware.imu.resetYaw();
+        // Auto shoot sequence tracking
+        boolean isIntakeRunning = false;
+        boolean isAutoShooting = false;
+        double spoolUpEndTime = 0;
+        double currentOuttakePower = 0;
+
+        boolean farToggle = false;
+        boolean closeToggle = false;
 
         // Start OpMode loop
         while (opModeIsActive()) {
             //      Gamepad 1 inputs
             double ly1 = -gamepad1.left_stick_y; // forward/backward driving
             double lx1 = gamepad1.left_stick_x; // strafing
-            double rx1 = gamepad1.right_stick_x; // turning
+            double rx1 = gamepad1.right_stick_x/2; // turning (decrease by factor of 2)
             boolean home1state = gamepad1.guide; // reset yaw value on gyro
             boolean options1state = gamepad1.options; // field centric toggle
             double lt1state = gamepad1.left_trigger; // slow mode
@@ -96,15 +107,17 @@ public class MainTeleOp extends LinearOpMode
             //Field centric toggle
             if (home1state && !home1prevState && fieldCentric) {
                 robotHardware.imu.resetYaw();
-            }
+            } home1prevState = home1state;
 
             if (options1state && !options1prevState) {
                 fieldCentric = !fieldCentric;
-            }
+            } options1prevState = options1state;
 
             updateDriveBase(ly1, lx1, rx1, lt1state, imuHeading, fieldCentric);
 
             //      Intake Control
+            robotIntake.update();
+
             if (ly2 >= 0.3) {
                 robotIntake.run(1.0);
             } else if (ly2 <= -0.3) {
@@ -117,8 +130,11 @@ public class MainTeleOp extends LinearOpMode
                     robotIntake.run(0.0);
                 }
             }
+            a2prevState = a2state;
 
             //      Storage Control
+            robotStorage.update();
+
             if (rt2state >= 0.3 && !rb2state) {
                 robotStorage.run(1.0);
             } else if (rb2state && rt2state < 0.3) {
@@ -126,6 +142,7 @@ public class MainTeleOp extends LinearOpMode
             } else {
                 robotStorage.run(0.0);
             }
+
             //      Outtake presets & auto shoot
             if (b2state && !b2prevState) {
                 if(!isAutoShooting)
@@ -244,10 +261,11 @@ public class MainTeleOp extends LinearOpMode
         robotHardware.frontRight.setPower(0);
         robotHardware.backLeft.setPower(0);
         robotHardware.backRight.setPower(0);
+
+        robotHardware.imu.resetYaw();
     }
 
-    private void
-    updateDriveBase(double ly, double lx, double rx, double lt1state, double imuHeading, boolean fieldCentric) {
+    private void updateDriveBase(double ly, double lx, double rx, double lt1state, double imuHeading, boolean fieldCentric) {
         double speedMultiplier = (lt1state > 0.5) ? 0.3 : 1.0;
         final double rxMultiplier = 0.75;
         rx *= rxMultiplier;
