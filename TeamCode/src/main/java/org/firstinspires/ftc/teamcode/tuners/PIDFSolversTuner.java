@@ -11,12 +11,13 @@ import org.firstinspires.ftc.teamcode.subsystems.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
-
+import com.seattlesolvers.solverslib.controller.PIDFController;
 @Configurable
-@TeleOp(name="PID Tuner", group="LinearOpMode")
-public class PIDTuner extends OpMode {
+@TeleOp(name="PID Solvers Tuner", group="LinearOpMode")
+public class PIDFSolversTuner extends OpMode {
     Hardware robotHardware = new Hardware();
     Outtake robotOuttake;
+    public com.seattlesolvers.solverslib.controller.PIDFController pidf;
 
     public static double pVal, fVal, dVal, iVal;
     public static double increment = 0.01;
@@ -46,10 +47,12 @@ public class PIDTuner extends OpMode {
         robotOuttake = new Outtake(robotHardware);
 
         defaultCoefficients = robotHardware.outtakeMotor.getPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        fVal = defaultCoefficients.f;
-        dVal = defaultCoefficients.d;
-        iVal = defaultCoefficients.i;
-        pVal = defaultCoefficients.p;
+        fVal = 0.00052d;
+        dVal = 0d;
+        iVal = 0d;
+        pVal = 0.01d;
+
+        pidf = new com.seattlesolvers.solverslib.controller.PIDFController(pVal,iVal,dVal,fVal);
 
         panels = PanelsTelemetry.INSTANCE.getTelemetry();
     }
@@ -60,6 +63,7 @@ public class PIDTuner extends OpMode {
 
     @Override
     public void loop() {
+        double output = pidf.calculate(robotHardware.outtakeMotor.getCurrentPosition(), robotOuttake.getTargetTps());
         boolean rb2wP = gamepad2.rightBumperWasPressed(); // pval+
         boolean lb2wP = gamepad2.leftBumperWasPressed(); // pval-
         boolean dpu2wP = gamepad2.dpadUpWasPressed(); // dval+
@@ -84,11 +88,12 @@ public class PIDTuner extends OpMode {
         if (x2wP) {fVal += increment;}
         if (b2wP) {fVal -= increment;}
 
-        robotHardware.outtakeMotor.setVelocityPIDFCoefficients(pVal,iVal,dVal,fVal);
 
         if (rt2 >0.5) {robotOuttake.run(powerPercentage);}
         else if (lt2 > 0.5) {robotOuttake.run(powerPercentage);}
         else {robotOuttake.run(0);}
+
+
 
 
         // telemetry
