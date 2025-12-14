@@ -118,7 +118,7 @@ public class PedroPathingTeleOp extends OpMode {
         double ly1 = -gamepad1.left_stick_y; // forward/backward driving
         double lx1 = gamepad1.left_stick_x; // strafing
         double rx1 = gamepad1.right_stick_x / 2; // turning (decrease by factor of 2)
-        slowMode = (gamepad1.right_trigger >= 0.5) ? true : false;
+        slowMode = (gamepad1.right_trigger >= 0.5);
         boolean home1wP = gamepad1.guideWasPressed(); // reset yaw value on gyro
         boolean options1wP = gamepad1.optionsWasPressed(); // field centric toggle
         boolean a1wP = gamepad1.aWasPressed(); // go to closest shoot pose
