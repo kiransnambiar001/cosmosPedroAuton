@@ -24,7 +24,7 @@ public class MainTeleOp extends LinearOpMode
     private double prevFrontRightPower = 0.0;
     private double prevBackLeftPower = 0.0;
     private double prevBackRightPower = 0.0;
-    private final double fcoefficient = 0.0001;
+    private final double fcoefficient = 13.989;
 
     //auto shoot
     final double storageTime = 1900;
