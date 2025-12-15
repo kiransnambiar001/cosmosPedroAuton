@@ -24,7 +24,13 @@ public class MainTeleOp extends LinearOpMode
     private double prevFrontRightPower = 0.0;
     private double prevBackLeftPower = 0.0;
     private double prevBackRightPower = 0.0;
-    private final double fcoefficient = 13.989;
+    private final double fcoefficient = 13.089;
+    private final double pcoefficient = 200;
+    private final double dcoefficient = 0;
+    private final double icoefficient = 0;
+
+
+    ;
 
     //auto shoot
     final double storageTime = 1900;
@@ -196,7 +202,6 @@ public class MainTeleOp extends LinearOpMode
                 telemetry.addData("Status", "Running");
                 telemetry.addData("Field Centric", fieldCentric ? "ON" : "OFF");
                 telemetry.addData("Auto-Shooting", isAutoShooting ? "ACTIVE" : "IDLE");
-                telemetry.addData("Outtake Motor Power", robotOuttake.getPower());
                 telemetry.addData("Target Velocity (tps)", robotOuttake.getTargetTps());
                 telemetry.addData("Actual Velocity (tps)", robotHardware.outtakeMotor.getVelocity());
                 telemetry.addData("IMU Heading (deg)", Math.toDegrees(imuHeading));
@@ -221,7 +226,7 @@ public class MainTeleOp extends LinearOpMode
     private void runAutoShoot()
     {
         robotOuttake.run(autoShootPreset);
-        if(robotHardware.timer.milliseconds() >= spoolUpEndTime && robotHardware.timer.milliseconds() < shootingEndTime)
+        if(robotOuttake.getTargetTps() > robotHardware.outtakeMotor.getVelocity()-80)
         {
             autoShootState = "shooting";
             robotStorage.runForTime(1.0, storageTime);

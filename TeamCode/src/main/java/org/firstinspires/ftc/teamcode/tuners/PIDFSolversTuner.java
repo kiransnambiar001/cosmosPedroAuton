@@ -46,7 +46,6 @@ public class PIDFSolversTuner extends OpMode {
         robotHardware.initialize(hardwareMap, false);
         robotOuttake = new Outtake(robotHardware);
 
-        defaultCoefficients = robotHardware.outtakeMotor.getPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER);
         fVal = 0.00052d;
         dVal = 0d;
         iVal = 0d;

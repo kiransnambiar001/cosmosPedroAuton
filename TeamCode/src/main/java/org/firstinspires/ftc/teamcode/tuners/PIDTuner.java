@@ -46,7 +46,7 @@ public class PIDTuner extends OpMode {
         robotOuttake = new Outtake(robotHardware);
 
         defaultCoefficients = robotHardware.outtakeMotor.getPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        fVal = defaultCoefficients.f;
+        fVal = 13.989;
         dVal = defaultCoefficients.d;
         iVal = defaultCoefficients.i;
         pVal = defaultCoefficients.p;

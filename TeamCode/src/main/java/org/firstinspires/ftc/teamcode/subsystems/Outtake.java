@@ -70,7 +70,7 @@ public class Outtake {
         if (isTimedRunActive && timer.milliseconds() >= stopTimeMs)
             run("idle");
     }
-    public double getPower()
+    public double getCurrentTps()
     {
         return power;
     }
