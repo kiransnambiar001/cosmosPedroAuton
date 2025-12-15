@@ -32,7 +32,12 @@ public class Outtake {
         closeShotPower = Math.max(idlePower, Math.min(maxPower, closeShotPower));
         farShotPower = Math.max(idlePower, Math.min(maxPower, farShotPower));
     }
-
+    public void run(double power)
+    {
+        double targetRpm = power * Hardware.OUTTAKE_MAX_RPM;
+        targetTps = (targetRpm / 60.0) * Hardware.OUTTAKE_TPR;
+        robotHardware.outtakeMotor.setVelocity(targetTps);
+    }
     public void run(String presetName) {
         if (presetName.equals("close"))
         {
@@ -52,6 +57,7 @@ public class Outtake {
 
         robotHardware.outtakeMotor.setVelocity(targetTps);
     }
+
     public void runForTime(String preset, double durationMs) {
         stopTimeMs = timer.milliseconds() + durationMs;
         if (!isTimedRunActive) {

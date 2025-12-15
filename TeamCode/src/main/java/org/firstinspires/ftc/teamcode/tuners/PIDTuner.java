@@ -75,14 +75,14 @@ public class PIDTuner extends OpMode {
         if (rb2wP) {pVal += increment;}
         if (lb2wP) {pVal -= increment;}
 
-        if (dpu2wP) {dVal += increment;}
-        if (dpd2wP) {dVal -= increment;}
+        if (dpu2wP) {dVal += increment*0.01;}
+        if (dpd2wP) {dVal -= increment*0.01;}
 
-        if (dpr2wP) {iVal += increment;}
-        if (dpl2wP) {iVal -= increment;}
+        if (dpr2wP) {iVal += increment*0.1;}
+        if (dpl2wP) {iVal -= increment*0.1;}
 
-        if (x2wP) {fVal += increment;}
-        if (b2wP) {fVal -= increment;}
+        if (x2wP) {fVal += increment*10;}
+        if (b2wP) {fVal -= increment*10;}
 
         robotHardware.outtakeMotor.setVelocityPIDFCoefficients(pVal,iVal,dVal,fVal);
 

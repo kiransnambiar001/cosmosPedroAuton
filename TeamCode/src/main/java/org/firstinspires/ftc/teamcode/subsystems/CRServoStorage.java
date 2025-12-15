@@ -1,60 +1,47 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-
 public class CRServoStorage {
-    public CRServo storageLeft;
-    public CRServo storageRight;
-    private double speed = 5;
 
+    private final Hardware robotHardware;
+    private final ElapsedTime timer;
+    private boolean isTimedRunActive = false;
 
-    public boolean isBusy = false;
-    private double previousTime = 0;
-    private double duration = 0;
-    private ElapsedTime timer = new ElapsedTime();
+    private double stopTime;
 
-
-
-    public CRServoStorage(Hardware robotHardware) {
-        this.storageLeft = robotHardware.storageLeft;
-        this.storageRight = robotHardware.storageRight;
+    public CRServoStorage(Hardware hardware) {
+        robotHardware = hardware;
+         timer = robotHardware.timer;
+    }
+    public void runForTime(double power, double durationMs) {
+        if (!isTimedRunActive) {
+            isTimedRunActive = true;
+            stopTime = timer.milliseconds() + durationMs;
+            robotHardware.storageLeft.setPower(power);
+            robotHardware.storageRight.setPower(power);
+        }
     }
 
 
-    public void run(double speed) {
-        this.speed = speed;
-        storageLeft.setPower(this.speed); storageRight.setPower(this.speed);
+    public void run(double power) {
+        isTimedRunActive = false;
+        robotHardware.storageLeft.setPower(power);
+        robotHardware.storageRight.setPower(power);
+
+
     }
-
-
-    public void runForTime(double time) {
-        this.isBusy = true;
-
-        storageLeft.setPower(this.speed);
-        storageRight.setPower(this.speed);
-
-
-        this.duration = time;
-        this.timer.reset();
+    public boolean getState()
+    {
+        if(robotHardware.storageLeft.getPower() == 0 && robotHardware.storageRight.getPower() == 0)
+            return false;
+        else
+            return true;
     }
-
-
-    boolean turnOffAllMotors() { // returns if the function overrided a runForTime() function
-        storageLeft.setPower(0); storageRight.setPower(0);
-        if (this.isBusy) {this.isBusy = false; return true;}
-        else {return false;}
-    }
-
 
     public void update() {
-        if (this.timer.milliseconds() >= this.duration && isBusy) {
-            storageLeft.setPower(0); storageRight.setPower(0);
-            this.isBusy = false;
+        if (isTimedRunActive && robotHardware.timer.milliseconds() >= stopTime) {
+            run(0);
         }
     }
 }
-
-
-
