@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(5);
+            .mass(5); // in kg
 
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
@@ -30,9 +30,9 @@ public class Constants {
             .forwardTicksToInches(.001989436789)
             .strafeTicksToInches(.001989436789)
             .turnTicksToInches(.001989436789)
-            .leftPodY(1) // offset from center of rotation
-            .rightPodY(-1) // offset from center of rotation
-            .strafePodX(-2.5) // offset from center of rotation
+            .leftPodY(1) // offset from center of rotation INCHES
+            .rightPodY(-1) // offset from center of rotation INCHES
+            .strafePodX(-2.5) // offset from center of rotation INCHES
             .leftEncoder_HardwareMapName("frontLeftOdom")
             .rightEncoder_HardwareMapName("backRightOdom")
             .strafeEncoder_HardwareMapName("frontRightOdom")
