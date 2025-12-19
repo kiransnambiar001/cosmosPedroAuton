@@ -6,7 +6,7 @@ public class CRServoStorage {
 
     private final Hardware robotHardware;
     private final ElapsedTime timer;
-    private boolean isTimedRunActive = false;
+    public boolean isTimedRunActive = false;
 
     private double stopTime;
 

@@ -7,8 +7,11 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
+import org.firstinspires.ftc.teamcode.subsystems.CRServoStorage;
 import org.firstinspires.ftc.teamcode.subsystems.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
+import org.firstinspires.ftc.teamcode.subsystems.SolversOuttake;
+
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.seattlesolvers.solverslib.controller.PIDFController;
@@ -16,15 +19,16 @@ import com.seattlesolvers.solverslib.controller.PIDFController;
 @TeleOp(name="PID Solvers Tuner", group="LinearOpMode")
 public class PIDFSolversTuner extends OpMode {
     Hardware robotHardware = new Hardware();
-    Outtake robotOuttake;
+    SolversOuttake robotOuttake;
+    CRServoStorage robotStorage;
     public com.seattlesolvers.solverslib.controller.PIDFController pidf;
 
     public static double pVal, fVal, dVal, iVal;
+    public static double idle;
     public static double increment = 0.01;
     public static double powerPercentage = 0.1;
     public TelemetryManager panels;
 
-    public PIDFCoefficients defaultCoefficients;
 
     private void log(String caption, Object... text) {
         if (text.length == 1) {
@@ -44,12 +48,16 @@ public class PIDFSolversTuner extends OpMode {
     @Override
     public void init() {
         robotHardware.initialize(hardwareMap, false);
-        robotOuttake = new Outtake(robotHardware);
+        robotStorage = new CRServoStorage(robotHardware);
 
         fVal = 0.00052d;
         dVal = 0d;
         iVal = 0d;
         pVal = 0.01d;
+        idle = 0.2;
+
+        robotOuttake = new SolversOuttake(robotHardware, pVal, iVal, dVal, fVal);
+
 
         pidf = new com.seattlesolvers.solverslib.controller.PIDFController(pVal,iVal,dVal,fVal);
 
@@ -73,6 +81,15 @@ public class PIDFSolversTuner extends OpMode {
         boolean b2wP = gamepad2.bWasPressed();// f-
         double rt2 = gamepad2.right_trigger;
         double lt2 = gamepad2.left_trigger;
+        double ry2 = gamepad2.right_stick_y;
+
+        if (ry2 > 0.5) {
+            robotStorage.run(1);
+        } else if (ry2 < -0.5) {
+            robotStorage.run(-1);
+        } else {
+            robotStorage.run(0);
+        }
 
 
         if (rb2wP) {pVal += increment;}
@@ -88,9 +105,9 @@ public class PIDFSolversTuner extends OpMode {
         if (b2wP) {fVal -= increment;}
 
 
-        if (rt2 >0.5) {robotOuttake.run(powerPercentage);}
-        else if (lt2 > 0.5) {robotOuttake.run(powerPercentage);}
-        else {robotOuttake.run(0);}
+        if (rt2 >0.5) {robotOuttake.setTargetTps(powerPercentage);}
+        else if (lt2 > 0.5) {robotOuttake.setTargetTps(powerPercentage);}
+        else {robotOuttake.setTargetTps(idle);}
 
 
 
@@ -103,8 +120,7 @@ public class PIDFSolversTuner extends OpMode {
         log("Target Velocity (tps)", robotOuttake.getTargetTps());
         log("Current Velocity (tps)", robotHardware.outtakeMotor.getVelocity());
 
-        log("Default P Value", defaultCoefficients.p); log("Default I Value", defaultCoefficients.i);
-        log("Default D Value", defaultCoefficients.d); log("Default F Value", defaultCoefficients.f);
+        log("Error (tps)", Math.abs(robotHardware.outtakeMotor.getVelocity() - robotOuttake.getTargetTps()));
         panels.update(telemetry);
     }
 }

@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(5); // in kg
+            .mass(8.1); // in kg
 
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
@@ -27,18 +27,18 @@ public class Constants {
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD);
 
     public static ThreeWheelIMUConstants localizerConstants = new ThreeWheelIMUConstants()
-            .forwardTicksToInches(.001989436789)
-            .strafeTicksToInches(.001989436789)
-            .turnTicksToInches(.001989436789)
-            .leftPodY(1) // offset from center of rotation INCHES
-            .rightPodY(-1) // offset from center of rotation INCHES
-            .strafePodX(-2.5) // offset from center of rotation INCHES
-            .leftEncoder_HardwareMapName("frontLeftOdom")
-            .rightEncoder_HardwareMapName("backRightOdom")
-            .strafeEncoder_HardwareMapName("frontRightOdom")
+            .forwardTicksToInches(.0029787066224)
+            .strafeTicksToInches(.0029495443792)
+            .turnTicksToInches(.0019958598246)
+            .leftPodY(5.25) // offset from center of rotation INCHES
+            .rightPodY(-5.25) // offset from center of rotation INCHES
+            .strafePodX(1.5) // offset from center of rotation INCHES
+            .leftEncoder_HardwareMapName("backRight")
+            .rightEncoder_HardwareMapName("frontRight")
+            .strafeEncoder_HardwareMapName("frontLeft")
             .leftEncoderDirection(Encoder.FORWARD)
-            .rightEncoderDirection(Encoder.FORWARD)
-            .strafeEncoderDirection(Encoder.FORWARD)
+            .rightEncoderDirection(Encoder.REVERSE)
+            .strafeEncoderDirection(Encoder.REVERSE)
             .IMU_HardwareMapName("imu")
             .IMU_Orientation(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.RIGHT, RevHubOrientationOnRobot.UsbFacingDirection.UP));
 

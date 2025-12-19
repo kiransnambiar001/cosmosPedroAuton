@@ -8,7 +8,7 @@ public class Outtake {
 
     private final double startingCloseShotPower = 0.32;
     private final double startingFarShotPower = 0.53;
-    private final double idlePower = 0.05;
+    private final double idlePower = 0.2;
     private final double maxPower = 0.8;
     private double  closeShotPower = 0.32;
     private double farShotPower = 0.53;
@@ -19,7 +19,8 @@ public class Outtake {
     private boolean isTimedRunActive = false;
     private final ElapsedTime timer;
 
-    public Outtake(Hardware hardware) {
+    public Outtake(Hardware hardware, double p, double i, double d, double f) {
+        hardware.outtakeMotor.setVelocityPIDFCoefficients(p,i,d,f);
         robotHardware = hardware;
         timer = robotHardware.timer;
     }
@@ -67,8 +68,9 @@ public class Outtake {
     }
     public void update()
     {
-        if (isTimedRunActive && timer.milliseconds() >= stopTimeMs)
+        if (isTimedRunActive && timer.milliseconds() >= stopTimeMs) {
             run("idle");
+        }
     }
     public double getCurrentTps()
     {

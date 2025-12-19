@@ -24,10 +24,12 @@ public class MainTeleOp extends LinearOpMode
     private double prevFrontRightPower = 0.0;
     private double prevBackLeftPower = 0.0;
     private double prevBackRightPower = 0.0;
-    private final double fcoefficient = 13.089;
-    private final double pcoefficient = 200;
-    private final double dcoefficient = 0;
-    private final double icoefficient = 0;
+    private final double fcoefficient = 13.989;
+
+
+    private final double pcoefficient = 200.0;
+    private final double dcoefficient = 0.0;
+    private final double icoefficient = 0.0;
 
 
     ;
@@ -42,7 +44,7 @@ public class MainTeleOp extends LinearOpMode
     double autoShootSequenceEndTime = 0;
     boolean isAutoShooting = false;
     String autoShootPreset = "close";
-    String autoShootState;
+    String autoShootState = "idle";
 
 
     @Override
@@ -52,7 +54,7 @@ public class MainTeleOp extends LinearOpMode
         robotHardware.initialize(hardwareMap, false);
         robotIntake = new Intake(robotHardware);
         robotStorage = new CRServoStorage(robotHardware);
-        robotOuttake = new Outtake(robotHardware);
+        robotOuttake = new Outtake(robotHardware, pcoefficient, icoefficient, dcoefficient, fcoefficient );
 
         initializeDrivetrainForTeleOp();
 
@@ -75,13 +77,7 @@ public class MainTeleOp extends LinearOpMode
         boolean x2prevState = false;
 
         // Auto shoot sequence tracking
-        boolean isIntakeRunning = false;
-        boolean isAutoShooting = false;
-        double spoolUpEndTime = 0;
-        double currentOuttakePower = 0;
-
-        boolean farToggle = false;
-        boolean closeToggle = false;
+        robotOuttake.run("idle"); // start outtake motor
 
         // Start OpMode loop
         while (opModeIsActive()) {
@@ -146,7 +142,9 @@ public class MainTeleOp extends LinearOpMode
             } else if (rb2state && rt2state < 0.3) {
                 robotStorage.run(-1.0);
             } else {
-                robotStorage.run(0.0);
+                if (!robotStorage.isTimedRunActive) {
+                    robotStorage.run(0.0);
+                }
             }
 
             //      Outtake presets & auto shoot
@@ -156,20 +154,28 @@ public class MainTeleOp extends LinearOpMode
                 else
                 {
                     autoShootSequenceEndTime = robotHardware.timer.milliseconds() + shootingTime + gracePeriod;
-                    if (autoShootState.equals("gracePeriod"))
+                    if (autoShootState.equals("gracePeriod") && autoShootPreset.equals("close")) {
                         robotStorage.runForTime(1.0, storageTime);
+                    } else if (autoShootPreset.equals("far")) {
+                        initializeAutoShoot("close");
+                    }
                 }
             } else if (y2state && !y2prevState) {
                 if(!isAutoShooting)
                     initializeAutoShoot("far");
                 else {
                     autoShootSequenceEndTime = robotHardware.timer.milliseconds() + shootingTime + gracePeriod;
-                    if (autoShootState.equals("gracePeriod"))
+                    if (autoShootState.equals("gracePeriod") && autoShootPreset.equals("far")) {
                         robotStorage.runForTime(1.0, storageTime);
+                    } else if (autoShootPreset.equals("close")) {
+                        initializeAutoShoot("far");
+                    }
                 }
             }
             if (isAutoShooting) {
                 runAutoShoot();
+            } if (autoShootState.equals("idle")) {
+                robotOuttake.run("idle");
             }
                 // End of auto shoot sequence
 
@@ -212,33 +218,35 @@ public class MainTeleOp extends LinearOpMode
     private void initializeAutoShoot(String currentPreset)
     {
         autoShootPreset = currentPreset;
-        if(autoShootPreset.equals("close"))
+        if(autoShootPreset.equals("close")) {
             spoolUpTime = 2000;
-        else if(autoShootPreset.equals("far"))
+        }
+        else if(autoShootPreset.equals("far")) {
             spoolUpTime = 4000;
+        }
         shootingTime = 1200;
-        spoolUpEndTime = robotHardware.timer.milliseconds() + spoolUpTime;
-        shootingEndTime = spoolUpEndTime + shootingTime;
-        autoShootSequenceEndTime = shootingEndTime + gracePeriod;
         isAutoShooting = true;
         autoShootState = "spoolingUp";
     }
     private void runAutoShoot()
     {
+        double tolerance = 40;
         robotOuttake.run(autoShootPreset);
-        if(robotOuttake.getTargetTps() > robotHardware.outtakeMotor.getVelocity()-80)
+        if(robotHardware.outtakeMotor.getVelocity() >= robotOuttake.getTargetTps()-(tolerance/2) && robotHardware.outtakeMotor.getVelocity() <= robotOuttake.getTargetTps()+(tolerance/2) && autoShootState.equals("spoolingUp"))
         {
             autoShootState = "shooting";
             robotStorage.runForTime(1.0, storageTime);
+            shootingEndTime = robotHardware.timer.milliseconds() + shootingTime;
+            autoShootSequenceEndTime = robotHardware.timer.milliseconds() +  shootingTime + gracePeriod;
         }
 
-        if(robotHardware.timer.milliseconds() >= shootingEndTime && robotHardware.timer.milliseconds() < autoShootSequenceEndTime)
+        if(robotHardware.timer.milliseconds() >= shootingEndTime && robotHardware.timer.milliseconds() < autoShootSequenceEndTime && autoShootState.equals("shooting"))
         {
             robotStorage.run(0.0);
             autoShootState = "gracePeriod";
         }
 
-        if(robotHardware.timer.milliseconds() >= autoShootSequenceEndTime)
+        if(robotHardware.timer.milliseconds() >= autoShootSequenceEndTime && autoShootState.equals("gracePeriod"))
         {
             robotOuttake.run("idle");
             robotStorage.run(0.0);

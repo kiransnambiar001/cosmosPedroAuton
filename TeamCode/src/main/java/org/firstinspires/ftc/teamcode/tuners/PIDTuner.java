@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
+import org.firstinspires.ftc.teamcode.subsystems.CRServoStorage;
 import org.firstinspires.ftc.teamcode.subsystems.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 import com.bylazar.telemetry.PanelsTelemetry;
@@ -18,12 +19,14 @@ public class PIDTuner extends OpMode {
     Hardware robotHardware = new Hardware();
     Outtake robotOuttake;
 
+    CRServoStorage robotStorage;
+
     public static double pVal, fVal, dVal, iVal;
+    public static double idle;
     public static double increment = 0.01;
     public static double powerPercentage = 0.1;
     public TelemetryManager panels;
 
-    public PIDFCoefficients defaultCoefficients;
 
     private void log(String caption, Object... text) {
         if (text.length == 1) {
@@ -43,13 +46,14 @@ public class PIDTuner extends OpMode {
     @Override
     public void init() {
         robotHardware.initialize(hardwareMap, false);
-        robotOuttake = new Outtake(robotHardware);
+        robotOuttake = new Outtake(robotHardware, pVal, iVal, dVal, fVal);
+        robotStorage = new CRServoStorage(robotHardware);
 
-        defaultCoefficients = robotHardware.outtakeMotor.getPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        fVal = 13.989;
-        dVal = defaultCoefficients.d;
-        iVal = defaultCoefficients.i;
-        pVal = defaultCoefficients.p;
+        fVal = 12.35;
+        dVal = 0;
+        iVal = 0;
+        pVal = 150;
+        idle = 0.2;
 
         panels = PanelsTelemetry.INSTANCE.getTelemetry();
     }
@@ -70,6 +74,15 @@ public class PIDTuner extends OpMode {
         boolean b2wP = gamepad2.bWasPressed();// f-
         double rt2 = gamepad2.right_trigger;
         double lt2 = gamepad2.left_trigger;
+        double ry2 = gamepad2.right_stick_y;
+
+        if (ry2 > 0.5) {
+            robotStorage.run(1);
+        } else if (ry2 < -0.5) {
+            robotStorage.run(-1);
+        } else {
+            robotStorage.run(0);
+        }
 
 
         if (rb2wP) {pVal += increment;}
@@ -88,7 +101,7 @@ public class PIDTuner extends OpMode {
 
         if (rt2 >0.5) {robotOuttake.run(powerPercentage);}
         else if (lt2 > 0.5) {robotOuttake.run(powerPercentage);}
-        else {robotOuttake.run(0);}
+        else {robotOuttake.run(idle);}
 
 
         // telemetry
@@ -98,9 +111,7 @@ public class PIDTuner extends OpMode {
 
         log("Target Velocity (tps)", robotOuttake.getTargetTps());
         log("Current Velocity (tps)", robotHardware.outtakeMotor.getVelocity());
-
-        log("Default P Value", defaultCoefficients.p); log("Default I Value", defaultCoefficients.i);
-        log("Default D Value", defaultCoefficients.d); log("Default F Value", defaultCoefficients.f);
+        log("Error (tps)", Math.abs(robotHardware.outtakeMotor.getVelocity() - robotOuttake.getTargetTps()));
         panels.update(telemetry);
     }
 }
