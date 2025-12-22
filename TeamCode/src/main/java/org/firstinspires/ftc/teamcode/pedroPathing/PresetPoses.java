@@ -31,7 +31,7 @@ public class PresetPoses {
     public boolean isRed = true;
     public Pose startPose;
     public Pose goalPose = new Pose(12.6, 135.5);
-    public Pose closeShootPose = new Pose(20.876, 122.886, Math.toRadians(145));
+    public Pose closeShootPose = new Pose(50, 95, Math.toRadians(145));
     public Pose farShootPose = new Pose(56.000, 8.000, Math.toRadians(90));;
     public Pose gppStartPose = new Pose(48.000, 83.750, Math.toRadians(180));
     public Pose gppEndPose = new Pose(19.800, 83.750, Math.toRadians(180));
@@ -59,11 +59,11 @@ public class PresetPoses {
 
     // MAKE SURE CONSTRUCTOR GOES IN ORDER OF INCREASING DISTANCES
     public static double[][] powerTable = new double[][] {
-            {50, 0.3},
-            {60, 0.4},
-            {70, 0.5},
-            {80, 0.6},
-            {100, 0.7},
+            {50, 0.55},
+            {60, 0.6},
+            {70, 0.65},
+            {80, 0.7},
+            {100, 0.75},
             {150, 0.8}
     };
 
@@ -102,10 +102,7 @@ public class PresetPoses {
             }
         }
 
-        double angle = Math.atan2(
-                Math.abs(closestPose.getY() - currentPose.getY()),
-                Math.abs(closestPose.getX() - currentPose.getX())
-        ); if (!isRed) {angle = (Math.toRadians(90)-angle) + Math.toRadians(90);}
+        double angle = this.getAngleTowardsGoal(closestPose);
 
         closestPose = closestPose.setHeading(angle - Math.toRadians(180));
 
@@ -113,12 +110,12 @@ public class PresetPoses {
     }
 
     public double getAngleTowardsGoal(Pose currentPose) {
-        double finalAngle = 0;
+        double finalAngle;
         double angle = Math.atan2(
-                Math.abs(goalPose.getY() - currentPose.getY()),
-                Math.abs(goalPose.getX() - currentPose.getX())
+                goalPose.getY() - currentPose.getY(),
+                goalPose.getX() - currentPose.getX()
         ); if (!isRed) {finalAngle = (Math.toRadians(90)-angle) + Math.toRadians(90);} else {finalAngle = angle;}
-        return normalizeAngle(finalAngle);
+        return finalAngle;
     }
 
     public static double normalizeAngle(double angle) {
