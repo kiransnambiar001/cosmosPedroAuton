@@ -68,7 +68,7 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
         public PathChain ShootPGP;
         public PathChain GotoLever;
 
-        public Pose startPose = new Pose(20.876, 122.886, Math.toRadians(145));
+        private Pose startPose = new Pose(20.876, 122.886, Math.toRadians(325));
 
         public PresetPoses poses = new PresetPoses(startPose, false);
 
@@ -89,7 +89,7 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
                     .addPath(
                             new BezierCurve(
                                     poses.closeShootPose,
-                                    new Pose(61.918, 94.181),
+                                    new Pose(61.918, 94.181).mirror(),
                                     poses.gppStartPose
                             )
                     )
@@ -196,7 +196,8 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
 
         // init pp follower
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(paths.startPose);
+        paths = new Paths(follower);
+        follower.setStartingPose(paths.poses.startPose);
         follower.update();
 
         Drawing.init();
@@ -215,7 +216,6 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
         follower.update();
         panelsTelemetry.update();
         currentPose = follower.getPose();
-        paths = new Paths(follower);
 
 
         while (opModeIsActive()) {
@@ -258,7 +258,7 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
 
             case 2:
                 if (!follower.isBusy()) {
-                    follower.followPath(paths.PickupGPP);
+                    follower.followPath(paths.PickupGPP, 0.5, true);
                     intake.run(1);
                     pathState = 3;
                 }
@@ -282,7 +282,7 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
 
             case 5:
                 if (!follower.isBusy()) {
-                    follower.followPath(paths.PickupPGP);
+                    follower.followPath(paths.PickupPGP, 0.5, true);
                     intake.run(1);
                     pathState = 6;
                 }
@@ -307,10 +307,11 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
 
             case 10: // shoot
                 if (!follower.isBusy()) {
-                    if (!rampingUp) {outtake.run("close"); rampingUp = true;}
+                    if (!rampingUp && !shooting) {outtake.run("close"); rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         intake.runForTime(1, 2000); storage.runForTime(1, 2000);
                         shooting = true;
+                        rampingUp = false;
                     }
                     else if (shooting && (intakeRFTFinished || storageRFTFinished)) {
                         rampingUp = false; shooting = false;

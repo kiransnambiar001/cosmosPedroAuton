@@ -4,6 +4,7 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.geometry.BezierLine;
+import com.pedropathing.math.MathFunctions;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathPoint;
 
@@ -31,15 +32,15 @@ public class PresetPoses {
     public boolean isRed = true;
     public Pose startPose;
     public Pose goalPose = new Pose(12.6, 135.5);
-    public Pose closeShootPose = new Pose(50, 95, Math.toRadians(325));
-    public Pose farShootPose = new Pose(56.000, 8.000, Math.toRadians(90));;
+    public Pose closeShootPose = new Pose(50, 95, Math.toRadians(315));
+    public Pose farShootPose = new Pose(56.000, 13.0750, Math.toRadians(285));;
     public Pose gppStartPose = new Pose(48.000, 83.750, Math.toRadians(180));
     public Pose gppEndPose = new Pose(19.800, 83.750, Math.toRadians(180));
     public Pose pgpStartPose = new Pose(48.000, 60.000, Math.toRadians(180));
     public Pose pgpEndPose = new Pose(20.000, 60.000, Math.toRadians(180));
     public Pose parkLeverPose = new Pose(28.000, 70.500, Math.toRadians(180));
-    public Pose ppgStartPose = new Pose(41.753, 35.500, Math.toRadians(180));
-    public Pose ppgEndPose = new Pose(13.997, 35.500, Math.toRadians(180));
+    public Pose ppgStartPose = new Pose(41.75, 35.500, Math.toRadians(180));
+    public Pose ppgEndPose = new Pose(14, 35.500, Math.toRadians(180));
     public Pose parkPose = new Pose(38.669, 33.213, Math.toRadians(180));
 
 
@@ -71,17 +72,17 @@ public class PresetPoses {
         this.isRed = isRed;
         if (isRed) {
             this.startPose = startPose.mirror();
-            goalPose = goalPose.mirror();
-            closeShootPose = closeShootPose.mirror();
-            farShootPose = farShootPose.mirror();
-            gppStartPose = gppStartPose.mirror();
-            gppEndPose = gppEndPose.mirror();
-            pgpStartPose = pgpStartPose.mirror();
-            pgpEndPose = pgpEndPose.mirror();
-            parkLeverPose = parkLeverPose.mirror();
-            ppgStartPose = pgpStartPose.mirror();
-            ppgEndPose = pgpEndPose.mirror();
-            parkPose = parkPose.mirror();
+            this.goalPose = goalPose.mirror();
+            this.closeShootPose = closeShootPose.mirror();
+            this.farShootPose = farShootPose.mirror();
+            this.gppStartPose = gppStartPose.mirror();
+            this.gppEndPose = gppEndPose.mirror();
+            this.pgpStartPose = pgpStartPose.mirror();
+            this.pgpEndPose = pgpEndPose.mirror();
+            this.parkLeverPose = parkLeverPose.mirror();
+            this.ppgStartPose = ppgStartPose.mirror();
+            this.ppgEndPose = ppgEndPose.mirror();
+            this.parkPose = parkPose.mirror();
         } else {this.startPose = startPose;}
 
             // power table
@@ -115,7 +116,7 @@ public class PresetPoses {
                 goalPose.getY() - currentPose.getY(),
                 goalPose.getX() - currentPose.getX()
         ); if (!isRed) {finalAngle = (Math.toRadians(90)-angle) + Math.toRadians(90);} else {finalAngle = angle;}
-        return finalAngle;
+        return MathFunctions.normalizeAngle(finalAngle);
     }
 
     public static double normalizeAngle(double angle) {

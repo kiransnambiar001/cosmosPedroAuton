@@ -16,7 +16,7 @@ public class Intake {
     }
 
     public void runForTime(double power, double durationMs) {
-         stopTimeMs = timer.milliseconds() + durationMs;
+        stopTimeMs = timer.milliseconds() + durationMs;
         if (!isTimedRunActive) {
             isTimedRunActive = true;
             robotHardware.intakeMotor.setPower(power);
@@ -31,7 +31,7 @@ public class Intake {
     public boolean update()
     {
         if (isTimedRunActive && timer.milliseconds() >= stopTimeMs) {
-            run(0);
+            this.run(0);
             isTimedRunActive = false;
             return true;
         }

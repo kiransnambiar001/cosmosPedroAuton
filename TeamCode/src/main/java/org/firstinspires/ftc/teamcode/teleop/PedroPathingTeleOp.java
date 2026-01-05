@@ -9,6 +9,7 @@ import com.bylazar.field.PanelsField;
 import com.bylazar.field.Style;
 import com.bylazar.gamepad.GamepadManager;
 import com.bylazar.telemetry.TelemetryManager;
+import com.pedropathing.math.MathFunctions;
 import com.pedropathing.math.Vector;
 import com.pedropathing.util.PoseHistory;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -271,16 +272,16 @@ public class PedroPathingTeleOp extends OpMode {
 
         // Reset outtake presets
         if (options1wP) {robotOuttake.reset();}
-        if (dpu1wP) {autoDriving = true; follower.followPath(toShootPosePath.get(), 0.5, true); launchPoseAutoDriving = true;}
-        if (dpd1wP) {autoDriving = true; follower.followPath(toLaunchLinePath.apply(poses.findClosestLaunchPose(currentPose)), 0.5, true); launchPoseAutoDriving = true;}
+        if (dpu1wP) {autoDriving = true; follower.followPath(toShootPosePath.get()); launchPoseAutoDriving = true;}
+        if (dpd1wP) {autoDriving = true; follower.followPath(toLaunchLinePath.apply(poses.findClosestLaunchPose(currentPose))); launchPoseAutoDriving = true;}
         if (launchPoseAutoDriving && !follower.isBusy()) {launchPoseAutoDriving = false; autoAligning = true; follower.startTeleOpDrive();}
         if (autoAligning) {
             double targetHeading = poses.getAngleTowardsGoal(currentPose) - Math.toRadians(180);
             double currentHeading = follower.getPose().getHeading();
             double output = headingPIDFController.calculate(currentHeading, targetHeading);
             output = Math.max(-1.0, Math.min(1.0, output));
-            follower.setTeleOpDrive(0,output,0,false);
-            if (Math.abs(targetHeading - currentHeading) < Math.toRadians(3)) {autoAligning = false; autoDriving = false;}
+            follower.setTeleOpDrive(0,0,output,false);
+            if (MathFunctions.normalizeAngle(targetHeading - currentHeading) < Math.toRadians(3)) {autoAligning = false; autoDriving = false;}
         }
         if ((autoDriving) && (y1wP || !follower.isBusy())) {follower.startTeleOpDrive(); autoDriving = false; autoAligning = false; launchPoseAutoDriving = false;}
 

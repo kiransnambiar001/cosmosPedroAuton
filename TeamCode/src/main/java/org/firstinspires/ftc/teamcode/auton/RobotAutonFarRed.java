@@ -68,7 +68,7 @@ public class RobotAutonFarRed extends LinearOpMode {
         public PathChain ShootPPG;
         public PathChain Park;
 
-        private Pose startPose = new Pose(56.000, 8.000, Math.toRadians(90));
+        private Pose startPose = new Pose(56.000, 8.000, Math.toRadians(270));
         private PresetPoses poses = new PresetPoses(startPose, true);
 
 
@@ -76,16 +76,20 @@ public class RobotAutonFarRed extends LinearOpMode {
             ShootPreloaded = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(startPose, poses.farShootPose)
+                            new BezierLine(poses.startPose, poses.farShootPose)
                     )
-                    .setLinearHeadingInterpolation(startPose.getHeading(), poses.farShootPose.getHeading())
+                    .setLinearHeadingInterpolation(poses.startPose.getHeading(), poses.farShootPose.getHeading())
                     .build();
 
 
             GotoPPG = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(poses.farShootPose, poses.ppgStartPose)
+                            new BezierCurve(
+                                    poses.farShootPose,
+                                    new Pose(57.5, 34.8).mirror(),
+                                    poses.ppgStartPose
+                            )
                     )
                     .setLinearHeadingInterpolation(poses.farShootPose.getHeading(), poses.ppgStartPose.getHeading())
                     .build();
@@ -152,7 +156,8 @@ public class RobotAutonFarRed extends LinearOpMode {
 
         // init pp follower
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(72, 8, Math.toRadians(90)));
+        paths = new Paths(follower);
+        follower.setStartingPose(paths.poses.startPose);
         follower.update();
 
         // init subsystems
@@ -178,7 +183,6 @@ public class RobotAutonFarRed extends LinearOpMode {
         follower.update();
         panelsTelemetry.update();
         currentPose = follower.getPose();
-        paths = new Paths(follower);
 
 
         while (opModeIsActive()) {
@@ -210,7 +214,7 @@ public class RobotAutonFarRed extends LinearOpMode {
     public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished, boolean storageRFTFinished) {
         switch (pathState) {
             case 0:
-                follower.followPath(paths.ShootPreloaded);
+                follower.followPath(paths.ShootPreloaded, 0.5, true);
                 nextState = 1;
                 pathState = 10; // shoot
                 break;
@@ -224,7 +228,7 @@ public class RobotAutonFarRed extends LinearOpMode {
 
             case 2:
                 if (!follower.isBusy()) {
-                    follower.followPath(paths.PickupPPG);
+                    follower.followPath(paths.PickupPPG, 0.5, true);
                     intake.run(1);
                     pathState = 3;
                 }
@@ -249,10 +253,11 @@ public class RobotAutonFarRed extends LinearOpMode {
 
             case 10: // shoot
                 if (!follower.isBusy()) {
-                    if (!rampingUp) {outtake.run("far"); rampingUp = true;}
+                    if (!rampingUp && !shooting) {outtake.run("far"); rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         intake.runForTime(1, 2000); storage.runForTime(1, 2000);
                         shooting = true;
+                        rampingUp = false;
                     }
                     else if (shooting && (intakeRFTFinished || storageRFTFinished)) {
                         rampingUp = false; shooting = false;
