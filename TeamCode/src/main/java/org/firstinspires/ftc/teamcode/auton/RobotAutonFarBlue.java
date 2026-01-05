@@ -19,17 +19,22 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.PresetPoses;
+import org.firstinspires.ftc.teamcode.subsystems.CRServoStorage;
 import org.firstinspires.ftc.teamcode.subsystems.Drawing;
+import org.firstinspires.ftc.teamcode.subsystems.Hardware;
+import org.firstinspires.ftc.teamcode.subsystems.Intake;
+import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
 
-@Autonomous(name="FAR SIDE BLUE - Auton", group="Robot")
+@Autonomous(name="FAR SIDE BLUE - Auton", group="Autonomous")
 @Configurable // for Panels
 @SuppressWarnings("FieldCanBeLocal") // android studio bugging
 public class RobotAutonFarBlue extends LinearOpMode {
 
-
-    public DcMotorEx outtakeMotor;
-    public DcMotor intakeMotor;
+    public Hardware hardware;
+    public Outtake outtake;
+    public Intake intake;
+    public CRServoStorage storage;
 
 
     private final ElapsedTime timer = new ElapsedTime(); // runtime
@@ -38,12 +43,14 @@ public class RobotAutonFarBlue extends LinearOpMode {
     public Follower follower;
     private TelemetryManager panelsTelemetry;
     private int pathState;
+    private int nextState;
 
+    // shoot sequence
+    public boolean rampingUp = false;
+    public boolean shooting = false;
 
-    private int beforeOuttakeState;
-    public static double outtakeMaxPower = ((256.2*0.7)/60)*537.7; // 0.7 power percentage
-    private double outtakeRunTime = 3000;
-
+    // intake sequence
+    public boolean intaking = false;
 
     public static double intakeMaxPower = 1;
 
@@ -112,9 +119,6 @@ public class RobotAutonFarBlue extends LinearOpMode {
         }
     }
 
-
-
-
     private void log(String caption, Object... text) {
         if (text.length == 1) {
             telemetry.addData(caption, text[0]);
@@ -144,23 +148,19 @@ public class RobotAutonFarBlue extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-
-
-        intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
-        outtakeMotor = hardwareMap.get(DcMotorEx.class, "outtakeMotor");
-        intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        outtakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        intakeMotor.setDirection(DcMotor.Direction.FORWARD);
-        outtakeMotor.setDirection(DcMotor.Direction.FORWARD);
-
-
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
-
 
         // init pp follower
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(new Pose(72, 8, Math.toRadians(90)));
         follower.update();
+
+        // init subsystems
+        hardware = new Hardware();
+        hardware.initialize(hardwareMap, true);
+        outtake = new Outtake(hardware, 200d, 0d, 0d, 13.989d);
+        intake = new Intake(hardware);
+        storage = new CRServoStorage(hardware);
 
         Drawing.init();
 
@@ -183,7 +183,10 @@ public class RobotAutonFarBlue extends LinearOpMode {
 
         while (opModeIsActive()) {
             currentPose = follower.getPose();
-            updatePath(timer.milliseconds());
+            // update subsystems
+            updatePath(timer.milliseconds(), outtake.update(), intake.update(), storage.update());
+
+
 
 
             // telemetry
@@ -204,50 +207,62 @@ public class RobotAutonFarBlue extends LinearOpMode {
         }
     }
 
-
-    public void updatePath(double currentTime) {
+    // shootpreloaded-->gotoppg-->pickupppg-->shootppg-->park
+    public void updatePath(double currentTime, boolean outtakeRFTFinished, boolean intakeRFTFinished, boolean storageRFTFinished) {
         switch (pathState) {
             case 0:
                 follower.followPath(paths.ShootPreloaded);
+                nextState = 1;
                 pathState = 10; // shoot
-                beforeOuttakeState = 0;
-                previousTime = currentTime;
-                outtakeMotor.setVelocity(outtakeMaxPower);
                 break;
+
             case 1:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.GotoPPG);
                     pathState = 2;
                 }
                 break;
+
             case 2:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.PickupPPG);
+                    intake.run(1);
                     pathState = 3;
-                    intakeMotor.setPower(intakeMaxPower); // start intake
                 }
                 break;
+
             case 3:
                 if (!follower.isBusy()) {
+                    intake.run(0);
                     follower.followPath(paths.ShootPPG);
-                    intakeMotor.setPower(0);
+                    nextState = 4;
                     pathState = 10; // shoot
-                    beforeOuttakeState = 3;
-                    previousTime = currentTime;
-                    outtakeMotor.setVelocity(outtakeMaxPower);
                 }
                 break;
+
             case 4:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.Park);
+                    outtake.run(0);
                     pathState = -1; // terminate
                 }
                 break;
-            case 10:
-                if (currentTime >= outtakeRunTime+previousTime) {
-                    outtakeMotor.setVelocity(0);
-                    pathState = beforeOuttakeState+1;
+
+            case 10: // shoot
+                if (!follower.isBusy()) {
+                    if (!rampingUp) {outtake.run("far"); rampingUp = true;}
+                    else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
+                        intake.runForTime(1, 2000); storage.runForTime(1, 2000);
+                        shooting = true;
+                    }
+                    else if (shooting && (intakeRFTFinished || storageRFTFinished)) {
+                        rampingUp = false; shooting = false;
+                        outtake.run("idle");
+                        pathState = nextState;
+                    }
                 }
+                break;
+
         }
     }
 }

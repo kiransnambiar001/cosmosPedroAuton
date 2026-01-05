@@ -28,10 +28,14 @@ public class Intake {
         robotHardware.intakeMotor.setPower(power);
     }
 
-    public void update()
+    public boolean update()
     {
-        if (isTimedRunActive && timer.milliseconds() >= stopTimeMs)
+        if (isTimedRunActive && timer.milliseconds() >= stopTimeMs) {
             run(0);
+            isTimedRunActive = false;
+            return true;
+        }
+        return false;
     }
 //    public boolean getState()
 //    {

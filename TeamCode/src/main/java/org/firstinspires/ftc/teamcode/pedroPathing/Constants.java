@@ -23,8 +23,8 @@ public class Constants {
             .translationalPIDFCoefficients(new PIDFCoefficients(0.125, 0, 0.01, 0.03))
             .secondaryTranslationalPIDFCoefficients(new PIDFCoefficients(0.15, 0, 0.01, 0.02))
             .useSecondaryDrivePIDF(true)
-            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.075, 0, 0.002, 0.6, 0.02))
-            .secondaryDrivePIDFCoefficients(new FilteredPIDFCoefficients(0.025, 0, 0.0005, 0.6, 0.02))
+            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.025, 0, 0.0015, 0.6, 0.03))
+            .secondaryDrivePIDFCoefficients(new FilteredPIDFCoefficients(0.01, 0, 0.0005, 0.6, 0.03))
             .forwardZeroPowerAcceleration(-63.114980111444126)
             .lateralZeroPowerAcceleration(-86.82421475789788);
 
@@ -60,7 +60,7 @@ public class Constants {
     public static PathConstraints pathConstraints = new PathConstraints(
             0.99,
             100,
-            0.4,
+            0.85,
             1
     );
 

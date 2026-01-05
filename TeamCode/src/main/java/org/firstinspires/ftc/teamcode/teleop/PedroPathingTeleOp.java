@@ -22,6 +22,8 @@ import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.hardware.Gamepad;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.seattlesolvers.solverslib.controller.PIDFController;
 
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -54,6 +56,8 @@ public class PedroPathingTeleOp extends OpMode {
     public static Pose currentPose;
     private Follower follower;
     public boolean autoDriving = false;
+    public boolean autoAligning = false;
+    public boolean launchPoseAutoDriving = false;
     private Supplier<PathChain> toShootPosePath;
     private Function<Pose, PathChain> toLaunchLinePath;
     private TelemetryManager panelsTelemetry;
@@ -69,6 +73,8 @@ public class PedroPathingTeleOp extends OpMode {
 
     // toggles
     boolean ballCamToggle = false;
+    public static PIDFCoefficients headingPIDFCoefficients = new PIDFCoefficients(1,0,0.075,0.1);
+    PIDFController headingPIDFController = new PIDFController(headingPIDFCoefficients);
     boolean slowMode = false;
     boolean offToggle = false;
 
@@ -197,8 +203,16 @@ public class PedroPathingTeleOp extends OpMode {
         boolean dpu2wP = dpu2state && !dpu2prevState; // tune preset increment
         boolean dpd2wP = dpd2state && !dpd2prevState; // tune preset decrement
 
-
         double imuHeading = robotHardware.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+
+        // rumble outtake feedback
+        double outtakeTargetTps = robotOuttake.getTargetTps();
+        double outtakeActualTps = robotHardware.outtakeMotor.getVelocity();
+        if (robotOuttake.getCurrentPreset().equals("idle")) {gamepad2.stopRumble();}
+        else if (outtakeTargetTps - 50 < robotHardware.outtakeMotor.getVelocity() && robotHardware.outtakeMotor.getVelocity() < outtakeTargetTps + 50) {
+            gamepad2.rumble(-1); // infinite
+        }
+        else {gamepad2.stopRumble();}
 
         //      Drivetrain Control
         //Field centric toggle
@@ -210,16 +224,14 @@ public class PedroPathingTeleOp extends OpMode {
 
             if (fieldCentric) { // field centric
                 if (ballCamToggle) {
-                    double turnPower = 0;
 
                     double targetHeading = poses.getAngleTowardsGoal(currentPose) - Math.toRadians(180);
                     double currentHeading = follower.getPose().getHeading();
 
-                    double headingError = AngleUnit.normalizeRadians(targetHeading - currentHeading);
-                    double kP = 1;
-                    turnPower = headingError * kP;
-                    turnPower = Math.max(-1.0, Math.min(1.0, turnPower));
-                    follower.setTeleOpDrive(ly1, lx1, turnPower, false);
+                    double output = headingPIDFController.calculate(currentHeading, targetHeading);
+
+                    output = Math.max(-1.0, Math.min(1.0, output));
+                    follower.setTeleOpDrive(ly1, lx1, output, false);
 
                 }
                 else {follower.setTeleOpDrive(ly1, lx1, -rx1, false);} // normal field centric
@@ -247,7 +259,7 @@ public class PedroPathingTeleOp extends OpMode {
         if (a2wP) {offToggle = !offToggle;}
         else if (b2state) {robotOuttake.run("close");}
         else if (y2state) {robotOuttake.run("far");}
-        else if (x2state) {robotOuttake.run(poses.getOptimalShooterPowerPercentage(currentPose));}
+        else if (x2state) {robotOuttake.run(poses.getOptimalShooterPowerPercentage(currentPose, false));}
 
         else {robotOuttake.run("idle");}
         if (offToggle) {robotOuttake.run(0);}
@@ -259,9 +271,18 @@ public class PedroPathingTeleOp extends OpMode {
 
         // Reset outtake presets
         if (options1wP) {robotOuttake.reset();}
-        if (dpu1wP) {autoDriving = true; follower.followPath(toShootPosePath.get());}
-        if (dpd1wP) {autoDriving = true; follower.followPath(toLaunchLinePath.apply(poses.findClosestLaunchPose(currentPose)));}
-        if (autoDriving && (y1wP || !follower.isBusy())) {follower.startTeleOpDrive(); autoDriving = false;}
+        if (dpu1wP) {autoDriving = true; follower.followPath(toShootPosePath.get(), 0.5, true); launchPoseAutoDriving = true;}
+        if (dpd1wP) {autoDriving = true; follower.followPath(toLaunchLinePath.apply(poses.findClosestLaunchPose(currentPose)), 0.5, true); launchPoseAutoDriving = true;}
+        if (launchPoseAutoDriving && !follower.isBusy()) {launchPoseAutoDriving = false; autoAligning = true; follower.startTeleOpDrive();}
+        if (autoAligning) {
+            double targetHeading = poses.getAngleTowardsGoal(currentPose) - Math.toRadians(180);
+            double currentHeading = follower.getPose().getHeading();
+            double output = headingPIDFController.calculate(currentHeading, targetHeading);
+            output = Math.max(-1.0, Math.min(1.0, output));
+            follower.setTeleOpDrive(0,output,0,false);
+            if (Math.abs(targetHeading - currentHeading) < Math.toRadians(3)) {autoAligning = false; autoDriving = false;}
+        }
+        if ((autoDriving) && (y1wP || !follower.isBusy())) {follower.startTeleOpDrive(); autoDriving = false; autoAligning = false; launchPoseAutoDriving = false;}
 
         log("Status", "Running");
         log("Field Centric", fieldCentric ? "ON" : "OFF");

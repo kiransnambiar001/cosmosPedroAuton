@@ -31,7 +31,7 @@ public class PresetPoses {
     public boolean isRed = true;
     public Pose startPose;
     public Pose goalPose = new Pose(12.6, 135.5);
-    public Pose closeShootPose = new Pose(50, 95, Math.toRadians(145));
+    public Pose closeShootPose = new Pose(50, 95, Math.toRadians(325));
     public Pose farShootPose = new Pose(56.000, 8.000, Math.toRadians(90));;
     public Pose gppStartPose = new Pose(48.000, 83.750, Math.toRadians(180));
     public Pose gppEndPose = new Pose(19.800, 83.750, Math.toRadians(180));
@@ -68,7 +68,7 @@ public class PresetPoses {
     };
 
     public PresetPoses(Pose startPose, boolean isRed) {
-        this.isRed = true;
+        this.isRed = isRed;
         if (isRed) {
             this.startPose = startPose.mirror();
             goalPose = goalPose.mirror();
@@ -126,15 +126,41 @@ public class PresetPoses {
         return newAngle;
     }
 
-    public double getOptimalShooterPowerPercentage(Pose currentPose) {
+    public double getOptimalShooterPowerPercentage(Pose currentPose, boolean doLinearInterp) {
         double distance = currentPose.distanceFrom(goalPose); // in inches (pedropathing coords are in inches)
-        int optimalCoordinateIndex = 0;
-        double minDiff = Double.MAX_VALUE;
-        for (int i=0; i<powerTable.length; i++) {
-            double coorDist = powerTable[i][1];
-            if (minDiff > Math.abs(coorDist-distance)) {optimalCoordinateIndex = i;}
+        // clamp to least and highest indexes
+        if (distance <= powerTable[0][0]) return powerTable[0][1];
+        if (distance >= powerTable[powerTable.length - 1][0]) return powerTable[powerTable.length - 1][1];
+
+
+
+        if (!doLinearInterp) {
+            int optimalCoordinateIndex = 0;
+            double minDiff = Double.MAX_VALUE;
+            for (int i = 0; i < powerTable.length; i++) {
+                double coorDist = powerTable[i][0];
+                if (minDiff > Math.abs(coorDist - distance)) {
+                    optimalCoordinateIndex = i;
+                }
+            }
+            return powerTable[optimalCoordinateIndex][1];
         }
-        return powerTable[optimalCoordinateIndex][1];
+
+        else {
+            for (int i = 0; i < powerTable.length - 1; i++) {
+                if (distance >= powerTable[i][0] && distance <= powerTable[i + 1][0]) {
+                    double d0 = powerTable[i][0];
+                    double d1 = powerTable[i + 1][0];
+                    double p0 = powerTable[i][1];
+                    double p1 = powerTable[i + 1][1];
+
+                    // Linear interpolation formula: y = y0 + (x - x0) * ((y1 - y0) / (x1 - x0))
+                    return p0 + (distance - d0) * ((p1 - p0) / (d1 - d0));
+                }
+            }
+        }
+
+        return powerTable[0][1]; // default return, should never reach here
     }
 
     public Pose closestPose(Pose targetPose, Pose[] possiblePoses) {

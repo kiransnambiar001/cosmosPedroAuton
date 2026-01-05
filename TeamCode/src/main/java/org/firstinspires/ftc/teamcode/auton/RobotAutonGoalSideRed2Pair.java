@@ -16,17 +16,24 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.PresetPoses;
+import org.firstinspires.ftc.teamcode.subsystems.CRServoStorage;
 import org.firstinspires.ftc.teamcode.subsystems.Drawing;
+import org.firstinspires.ftc.teamcode.subsystems.Hardware;
+import org.firstinspires.ftc.teamcode.subsystems.Intake;
+import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
 
-@Autonomous(name="GOAL SIDE BLUE - 2Pair Auton", group="Robot")
+@Autonomous(name="GOAL SIDE RED - 2Pair Auton", group="Robot")
 @Configurable // for Panels
 @SuppressWarnings("FieldCanBeLocal") // android studio bugging
 public class RobotAutonGoalSideRed2Pair extends LinearOpMode {
 
 
-    public DcMotorEx outtakeMotor;
-    public DcMotor intakeMotor;
+    public Hardware hardware;
+    public Outtake outtake;
+    public Intake intake;
+    public CRServoStorage storage;
+
 
 
     private final ElapsedTime timer = new ElapsedTime(); // runtime
@@ -35,18 +42,18 @@ public class RobotAutonGoalSideRed2Pair extends LinearOpMode {
     public Follower follower;
     private TelemetryManager panelsTelemetry;
     public static int pathState;
+    public static int nextState;
 
 
-    private int beforeOuttakeState;
-    public static double outtakeMaxPower = ((256.2*0.4)/60)*537.7; // 0.7 power percentage
-    public static double outtakeRunTime = 3000;
 
 
-    public static double intakeMaxPower = 1;
 
 
-    private double previousTime;
     private Paths paths;
+
+    // shoot sequence
+    public boolean rampingUp = false;
+    public boolean shooting = false;
 
 
     public static class Paths {
@@ -63,7 +70,7 @@ public class RobotAutonGoalSideRed2Pair extends LinearOpMode {
 
         public Pose startPose = new Pose(20.876, 122.886, Math.toRadians(145));
 
-        public PresetPoses poses = new PresetPoses(startPose, true);
+        public PresetPoses poses = new PresetPoses(startPose, false);
 
 
 
@@ -178,13 +185,11 @@ public class RobotAutonGoalSideRed2Pair extends LinearOpMode {
     @Override
     public void runOpMode() {
         // init intake and outtake
-        intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
-        outtakeMotor = hardwareMap.get(DcMotorEx.class, "outtakeMotor");
-        intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        outtakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        intakeMotor.setDirection(DcMotor.Direction.FORWARD);
-        outtakeMotor.setDirection(DcMotor.Direction.FORWARD);
-
+        hardware = new Hardware();
+        hardware.initialize(hardwareMap, true);
+        outtake = new Outtake(hardware, 200d, 0d, 0d, 13.989d);
+        intake = new Intake(hardware);
+        storage = new CRServoStorage(hardware);
 
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
@@ -217,7 +222,7 @@ public class RobotAutonGoalSideRed2Pair extends LinearOpMode {
             follower.update();
             panelsTelemetry.update();
             currentPose = follower.getPose();
-            updatePath(timer.milliseconds());
+            updatePath(outtake.update(), intake.update(), storage.update());
 
 
             // telemetry
@@ -228,70 +233,92 @@ public class RobotAutonGoalSideRed2Pair extends LinearOpMode {
         }
     }
 
-
-    public void updatePath(double currentTime) {
+    // shoot preloaded, shoot
+    // go to gpp
+    // pickup gpp + intake
+    // shoot gpp, shoot
+    // go to pgp
+    // pickup pgp + intake
+    // shoot pgp, shoot
+    // go to lever
+    public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished, boolean storageRFTFinished) {
         switch (pathState) {
             case 0:
                 follower.followPath(paths.ShootPreloaded);
                 pathState = 10; // shoot
-                beforeOuttakeState = 0;
-                previousTime = currentTime;
-                outtakeMotor.setVelocity(outtakeMaxPower);
+                nextState = 1;
                 break;
+
             case 1:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.GotoGPP);
                     pathState = 2;
                 }
                 break;
+
             case 2:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.PickupGPP);
-                    pathState = 2;
-                    intakeMotor.setPower(intakeMaxPower);
+                    intake.run(1);
+                    pathState = 3;
                 }
                 break;
+
             case 3:
                 if (!follower.isBusy()) {
+                    intake.run(0);
                     follower.followPath(paths.ShootGPP);
                     pathState = 10; // shoot
-                    beforeOuttakeState = 4;
-                    previousTime = currentTime;
-                    outtakeMotor.setVelocity(outtakeMaxPower);
+                    nextState = 4;
                 }
                 break;
+
             case 4:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.GotoPGP);
                     pathState = 5;
                 }
                 break;
+
             case 5:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.PickupPGP);
+                    intake.run(1);
                     pathState = 6;
-                    intakeMotor.setPower(intakeMaxPower);
                 }
                 break;
+
             case 6:
                 if (!follower.isBusy()) {
+                    intake.run(0);
                     follower.followPath(paths.ShootPGP);
                     pathState = 10; // shoot
-                    beforeOuttakeState = 6;
-                    previousTime = currentTime;
-                    outtakeMotor.setVelocity(outtakeMaxPower);
+                    nextState = 7;
                 }
                 break;
+
             case 7:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.GotoLever);
-                    pathState = -1;
+                    outtake.run(0);
+                    pathState = -1; // terminate
                 }
-            case 10:
-                if (currentTime >= outtakeRunTime+previousTime) {
-                    outtakeMotor.setVelocity(0);
-                    pathState = beforeOuttakeState+1;
+                break;
+
+            case 10: // shoot
+                if (!follower.isBusy()) {
+                    if (!rampingUp) {outtake.run("close"); rampingUp = true;}
+                    else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
+                        intake.runForTime(1, 2000); storage.runForTime(1, 2000);
+                        shooting = true;
+                    }
+                    else if (shooting && (intakeRFTFinished || storageRFTFinished)) {
+                        rampingUp = false; shooting = false;
+                        outtake.run("idle");
+                        pathState = nextState;
+                    }
                 }
+                break;
         }
     }
 }

@@ -16,7 +16,7 @@ public class Outtake {
     double stopTimeMs;
     double power = idlePower;
     private String currentPreset = "";
-    private boolean isTimedRunActive = false;
+    public boolean isTimedRunActive = false;
     private final ElapsedTime timer;
 
     public Outtake(Hardware hardware, double p, double i, double d, double f) {
@@ -66,11 +66,22 @@ public class Outtake {
             run(preset);
         }
     }
-    public void update()
+
+    public void runForTime(double power, double durationMs) {
+        stopTimeMs = timer.milliseconds() + durationMs;
+        if (!isTimedRunActive) {
+            isTimedRunActive = true;
+            run(power);
+        }
+    }
+    public boolean update()
     {
         if (isTimedRunActive && timer.milliseconds() >= stopTimeMs) {
             run("idle");
+            isTimedRunActive = false;
+            return true;
         }
+        return false;
     }
     public double getCurrentTps()
     {
@@ -80,6 +91,9 @@ public class Outtake {
     {
         return targetTps;
     }
+
+    public String getCurrentPreset() {return currentPreset;}
+
     public void reset()
     {
         closeShotPower = startingCloseShotPower;

@@ -39,9 +39,12 @@ public class CRServoStorage {
             return true;
     }
 
-    public void update() {
+    public boolean update() {
         if (isTimedRunActive && robotHardware.timer.milliseconds() >= stopTime) {
             run(0);
+            isTimedRunActive = false;
+            return true;
         }
+        return false;
     }
 }
