@@ -4,14 +4,9 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.bylazar.configurables.annotations.Configurable;
-import com.bylazar.field.FieldManager;
-import com.bylazar.field.PanelsField;
-import com.bylazar.field.Style;
 import com.bylazar.gamepad.GamepadManager;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.math.MathFunctions;
-import com.pedropathing.math.Vector;
-import com.pedropathing.util.PoseHistory;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.bylazar.gamepad.PanelsGamepad;
@@ -40,8 +35,8 @@ import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
 
 @Configurable
-@TeleOp(name="PedroPathing TeleOp", group="LinearOpMode")
-public class PedroPathingTeleOp extends OpMode {
+@TeleOp(name="FAR SIDE BLUE - PedroPathingTeleOp", group="LinearOpMode")
+public class PedroPathingTeleOpFarSideBlue extends OpMode {
 
     // Create hardware object
     Hardware robotHardware = new Hardware();
@@ -51,9 +46,9 @@ public class PedroPathingTeleOp extends OpMode {
     public GamepadManager g1Manager, g2Manager;
 
     // pp vars
-    public static Pose startPose = new Pose(72, 72, Math.toRadians(0));
+    public static Pose startPose = new Pose(56.000, 8.000, Math.toRadians(270));
 
-    public PresetPoses poses = new PresetPoses(startPose, true);
+    public PresetPoses poses = new PresetPoses(startPose, false);
     public static Pose currentPose;
     private Follower follower;
     public boolean autoDriving = false;
@@ -90,6 +85,8 @@ public class PedroPathingTeleOp extends OpMode {
     boolean dpu2prevState = false; // tune preset increment
     boolean dpd2prevState = false; // tune preset decrement
     boolean a2prevState = false;
+    boolean dpr2prevState = false;
+    boolean dpl2prevState = false;
 
 
 
@@ -130,19 +127,19 @@ public class PedroPathingTeleOp extends OpMode {
         robotOuttake = new Outtake(robotHardware, 200d, 0d, 0d, 13.989d);
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(startPose);
+        follower.setStartingPose(poses.startPose);
         follower.update();
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
         toShootPosePath = () -> follower.pathBuilder()
-            .addPath(new Path(new BezierLine(follower::getPose, poses.closeShootPose)))
-            .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, poses.closeShootPose.getHeading(), 0.8))
-            .build();
+                .addPath(new Path(new BezierLine(follower::getPose, poses.closeShootPose)))
+                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, poses.closeShootPose.getHeading(), 0.8))
+                .build();
 
         toLaunchLinePath = (Pose targetPose) -> follower.pathBuilder()
-            .addPath(new Path(new BezierLine(follower::getPose, targetPose)))
-            .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, targetPose::getHeading, 0.8))
-            .build();
+                .addPath(new Path(new BezierLine(follower::getPose, targetPose)))
+                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, targetPose::getHeading, 0.8))
+                .build();
 
         Drawing.init();
 
@@ -199,10 +196,14 @@ public class PedroPathingTeleOp extends OpMode {
         boolean x2state = g2.x; // set outtake power based on power tables
         boolean dpu2state = g2.dpad_up; // tune preset increment
         boolean dpd2state = g2.dpad_down; // tune preset decrement
+        boolean dpr2state = g2.dpad_right; // close auto shoot
+        boolean dpl2state = g2.dpad_left; // far auto shoot
 
         boolean a2wP = a2state && !a2prevState;
         boolean dpu2wP = dpu2state && !dpu2prevState; // tune preset increment
         boolean dpd2wP = dpd2state && !dpd2prevState; // tune preset decrement
+        boolean dpr2wP = dpr2state && !dpr2prevState; // close auto shoot
+        boolean dpl2wP = dpl2state && !dpl2prevState; // far auto shoot
 
         double imuHeading = robotHardware.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
@@ -283,7 +284,9 @@ public class PedroPathingTeleOp extends OpMode {
             follower.setTeleOpDrive(0,0,output,false);
             if (MathFunctions.normalizeAngle(targetHeading - currentHeading) < Math.toRadians(3)) {autoAligning = false; autoDriving = false;}
         }
-        if ((autoDriving) && (y1wP || !follower.isBusy())) {follower.startTeleOpDrive(); autoDriving = false; autoAligning = false; launchPoseAutoDriving = false;}
+        if (((autoDriving) && (y1wP || (!follower.isBusy() && !autoAligning && !launchPoseAutoDriving))) || (autoAligning && (Math.abs(ly1) > 0.1 || Math.abs(lx1) > 0.1 || Math.abs(rx1) > 0.1))) {
+            follower.startTeleOpDrive(); autoDriving = false; autoAligning = false; launchPoseAutoDriving = false;
+        }
 
         log("Status", "Running");
         log("Field Centric", fieldCentric ? "ON" : "OFF");
@@ -309,5 +312,7 @@ public class PedroPathingTeleOp extends OpMode {
         dpu2prevState = dpu2state; // tune preset increment
         dpd2prevState = dpd2state; // tune preset decrement
         a2prevState = a2state;
+        dpr2prevState = dpr2state;
+        dpl2prevState = dpl2state;
     }
 }

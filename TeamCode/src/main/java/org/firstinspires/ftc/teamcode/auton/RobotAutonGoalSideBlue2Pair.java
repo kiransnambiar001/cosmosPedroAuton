@@ -258,7 +258,7 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
 
             case 2:
                 if (!follower.isBusy()) {
-                    follower.followPath(paths.PickupGPP, 0.5, true);
+                    follower.followPath(paths.PickupGPP, 0.3, true);
                     intake.run(1);
                     pathState = 3;
                 }
@@ -282,7 +282,7 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
 
             case 5:
                 if (!follower.isBusy()) {
-                    follower.followPath(paths.PickupPGP, 0.5, true);
+                    follower.followPath(paths.PickupPGP, 0.3, true);
                     intake.run(1);
                     pathState = 6;
                 }

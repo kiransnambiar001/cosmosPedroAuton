@@ -214,7 +214,7 @@ public class RobotAutonFarRed extends LinearOpMode {
     public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished, boolean storageRFTFinished) {
         switch (pathState) {
             case 0:
-                follower.followPath(paths.ShootPreloaded, 0.5, true);
+                follower.followPath(paths.ShootPreloaded, 0.3, true);
                 nextState = 1;
                 pathState = 10; // shoot
                 break;
@@ -228,7 +228,7 @@ public class RobotAutonFarRed extends LinearOpMode {
 
             case 2:
                 if (!follower.isBusy()) {
-                    follower.followPath(paths.PickupPPG, 0.5, true);
+                    follower.followPath(paths.PickupPPG, 0.3, true);
                     intake.run(1);
                     pathState = 3;
                 }
