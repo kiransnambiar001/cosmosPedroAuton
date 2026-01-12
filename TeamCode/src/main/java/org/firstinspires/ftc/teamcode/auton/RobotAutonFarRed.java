@@ -21,12 +21,13 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.PresetPoses;
 import org.firstinspires.ftc.teamcode.subsystems.CRServoStorage;
 import org.firstinspires.ftc.teamcode.subsystems.Drawing;
+import org.firstinspires.ftc.teamcode.subsystems.Gate;
 import org.firstinspires.ftc.teamcode.subsystems.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
 
-@Autonomous(name="FAR SIDE RED - Auton", group="Autonomous")
+@Autonomous(name="FAR SIDE BLUE - Auton", group="Autonomous")
 @Configurable // for Panels
 @SuppressWarnings("FieldCanBeLocal") // android studio bugging
 public class RobotAutonFarRed extends LinearOpMode {
@@ -34,6 +35,7 @@ public class RobotAutonFarRed extends LinearOpMode {
     public Hardware hardware;
     public Outtake outtake;
     public Intake intake;
+    public Gate gate;
     public CRServoStorage storage;
 
 
@@ -82,12 +84,13 @@ public class RobotAutonFarRed extends LinearOpMode {
                     .build();
 
 
+
             GotoPPG = follower
                     .pathBuilder()
                     .addPath(
                             new BezierCurve(
                                     poses.farShootPose,
-                                    new Pose(57.5, 34.8).mirror(),
+                                    new Pose(57.5, 34.8),
                                     poses.ppgStartPose
                             )
                     )
@@ -166,6 +169,7 @@ public class RobotAutonFarRed extends LinearOpMode {
         outtake = new Outtake(hardware, 200d, 0d, 0d, 13.989d);
         intake = new Intake(hardware);
         storage = new CRServoStorage(hardware);
+        gate = new Gate(hardware);
 
         Drawing.init();
 
@@ -183,6 +187,8 @@ public class RobotAutonFarRed extends LinearOpMode {
         follower.update();
         panelsTelemetry.update();
         currentPose = follower.getPose();
+
+        gate.setGateState(true);
 
 
         while (opModeIsActive()) {
@@ -210,7 +216,7 @@ public class RobotAutonFarRed extends LinearOpMode {
         }
     }
 
-// shootpreloaded-->gotoppg-->pickupppg-->shootppg-->park
+    // shootpreloaded-->gotoppg-->pickupppg-->shootppg-->park
     public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished, boolean storageRFTFinished) {
         switch (pathState) {
             case 0:
@@ -255,11 +261,13 @@ public class RobotAutonFarRed extends LinearOpMode {
                 if (!follower.isBusy()) {
                     if (!rampingUp && !shooting) {outtake.run("far"); rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
+                        gate.setGateState(false);
                         intake.runForTime(1, 2000); storage.runForTime(1, 2000);
                         shooting = true;
                         rampingUp = false;
                     }
                     else if (shooting && (intakeRFTFinished || storageRFTFinished)) {
+                        gate.setGateState(true);
                         rampingUp = false; shooting = false;
                         outtake.run("idle");
                         pathState = nextState;

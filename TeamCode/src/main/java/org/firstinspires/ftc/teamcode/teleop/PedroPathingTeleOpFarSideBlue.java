@@ -19,6 +19,7 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.seattlesolvers.solverslib.controller.PIDFController;
 
 
@@ -27,6 +28,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.PresetPoses;
 import org.firstinspires.ftc.teamcode.subsystems.CRServoStorage;
 import org.firstinspires.ftc.teamcode.subsystems.Drawing;
+import org.firstinspires.ftc.teamcode.subsystems.Gate;
 import org.firstinspires.ftc.teamcode.subsystems.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
@@ -43,6 +45,8 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
     Intake robotIntake;
     CRServoStorage robotStorage;
     Outtake robotOuttake;
+    Gate gate;
+    boolean gateIsClosed = false;
     public GamepadManager g1Manager, g2Manager;
 
     // pp vars
@@ -87,6 +91,7 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
     boolean a2prevState = false;
     boolean dpr2prevState = false;
     boolean dpl2prevState = false;
+    boolean lb2prevState = false;
 
 
 
@@ -125,6 +130,7 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
         robotIntake = new Intake(robotHardware);
         robotStorage = new CRServoStorage(robotHardware);
         robotOuttake = new Outtake(robotHardware, 200d, 0d, 0d, 13.989d);
+        gate = new Gate(robotHardware);
 
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(poses.startPose);
@@ -198,12 +204,15 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
         boolean dpd2state = g2.dpad_down; // tune preset decrement
         boolean dpr2state = g2.dpad_right; // close auto shoot
         boolean dpl2state = g2.dpad_left; // far auto shoot
+        boolean lb2state = g2.left_bumper;
 
         boolean a2wP = a2state && !a2prevState;
         boolean dpu2wP = dpu2state && !dpu2prevState; // tune preset increment
         boolean dpd2wP = dpd2state && !dpd2prevState; // tune preset decrement
         boolean dpr2wP = dpr2state && !dpr2prevState; // close auto shoot
         boolean dpl2wP = dpl2state && !dpl2prevState; // far auto shoot
+        boolean lb2wP = lb2state && !lb2prevState;
+
 
         double imuHeading = robotHardware.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
@@ -241,8 +250,16 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
             else {follower.setTeleOpDrive(ly1, lx1, -rx1, true);} // rbt centric
         }
 
+
+
         //      Intake Control
         robotIntake.update();
+
+        // robot gate toggle (lb2wP)
+        if (lb2wP) {
+            gateIsClosed = !gateIsClosed;
+            gate.setGateState(gateIsClosed);
+        }
 
         // ball cam toggle
         if (b1wP) {ballCamToggle = !ballCamToggle;}
@@ -314,5 +331,6 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
         a2prevState = a2state;
         dpr2prevState = dpr2state;
         dpl2prevState = dpl2state;
+        lb2prevState = lb2state;
     }
 }

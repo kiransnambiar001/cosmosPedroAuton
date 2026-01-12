@@ -18,6 +18,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.PresetPoses;
 import org.firstinspires.ftc.teamcode.subsystems.CRServoStorage;
 import org.firstinspires.ftc.teamcode.subsystems.Drawing;
+import org.firstinspires.ftc.teamcode.subsystems.Gate;
 import org.firstinspires.ftc.teamcode.subsystems.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
@@ -32,6 +33,7 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
     public Hardware hardware;
     public Outtake outtake;
     public Intake intake;
+    public Gate gate;
     public CRServoStorage storage;
 
 
@@ -190,6 +192,7 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
         outtake = new Outtake(hardware, 200d, 0d, 0d, 13.989d);
         intake = new Intake(hardware);
         storage = new CRServoStorage(hardware);
+        gate = new Gate(hardware);
 
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
@@ -216,6 +219,7 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
         follower.update();
         panelsTelemetry.update();
         currentPose = follower.getPose();
+        gate.setGateState(true);
 
 
         while (opModeIsActive()) {
@@ -309,11 +313,13 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
                 if (!follower.isBusy()) {
                     if (!rampingUp && !shooting) {outtake.run("close"); rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
+                        gate.setGateState(false);
                         intake.runForTime(1, 2000); storage.runForTime(1, 2000);
                         shooting = true;
                         rampingUp = false;
                     }
                     else if (shooting && (intakeRFTFinished || storageRFTFinished)) {
+                        gate.setGateState(true);
                         rampingUp = false; shooting = false;
                         outtake.run("idle");
                         pathState = nextState;

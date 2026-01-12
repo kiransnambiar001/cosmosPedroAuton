@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class Hardware {
@@ -19,6 +20,7 @@ public class Hardware {
     public IMU imu;
     public ElapsedTime timer;
     public CRServo storageLeft, storageRight;
+    public Servo gateServo;
     // Init hardwareMaps
 
     public void initialize(HardwareMap hardwareMap, boolean isPedro) {
@@ -38,6 +40,7 @@ public class Hardware {
         }
         intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
         outtakeMotor = hardwareMap.get(DcMotorEx.class, "outtakeMotor");
+        gateServo = hardwareMap.get(Servo.class, "gate");
         imu = hardwareMap.get(IMU.class, "imu");
         storageLeft = hardwareMap.get(CRServo.class, "storageLeft");
         storageRight = hardwareMap.get(CRServo.class, "storageRight");
