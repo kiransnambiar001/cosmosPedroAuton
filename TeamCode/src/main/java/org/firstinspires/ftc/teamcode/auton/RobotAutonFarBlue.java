@@ -9,6 +9,7 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -16,6 +17,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.pedropathing.paths.HeadingInterpolator;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.PresetPoses;
@@ -53,6 +55,7 @@ public class RobotAutonFarBlue extends LinearOpMode {
 
     // intake sequence
     public boolean intaking = false;
+    public static double storageOuttakePower = 0.5;
 
     public static double intakeMaxPower = 1;
 
@@ -90,7 +93,7 @@ public class RobotAutonFarBlue extends LinearOpMode {
                     .addPath(
                             new BezierCurve(
                                     poses.farShootPose,
-                                    new Pose(57.5, 34.8),
+                                    poses.farShootPpgStartMidCurvePose,
                                     poses.ppgStartPose
                             )
                     )
@@ -235,14 +238,14 @@ public class RobotAutonFarBlue extends LinearOpMode {
             case 2:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.PickupPPG, 0.3, true);
-                    intake.run(1);
+                    intake.run(1); storage.run(-1);
                     pathState = 3;
                 }
                 break;
 
             case 3:
                 if (!follower.isBusy()) {
-                    intake.run(0);
+                    intake.run(0); storage.run(0);
                     follower.followPath(paths.ShootPPG);
                     nextState = 4;
                     pathState = 10; // shoot
@@ -262,7 +265,7 @@ public class RobotAutonFarBlue extends LinearOpMode {
                     if (!rampingUp && !shooting) {outtake.run("far"); rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         gate.setGateState(false);
-                        intake.runForTime(1, 2000); storage.runForTime(1, 2000);
+                        intake.runForTime(1, 5000); storage.runForTime(storageOuttakePower, 5000);
                         shooting = true;
                         rampingUp = false;
                     }

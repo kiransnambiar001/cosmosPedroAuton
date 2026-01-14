@@ -1,5 +1,9 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
+
+
+import android.annotation.SuppressLint;
+
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -37,7 +41,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
 
 @Configurable
-@TeleOp(name="FAR SIDE BLUE - PedroPathingTeleOp", group="LinearOpMode")
+@TeleOp(name="FAR SIDE RED - PedroPathingTeleOp", group="LinearOpMode")
 public class PedroPathingTeleOpFarSideBlue extends OpMode {
 
     // Create hardware object
@@ -50,9 +54,9 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
     public GamepadManager g1Manager, g2Manager;
 
     // pp vars
-    public static Pose startPose = new Pose(56.000, 8.000, Math.toRadians(270));
+    public Pose startPose = new Pose(56.000, 8.000, Math.toRadians(270));
 
-    public PresetPoses poses = new PresetPoses(startPose, false);
+    public PresetPoses poses;
     public static Pose currentPose;
     private Follower follower;
     public boolean autoDriving = false;
@@ -63,6 +67,11 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
     private TelemetryManager panelsTelemetry;
 
 
+    // selection
+    public int selection_index = 0;
+    public String[] selectables = new String[] {"FarSideBlue", "FarSideRed", "GoalSideBlue", "GoalSideRed", "Default"};
+    public int selected_index = 0;
+    public int max_index = selectables.length;
 
     // input vars
     boolean fieldCentric = false;
@@ -82,6 +91,8 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
     boolean home1prevState = false;
     boolean options1prevState = false;
     boolean dpd1prevState = false;
+    boolean rb1prevState = false;
+    boolean lb1prevState = false;
     boolean b1prevState = false;
     boolean dpu1prevState = false;
     boolean x1prevState = false;
@@ -132,10 +143,15 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
         robotOuttake = new Outtake(robotHardware, 200d, 0d, 0d, 13.989d);
         gate = new Gate(robotHardware);
 
+        poses = new PresetPoses(startPose, false);
+
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(poses.startPose);
+        follower.setStartingPose(poses.parkPose);
         follower.update();
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
+
+        Drawing.init();
+
 
         toShootPosePath = () -> follower.pathBuilder()
                 .addPath(new Path(new BezierLine(follower::getPose, poses.closeShootPose)))
@@ -147,7 +163,6 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
                 .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, targetPose::getHeading, 0.8))
                 .build();
 
-        Drawing.init();
 
         g1Manager = PanelsGamepad.INSTANCE.getFirstManager();
         g2Manager = PanelsGamepad.INSTANCE.getSecondManager();
@@ -156,14 +171,21 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
         telemetry.addData("Drive Mode", "Ready for TeleOp");
         telemetry.update();
         drawOnlyCurrent();
+
     }
 
     @Override
     public void start() {
+
+
+        follower.update();
         robotHardware.imu.resetYaw();
         follower.startTeleOpDrive();
+
+
     }
 
+    @SuppressLint("DefaultLocale")
     @Override
     public void loop() {
         currentPose = follower.getPose();
@@ -290,19 +312,10 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
 
         // Reset outtake presets
         if (options1wP) {robotOuttake.reset();}
-        if (dpu1wP) {autoDriving = true; follower.followPath(toShootPosePath.get()); launchPoseAutoDriving = true;}
-        if (dpd1wP) {autoDriving = true; follower.followPath(toLaunchLinePath.apply(poses.findClosestLaunchPose(currentPose))); launchPoseAutoDriving = true;}
-        if (launchPoseAutoDriving && !follower.isBusy()) {launchPoseAutoDriving = false; autoAligning = true; follower.startTeleOpDrive();}
-        if (autoAligning) {
-            double targetHeading = poses.getAngleTowardsGoal(currentPose) - Math.toRadians(180);
-            double currentHeading = follower.getPose().getHeading();
-            double output = headingPIDFController.calculate(currentHeading, targetHeading);
-            output = Math.max(-1.0, Math.min(1.0, output));
-            follower.setTeleOpDrive(0,0,output,false);
-            if (MathFunctions.normalizeAngle(targetHeading - currentHeading) < Math.toRadians(3)) {autoAligning = false; autoDriving = false;}
-        }
-        if (((autoDriving) && (y1wP || (!follower.isBusy() && !autoAligning && !launchPoseAutoDriving))) || (autoAligning && (Math.abs(ly1) > 0.1 || Math.abs(lx1) > 0.1 || Math.abs(rx1) > 0.1))) {
-            follower.startTeleOpDrive(); autoDriving = false; autoAligning = false; launchPoseAutoDriving = false;
+        if (dpu1wP) {autoDriving = true; follower.followPath(toShootPosePath.get()); }
+        if (dpd1wP) {autoDriving = true; follower.followPath(toLaunchLinePath.apply(poses.findClosestLaunchPose(currentPose)));}
+        if ((autoDriving) && (y1wP || !follower.isBusy())) {
+            follower.startTeleOpDrive(); autoDriving = false;
         }
 
         log("Status", "Running");
