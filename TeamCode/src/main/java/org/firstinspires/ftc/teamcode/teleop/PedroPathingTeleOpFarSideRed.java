@@ -41,7 +41,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
 
 @Configurable
-@TeleOp(name="FAR SIDE BLUE - PedroPathingTeleOp", group="LinearOpMode")
+@TeleOp(name="FAR SIDE RED - PedroPathingTeleOp", group="LinearOpMode")
 public class PedroPathingTeleOpFarSideRed extends OpMode {
 
     // Create hardware object

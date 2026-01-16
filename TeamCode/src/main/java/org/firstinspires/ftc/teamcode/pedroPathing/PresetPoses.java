@@ -29,10 +29,11 @@ import com.pedropathing.paths.PathPoint;
 public class PresetPoses {
 
     // robot poses
+    public static double shootAngle = 320;
     public boolean isRed = true;
     public Pose startPose;
     public Pose goalPose = new Pose(12.6, 135.5);
-    public Pose closeShootPose = new Pose(50, 95, Math.toRadians(315));
+    public Pose closeShootPose = new Pose(50, 95, Math.toRadians(shootAngle));
     public Pose farShootPose = new Pose(56.000, 13.0750, Math.toRadians(285));;
     public Pose gppStartPose = new Pose(52.000, 83.750, Math.toRadians(180));
     public Pose closeShootGppStartMidCurvePose = new Pose(61.918, 94.181);
@@ -45,6 +46,9 @@ public class PresetPoses {
     public Pose farShootPpgStartMidCurvePose = new Pose(57.5, 34.8);
     public Pose ppgEndPose = new Pose(14, 35.500, Math.toRadians(180));
     public Pose parkPose = new Pose(106, 33, Math.toRadians(90));
+
+    public static Pose LOCALIZE_POSE_LEFT = new Pose(7.9,7.7, Math.toRadians(90));
+    public static Pose LOCALIZE_POSE_RIGHT = LOCALIZE_POSE_LEFT.mirror();
 
 
     // launch line poses
@@ -117,12 +121,15 @@ public class PresetPoses {
     }
 
     public double getAngleTowardsGoal(Pose currentPose) {
-        double finalAngle;
+        // Calculate the absolute angle vector from the robot to the goal
         double angle = Math.atan2(
                 goalPose.getY() - currentPose.getY(),
                 goalPose.getX() - currentPose.getX()
-        ); if (!isRed) {finalAngle = (Math.toRadians(90)-angle) + Math.toRadians(90);} else {finalAngle = angle;}
-        return MathFunctions.normalizeAngle(finalAngle);
+        );
+
+        // Since goalPose is already mirrored in the constructor based on isRed,
+        // we do not need conditional math here. The coordinates handle the mirroring.
+        return MathFunctions.normalizeAngle(angle);
     }
 
     public static double normalizeAngle(double angle) {

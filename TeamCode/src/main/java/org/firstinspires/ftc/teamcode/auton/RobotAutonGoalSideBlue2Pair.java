@@ -55,7 +55,7 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
 
     // intake sequence
     public boolean intaking = false;
-    public static double storageOuttakePower = 0.5;
+    public static double storageOuttakePower = 1;
 
     public static double intakeMaxPower = 1;
 
@@ -76,7 +76,7 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
         public PathChain ShootGPP;
         public PathChain GotoLever;
 
-        private Pose startPose = new Pose(21, 123, Math.toRadians(145));
+        private Pose startPose = new Pose(28.5, 136, Math.toRadians(270));
         private PresetPoses poses = new PresetPoses(startPose, false);
 
 
@@ -263,14 +263,15 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
             case 2:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.PickupGPP, 0.3, true);
-                    intake.run(1); storage.run(-1);
+                    gate.setGateState(true);
+                    intake.run(1);
                     pathState = 3;
                 }
                 break;
 
             case 3:
                 if (!follower.isBusy()) {
-                    intake.run(0); storage.run(0);
+                    intake.run(0);
                     follower.followPath(paths.ShootGPP);
                     nextState = 4;
                     pathState = 10; // shoot
@@ -278,43 +279,47 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
                 break;
 
             case 4:
-                if (!follower.isBusy()) {
-                    follower.followPath(paths.GotoPGP);
-                    pathState = 5;
-                }
-                break;
+                pathState=10;
 
-            case 5:
-                if (!follower.isBusy()) {
-                    follower.followPath(paths.PickupPGP, 0.3, true);
-                    intake.run(1); storage.run(-1);
-                    pathState =6;
-                }
-                break;
-
-            case 6:
-                if (!follower.isBusy()) {
-                    intake.run(0); storage.run(0);
-                    follower.followPath(paths.ShootPGP);
-                    nextState = 7;
-                    pathState = 10; // shoot
-                }
-                break;
-
-            case 7:
-                if (!follower.isBusy()) {
-                    follower.followPath(paths.GotoLever);
-                    outtake.run(0);
-                    pathState = -1; // terminate
-                }
-                break;
+//            case 4:
+//                if (!follower.isBusy()) {
+//                    follower.followPath(paths.GotoPGP);
+//                    pathState = 5;
+//                }
+//                break;
+//
+//            case 5:
+//                if (!follower.isBusy()) {
+//                    follower.followPath(paths.PickupPGP, 0.3, true);
+//                    gate.setGateState(true);
+//                    intake.run(1);
+//                    pathState =6;
+//                }
+//                break;
+//
+//            case 6:
+//                if (!follower.isBusy()) {
+//                    intake.run(0);
+//                    follower.followPath(paths.ShootPGP);
+//                    nextState = 7;
+//                    pathState = 10; // shoot
+//                }
+//                break;
+//
+//            case 7:
+//                if (!follower.isBusy()) {
+//                    follower.followPath(paths.GotoLever);
+//                    outtake.run(0);
+//                    pathState = -1; // terminate
+//                }
+//                break;
 
             case 10: // shoot
                 if (!follower.isBusy()) {
-                    if (!rampingUp && !shooting) {outtake.run("far"); rampingUp = true;}
+                    if (!rampingUp && !shooting) {outtake.run("close"); rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         gate.setGateState(false);
-                        intake.runForTime(1, 5000); storage.runForTime(storageOuttakePower, 5000);
+                        intake.runForTime(1, 7000); storage.runForTime(storageOuttakePower, 7000);
                         shooting = true;
                         rampingUp = false;
                     }

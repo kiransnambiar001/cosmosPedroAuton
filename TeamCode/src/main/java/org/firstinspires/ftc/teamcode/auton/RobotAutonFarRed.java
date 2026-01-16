@@ -55,7 +55,7 @@ public class RobotAutonFarRed extends LinearOpMode {
 
     // intake sequence
     public boolean intaking = false;
-    public static double storageOuttakePower = 0.5;
+    public static double storageOuttakePower = 1;
 
     public static double intakeMaxPower = 1;
 
@@ -238,14 +238,15 @@ public class RobotAutonFarRed extends LinearOpMode {
             case 2:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.PickupPPG, 0.3, true);
-                    intake.run(1); storage.run(-1);
+                    gate.setGateState(true);
+                    intake.run(1);
                     pathState = 3;
                 }
                 break;
 
             case 3:
                 if (!follower.isBusy()) {
-                    intake.run(0); storage.run(0);
+                    intake.run(0);
                     follower.followPath(paths.ShootPPG);
                     nextState = 4;
                     pathState = 10; // shoot
