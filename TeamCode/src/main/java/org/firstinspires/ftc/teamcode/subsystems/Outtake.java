@@ -6,13 +6,14 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class Outtake {
 
     private final Hardware robotHardware;
+    private static double  closeShotPower = 0.46;
+    private static double farShotPower = 0.8;
 
-    private final double startingCloseShotPower = 0.52;
-    private final double startingFarShotPower = 0.41;
+    private final double startingCloseShotPower = closeShotPower;
+    private final double startingFarShotPower = farShotPower;
     private final double idlePower = 0.2;
     private final double maxPower = 0.8;
-    private static double  closeShotPower = 0.46;
-    private static double farShotPower = 0.73;
+
     private double targetTps = 0.0;
     double stopTimeMs;
     double power = idlePower;

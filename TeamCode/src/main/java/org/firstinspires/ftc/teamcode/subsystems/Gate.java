@@ -10,7 +10,7 @@ public class Gate {
     //private boolean state = false;
 
     public static double gateOpenPos = -1;
-    public static double gateClosedPos = 0.45;
+    public static double gateClosedPos = 0.4;
 
     public Gate(Hardware hardware) {
         robotHardware = hardware;

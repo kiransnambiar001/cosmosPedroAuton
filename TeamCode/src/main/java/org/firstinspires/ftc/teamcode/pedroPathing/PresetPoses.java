@@ -39,13 +39,15 @@ public class PresetPoses {
     public Pose closeShootGppStartMidCurvePose = new Pose(61.918, 94.181);
     public Pose gppEndPose = new Pose(19.800, 83.750, Math.toRadians(180));
     public Pose pgpStartPose = new Pose(48.000, 60.000, Math.toRadians(180));
-    public Pose closeShootPgpStartMidCurvePose = new Pose(54, 59);
+    public Pose closeShootPgpEndMidCurvePose = new Pose(54, 59);
     public Pose pgpEndPose = new Pose(20.000, 60.000, Math.toRadians(180));
     public Pose parkLeverPose = new Pose(28.000, 70.500, Math.toRadians(90));
-    public Pose ppgStartPose = new Pose(41.75, 35.500, Math.toRadians(180));
+    public Pose ppgStartPose = new Pose(49.75, 35.500, Math.toRadians(180));
     public Pose farShootPpgStartMidCurvePose = new Pose(57.5, 34.8);
     public Pose ppgEndPose = new Pose(14, 35.500, Math.toRadians(180));
     public Pose parkPose = new Pose(106, 33, Math.toRadians(90));
+    public Pose closeMoveOutOfWayPose = new Pose(47.6539, 134.17565, Math.toRadians(270));
+    public Pose farStartPose = new Pose(56.000, 8.000, Math.toRadians(270));
 
     public static Pose LOCALIZE_POSE_LEFT = new Pose(7.9,7.7, Math.toRadians(90));
     public static Pose LOCALIZE_POSE_RIGHT = LOCALIZE_POSE_LEFT.mirror();
@@ -91,8 +93,10 @@ public class PresetPoses {
             this.ppgEndPose = ppgEndPose.mirror();
             this.parkPose = parkPose.mirror();
             this.closeShootGppStartMidCurvePose = closeShootGppStartMidCurvePose.mirror();
-            this.closeShootPgpStartMidCurvePose = closeShootPgpStartMidCurvePose.mirror();
+            this.closeShootPgpEndMidCurvePose = closeShootPgpEndMidCurvePose.mirror();
+            this.closeMoveOutOfWayPose = closeMoveOutOfWayPose.mirror();
             this.farShootPpgStartMidCurvePose = farShootPpgStartMidCurvePose.mirror();
+            this.farStartPose = farShootPose.mirror();
         } else {this.startPose = startPose;}
 
             // power table

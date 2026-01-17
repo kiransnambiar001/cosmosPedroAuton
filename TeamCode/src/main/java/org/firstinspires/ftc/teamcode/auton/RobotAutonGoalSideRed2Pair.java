@@ -143,7 +143,7 @@ public class RobotAutonGoalSideRed2Pair extends LinearOpMode {
                     .addPath(
                             new BezierCurve(
                                     poses.pgpEndPose,
-                                    poses.closeShootPgpStartMidCurvePose,
+                                    poses.closeShootPgpEndMidCurvePose,
                                     poses.closeShootPose
                             )
                     )
@@ -279,7 +279,12 @@ public class RobotAutonGoalSideRed2Pair extends LinearOpMode {
                 break;
 
             case 4:
-                pathState=10;
+                if (!follower.isBusy()) {
+                    follower.followPath(paths.GotoPGP);
+                    pathState=-1;
+                }
+
+
 
 //            case 4:
 //                if (!follower.isBusy()) {
@@ -320,6 +325,23 @@ public class RobotAutonGoalSideRed2Pair extends LinearOpMode {
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         gate.setGateState(false);
                         intake.runForTime(1, 7000); storage.runForTime(storageOuttakePower, 7000);
+                        shooting = true;
+                        rampingUp = false;
+                    }
+                    else if (shooting && (intakeRFTFinished || storageRFTFinished)) {
+                        gate.setGateState(true);
+                        rampingUp = false; shooting = false;
+                        outtake.run("idle");
+                        pathState = nextState;
+                    }
+                }
+                break;
+            case 11: // shoot
+                if (!follower.isBusy()) {
+                    if (!rampingUp && !shooting) {outtake.run("close"); rampingUp = true;}
+                    else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
+                        gate.setGateState(false);
+                        intake.runForTime(1, 100000); storage.runForTime(storageOuttakePower, 100000);
                         shooting = true;
                         rampingUp = false;
                     }

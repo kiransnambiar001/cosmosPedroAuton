@@ -29,10 +29,10 @@ import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
 
-@Autonomous(name="GOAL SIDE BLUE - Auton", group="Autonomous")
+@Autonomous(name="GOAL SIDE BLUE - Only Preloaded Auton", group="Autonomous")
 @Configurable // for Panels
 @SuppressWarnings("FieldCanBeLocal") // android studio bugging
-public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
+public class RobotAutonGoalSideBluePreloaded extends LinearOpMode {
 
     public Hardware hardware;
     public Outtake outtake;
@@ -68,13 +68,7 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
 
 
         public PathChain ShootPreloaded;
-        public PathChain GotoPGP;
-        public PathChain PickupPGP;
-        public PathChain ShootPGP;
-        public PathChain GotoGPP;
-        public PathChain PickupGPP;
-        public PathChain ShootGPP;
-        public PathChain GotoLever;
+        public PathChain MoveOutOfWay;
 
         private Pose startPose = new Pose(28.5, 136, Math.toRadians(270));
         private PresetPoses poses = new PresetPoses(startPose, false);
@@ -90,74 +84,17 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
                     .build();
 
 
-            GotoGPP = follower
+            MoveOutOfWay = follower
                     .pathBuilder()
                     .addPath(
                             new BezierLine(
                                     poses.closeShootPose,
-                                    poses.gppStartPose
+                                    poses.closeMoveOutOfWayPose
                             )
                     )
                     .setLinearHeadingInterpolation(poses.closeShootPose.getHeading(), poses.gppStartPose.getHeading())
                     .build();
 
-
-            PickupGPP = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(poses.gppStartPose, poses.gppEndPose)
-                    )
-                    .setTangentHeadingInterpolation()
-                    .build();
-
-
-            ShootGPP = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(poses.gppEndPose, poses.closeShootPose)
-                    )
-                    .setLinearHeadingInterpolation(poses.gppEndPose.getHeading(), poses.closeShootPose.getHeading())
-                    .build();
-
-
-            GotoPGP = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(poses.closeShootPose, poses.pgpStartPose)
-                    )
-                    .setLinearHeadingInterpolation(poses.closeShootPose.getHeading(), poses.pgpStartPose.getHeading())
-                    .build();
-
-
-            PickupPGP = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(poses.pgpStartPose, poses.pgpEndPose)
-                    )
-                    .setTangentHeadingInterpolation()
-                    .build();
-
-
-            ShootPGP = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierCurve(
-                                    poses.pgpEndPose,
-                                    poses.closeShootPgpEndMidCurvePose,
-                                    poses.closeShootPose
-                            )
-                    )
-                    .setLinearHeadingInterpolation(poses.pgpEndPose.getHeading(), poses.closeShootPose.getHeading())
-                    .build();
-
-
-            GotoLever = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(poses.closeShootPose, poses.parkLeverPose)
-                    )
-                    .setLinearHeadingInterpolation(poses.closeShootPose.getHeading(), poses.parkLeverPose.getHeading())
-                    .build();
         }
     }
 
@@ -255,76 +192,18 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
 
             case 1:
                 if (!follower.isBusy()) {
-                    follower.followPath(paths.GotoGPP);
-                    pathState = 2;
+                    follower.followPath(paths.MoveOutOfWay);
+                    pathState = -1;
                 }
                 break;
 
-            case 2:
-                if (!follower.isBusy()) {
-                    follower.followPath(paths.PickupGPP, 0.3, true);
-                    gate.setGateState(true);
-                    intake.run(1);
-                    pathState = 3;
-                }
-                break;
-
-            case 3:
-                if (!follower.isBusy()) {
-                    intake.run(0);
-                    follower.followPath(paths.ShootGPP);
-                    nextState = 4;
-                    pathState = 10; // shoot
-                }
-                break;
-
-            case 4:
-                if (!follower.isBusy()) {
-                    follower.followPath(paths.GotoPGP);
-                    pathState=-1;
-                }
-
-
-
-//            case 4:
-//                if (!follower.isBusy()) {
-//                    follower.followPath(paths.GotoPGP);
-//                    pathState = 5;
-//                }
-//                break;
-//
-//            case 5:
-//                if (!follower.isBusy()) {
-//                    follower.followPath(paths.PickupPGP, 0.3, true);
-//                    gate.setGateState(true);
-//                    intake.run(1);
-//                    pathState =6;
-//                }
-//                break;
-//
-//            case 6:
-//                if (!follower.isBusy()) {
-//                    intake.run(0);
-//                    follower.followPath(paths.ShootPGP);
-//                    nextState = 7;
-//                    pathState = 10; // shoot
-//                }
-//                break;
-//
-//            case 7:
-//                if (!follower.isBusy()) {
-//                    follower.followPath(paths.GotoLever);
-//                    outtake.run(0);
-//                    pathState = -1; // terminate
-//                }
-//                break;
 
             case 10: // shoot
                 if (!follower.isBusy()) {
                     if (!rampingUp && !shooting) {outtake.run("close"); rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         gate.setGateState(false);
-                        intake.runForTime(1, 7000); storage.runForTime(storageOuttakePower, 7000);
+                        intake.runForTime(1, 8000); storage.runForTime(storageOuttakePower, 8000);
                         shooting = true;
                         rampingUp = false;
                     }

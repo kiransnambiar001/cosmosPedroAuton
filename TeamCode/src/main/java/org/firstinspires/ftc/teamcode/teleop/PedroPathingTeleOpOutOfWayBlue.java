@@ -41,8 +41,8 @@ import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
 
 @Configurable
-@TeleOp(name="FAR SIDE BLUE - PedroPathingTeleOp", group="LinearOpMode")
-public class PedroPathingTeleOpFarSideBlue extends OpMode {
+@TeleOp(name="OUT OF WAY BLUE - PedroPathingTeleOp", group="LinearOpMode")
+public class PedroPathingTeleOpOutOfWayBlue extends OpMode {
 
     // Create hardware object
     Hardware robotHardware = new Hardware();
@@ -152,7 +152,7 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
         poses = new PresetPoses(startPose, false);
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(poses.farStartPose);
+        follower.setStartingPose(poses.closeMoveOutOfWayPose);
         follower.update();
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 

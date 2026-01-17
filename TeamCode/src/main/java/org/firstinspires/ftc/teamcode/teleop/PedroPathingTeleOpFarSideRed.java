@@ -10,6 +10,8 @@ import java.util.function.Supplier;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.gamepad.GamepadManager;
 import com.bylazar.telemetry.TelemetryManager;
+import com.pedropathing.control.PIDFCoefficients;
+import com.pedropathing.control.PIDFController;
 import com.pedropathing.math.MathFunctions;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -22,9 +24,7 @@ import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.hardware.Gamepad;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.seattlesolvers.solverslib.controller.PIDFController;
 
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -75,6 +75,9 @@ public class PedroPathingTeleOpFarSideRed extends OpMode {
 
     // input vars
     boolean fieldCentric = false;
+    double fcOffset = 0;
+
+    public Pose holdingPose = new Pose(0,0,0);
 
     // Auto shoot sequence tracking
     boolean isAutoShooting = false;
@@ -82,8 +85,7 @@ public class PedroPathingTeleOpFarSideRed extends OpMode {
 
     // toggles
     boolean ballCamToggle = false;
-    public static PIDFCoefficients headingPIDFCoefficients = new PIDFCoefficients(1,0,0.075,0.1);
-    PIDFController headingPIDFController = new PIDFController(headingPIDFCoefficients);
+    PIDFController headingPIDFController = new PIDFController(new PIDFCoefficients(0,0,0,0));
     boolean slowMode = false;
     boolean offToggle = false;
 
@@ -91,6 +93,7 @@ public class PedroPathingTeleOpFarSideRed extends OpMode {
     boolean home1prevState = false;
     boolean options1prevState = false;
     boolean dpd1prevState = false;
+    boolean dpr1prevState = false;
     boolean rb1prevState = false;
     boolean lb1prevState = false;
     boolean b1prevState = false;
@@ -103,6 +106,9 @@ public class PedroPathingTeleOpFarSideRed extends OpMode {
     boolean dpr2prevState = false;
     boolean dpl2prevState = false;
     boolean lb2prevState = false;
+    boolean a1prevState = false;
+    boolean b2prevState = false;
+    boolean y2prevState = false;
 
 
 
@@ -146,7 +152,7 @@ public class PedroPathingTeleOpFarSideRed extends OpMode {
         poses = new PresetPoses(startPose, true);
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(poses.parkPose);
+        follower.setStartingPose(poses.farStartPose);
         follower.update();
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
@@ -188,6 +194,7 @@ public class PedroPathingTeleOpFarSideRed extends OpMode {
     @SuppressLint("DefaultLocale")
     @Override
     public void loop() {
+        headingPIDFController.setCoefficients(follower.constants.coefficientsHeadingPIDF);
         currentPose = follower.getPose();
         Gamepad g1 = g1Manager.asCombinedFTCGamepad(gamepad1);
         Gamepad g2 = g2Manager.asCombinedFTCGamepad(gamepad2);
@@ -201,9 +208,11 @@ public class PedroPathingTeleOpFarSideRed extends OpMode {
         boolean home1state = g1.guide; // reset yaw value on gyro
         boolean options1state = g1.options; // field centric toggle
         boolean dpd1state = g1.dpad_down; // go to closest shoot pose
+        boolean dpr1state = g1.dpad_right;
         boolean b1state = g1.b; // ball cam toggle
         boolean dpu1state = g1.dpad_up; // go to closest launch line pose
-        boolean x1state = g1.x;
+        boolean x1state = g1.x; // right localize
+        boolean a1state = g1.a; // left localize
         boolean y1state = g1.y; // abort autonomous drive
 
         boolean home1wP = home1state && !home1prevState;
@@ -213,6 +222,8 @@ public class PedroPathingTeleOpFarSideRed extends OpMode {
         boolean dpu1wP = dpu1state && !dpu1prevState;
         boolean x1wP = x1state && !x1prevState;
         boolean y1wP = y1state && !y1prevState;
+        boolean a1wP = a1state && !a1prevState;
+        boolean dpr1wP = dpr1state && !dpr1prevState;
 
         //      Gamepad 2 inputs
         double ly2 = g2.left_stick_y; // robot intake run
@@ -259,15 +270,16 @@ public class PedroPathingTeleOpFarSideRed extends OpMode {
                 if (ballCamToggle) {
 
                     double targetHeading = poses.getAngleTowardsGoal(currentPose) - Math.toRadians(180);
-                    double currentHeading = follower.getPose().getHeading();
 
-                    double output = headingPIDFController.calculate(currentHeading, targetHeading);
+                    double error = MathFunctions.getTurnDirection(follower.getPose().getHeading(), targetHeading)
+                            * MathFunctions.getSmallestAngleDifference(follower.getPose().getHeading(), targetHeading);
 
-                    output = Math.max(-1.0, Math.min(1.0, output));
-                    follower.setTeleOpDrive(ly1, lx1, output, false);
+                    headingPIDFController.updateError(error);
+
+                    follower.setTeleOpDrive(ly1, lx1, headingPIDFController.run(), false, fcOffset);
 
                 }
-                else {follower.setTeleOpDrive(ly1, lx1, -rx1, false);} // normal field centric
+                else {follower.setTeleOpDrive(ly1, lx1, -rx1, false, fcOffset);} // normal field centric
             }
             else {follower.setTeleOpDrive(ly1, lx1, -rx1, true);} // rbt centric
         }
@@ -276,6 +288,13 @@ public class PedroPathingTeleOpFarSideRed extends OpMode {
 
         //      Intake Control
         robotIntake.update();
+
+        if (!poses.isRed && x1wP) {
+            follower.setPose(PresetPoses.LOCALIZE_POSE_RIGHT);
+        }
+        else if (poses.isRed && x1wP) {
+            follower.setPose(PresetPoses.LOCALIZE_POSE_LEFT);
+        }
 
         // robot gate toggle (lb2wP)
         if (lb2wP) {
@@ -290,6 +309,17 @@ public class PedroPathingTeleOpFarSideRed extends OpMode {
         else if (ly2 <= -0.3) {robotIntake.run(-1.0);}
         else {robotIntake.run(0);}
 
+        // hold pos dpr1
+        if (!follower.isBusy()) {
+            if (dpr1wP) {
+                holdingPose = follower.getPose();
+                follower.holdPoint(holdingPose);
+            }
+            if (!dpr1state && dpr1prevState) {
+                follower.breakFollowing();
+            }
+        }
+
         //      Storage Control
         robotStorage.update();
         if (rt2state >= 0.3 && !rb2state) {robotStorage.run(1.0);}
@@ -297,10 +327,9 @@ public class PedroPathingTeleOpFarSideRed extends OpMode {
         else {robotStorage.run(0.0);}
 
         // outtake preset running
-        if (a2wP) {offToggle = !offToggle;}
-        else if (b2state) {robotOuttake.run("close");}
-        else if (y2state) {robotOuttake.run("far");}
-        else if (x2state) {robotOuttake.run(poses.getOptimalShooterPowerPercentage(currentPose, false));}
+        if (a2wP) {robotOuttake.reset();}
+        else if (y2state) {robotOuttake.run("close"); gate.setGateState(false);} else if (y2prevState) {gate.setGateState(true);}
+        else if (b2state) {robotOuttake.run("far"); gate.setGateState(false);} else if (b2prevState) {gate.setGateState(true);}
 
         else {robotOuttake.run("idle");}
         if (offToggle) {robotOuttake.run(0);}
@@ -308,6 +337,8 @@ public class PedroPathingTeleOpFarSideRed extends OpMode {
         // Fine tune active preset
         if (dpu2wP && !offToggle && !b2state) {robotOuttake.tuneActivePreset(0.05);}
         else if (dpd2wP && !offToggle) {robotOuttake.tuneActivePreset(-0.05);}
+
+        if (home1wP) {fcOffset = follower.getHeading();}
 
 
         // Reset outtake presets
@@ -327,6 +358,8 @@ public class PedroPathingTeleOpFarSideRed extends OpMode {
         log("Actual Velocity (tps)", robotHardware.outtakeMotor.getVelocity());
         log("IMU Heading (deg)", Math.toDegrees(imuHeading));
         log("Position", String.format("X: %.2f, Y: %.2f", currentPose.getX(), currentPose.getY()));
+        log("Goal Pose", poses.goalPose);
+        log("Target Angle for Goal", Math.toDegrees(poses.getAngleTowardsGoal(currentPose)));
         panelsTelemetry.update(telemetry);
         follower.update();
         draw();
@@ -338,6 +371,7 @@ public class PedroPathingTeleOpFarSideRed extends OpMode {
         b1prevState = b1state;
         dpu1prevState = dpu1state;
         x1prevState = x1state;
+        a1prevState = a1state;
         y1prevState = y1state;
         dpu2prevState = dpu2state; // tune preset increment
         dpd2prevState = dpd2state; // tune preset decrement
@@ -345,5 +379,8 @@ public class PedroPathingTeleOpFarSideRed extends OpMode {
         dpr2prevState = dpr2state;
         dpl2prevState = dpl2state;
         lb2prevState = lb2state;
+        b2prevState = b2state;
+        y2prevState = y2state;
+        dpr1prevState = dpr1state;
     }
 }
