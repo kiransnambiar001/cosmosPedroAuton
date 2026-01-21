@@ -23,7 +23,7 @@ public class Constants {
             .translationalPIDFCoefficients(new PIDFCoefficients(0.125, 0, 0.01, 0.03))
             .secondaryTranslationalPIDFCoefficients(new PIDFCoefficients(0.15, 0, 0.01, 0.02))
             .useSecondaryDrivePIDF(true)
-            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.025, 0, 0.0015, 0.6, 0.03))
+            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.04, 0, 0.0015, 0.6, 0.03)) // original p: 0.025
             .secondaryDrivePIDFCoefficients(new FilteredPIDFCoefficients(0.01, 0, 0.0005, 0.6, 0.03))
             .forwardZeroPowerAcceleration(-63.114980111444126)
             .lateralZeroPowerAcceleration(-86.82421475789788);

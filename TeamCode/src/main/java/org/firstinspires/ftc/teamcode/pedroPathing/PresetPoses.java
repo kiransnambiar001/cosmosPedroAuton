@@ -46,7 +46,7 @@ public class PresetPoses {
     public Pose farShootPpgStartMidCurvePose = new Pose(57.5, 34.8);
     public Pose ppgEndPose = new Pose(14, 35.500, Math.toRadians(180));
     public Pose parkPose = new Pose(106, 33, Math.toRadians(90));
-    public Pose closeMoveOutOfWayPose = new Pose(47.6539, 134.17565, Math.toRadians(270));
+    public Pose closeMoveOutOfWayPose = new Pose(55, 134.17565, Math.toRadians(270));
     public Pose farStartPose = new Pose(56.000, 8.000, Math.toRadians(270));
 
     public static Pose LOCALIZE_POSE_LEFT = new Pose(7.9,7.7, Math.toRadians(90));
