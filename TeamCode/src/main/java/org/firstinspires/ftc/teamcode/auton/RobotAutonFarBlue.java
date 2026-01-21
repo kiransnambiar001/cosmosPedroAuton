@@ -223,6 +223,7 @@ public class RobotAutonFarBlue extends LinearOpMode {
     public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished, boolean storageRFTFinished) {
         switch (pathState) {
             case 0:
+                outtake.run("far");
                 follower.followPath(paths.ShootPreloaded, 0.3, true);
                 nextState = 1;
                 pathState = 10; // shoot
@@ -273,7 +274,6 @@ public class RobotAutonFarBlue extends LinearOpMode {
                     else if (shooting && (intakeRFTFinished || storageRFTFinished)) {
                         gate.setGateState(true);
                         rampingUp = false; shooting = false;
-                        outtake.run("idle");
                         pathState = nextState;
                     }
                 }
