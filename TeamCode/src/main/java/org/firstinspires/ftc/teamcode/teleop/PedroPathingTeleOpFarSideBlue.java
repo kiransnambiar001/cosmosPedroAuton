@@ -2,6 +2,9 @@ package org.firstinspires.ftc.teamcode.teleop;
 
 
 
+
+
+
 import android.annotation.SuppressLint;
 
 import java.util.function.Function;
@@ -204,7 +207,7 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
         double ly1 = -g1.left_stick_y; // forward/backward driving
         double lx1 = -g1.left_stick_x; // strafing
         double rx1 = g1.right_stick_x / 2; // turning (decrease by factor of 2)
-        slowMode = (g1.right_trigger >= 0.5) ? true : false;
+        slowMode = g1.right_trigger >= 0.5;
         boolean home1state = g1.guide; // reset yaw value on gyro
         boolean options1state = g1.options; // field centric toggle
         boolean dpd1state = g1.dpad_down; // go to closest shoot pose
