@@ -152,7 +152,7 @@ public class PedroPathingTeleOpGoalSideRed extends OpMode {
         poses = new PresetPoses(startPose, true);
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(poses.closeShootPose);
+        follower.setStartingPose(poses.pgpEndPose);
         follower.update();
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
@@ -187,8 +187,6 @@ public class PedroPathingTeleOpGoalSideRed extends OpMode {
         follower.update();
         robotHardware.imu.resetYaw();
         follower.startTeleOpDrive();
-
-
     }
 
     @SuppressLint("DefaultLocale")

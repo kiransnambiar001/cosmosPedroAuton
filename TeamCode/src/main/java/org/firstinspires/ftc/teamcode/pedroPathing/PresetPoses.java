@@ -30,14 +30,15 @@ public class PresetPoses {
 
     // robot poses
     public static double shootAngle = 320;
+    public static double farShootAngle = 120;
     public boolean isRed = true;
     public Pose startPose;
     public Pose goalPose = new Pose(12.6, 135.5);
     public Pose closeShootPose = new Pose(50, 95, Math.toRadians(shootAngle));
-    public Pose farShootPose = new Pose(56.000, 13.0750, Math.toRadians(285));;
+    public Pose farShootPose = new Pose(56.000, 13.0750, Math.toRadians(farShootAngle));;
     public Pose gppStartPose = new Pose(52.000, 83.750, Math.toRadians(180));
     public Pose closeShootGppStartMidCurvePose = new Pose(61.918, 94.181);
-    public Pose gppEndPose = new Pose(19.800, 83.750, Math.toRadians(180));
+    public Pose gppEndPose = new Pose(16, 83.750, Math.toRadians(180));
     public Pose pgpStartPose = new Pose(48.000, 60.000, Math.toRadians(180));
     public Pose closeShootPgpEndMidCurvePose = new Pose(54, 59);
     public Pose pgpEndPose = new Pose(20.000, 60.000, Math.toRadians(180));

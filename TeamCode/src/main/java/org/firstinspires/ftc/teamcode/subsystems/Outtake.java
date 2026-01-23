@@ -7,7 +7,7 @@ public class Outtake {
 
     private final Hardware robotHardware;
     private static double  closeShotPower = 0.46;
-    private static double farShotPower = 0.8;
+    private static double farShotPower = 0.635;
 
     private final double startingCloseShotPower = closeShotPower;
     private final double startingFarShotPower = farShotPower;

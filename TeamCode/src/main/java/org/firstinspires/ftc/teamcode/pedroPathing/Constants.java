@@ -23,7 +23,7 @@ public class Constants {
             .translationalPIDFCoefficients(new PIDFCoefficients(0.125, 0, 0.01, 0.03))
             .secondaryTranslationalPIDFCoefficients(new PIDFCoefficients(0.15, 0, 0.01, 0.02))
             .useSecondaryDrivePIDF(true)
-            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.04, 0, 0.0015, 0.6, 0.03)) // original p: 0.025
+            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.03, 0, 0.0015, 0.6, 0.03)) // original p: 0.025
             .secondaryDrivePIDFCoefficients(new FilteredPIDFCoefficients(0.01, 0, 0.0005, 0.6, 0.03))
             .forwardZeroPowerAcceleration(-63.114980111444126)
             .lateralZeroPowerAcceleration(-86.82421475789788);
@@ -45,8 +45,8 @@ public class Constants {
             .forwardTicksToInches(.0029787066224)
             .strafeTicksToInches(.0029495443792)
             .turnTicksToInches(.0019958598246)
-            .leftPodY(5.25) // offset from center of rotation INCHES
-            .rightPodY(-5.25) // offset from center of rotation INCHES
+            .leftPodY(5.75) // offset from center of rotation INCHES
+            .rightPodY(-5.75) // offset from center of rotation INCHES
             .strafePodX(1.5) // offset from center of rotation INCHES
             .leftEncoder_HardwareMapName("backRight")
             .rightEncoder_HardwareMapName("frontRight")
