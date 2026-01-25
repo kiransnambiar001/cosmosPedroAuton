@@ -30,7 +30,7 @@ public class PresetPoses {
 
     // robot poses
     public static double shootAngle = 320;
-    public static double farShootAngle = 120;
+    public static double farShootAngle = 290;
     public boolean isRed = true;
     public Pose startPose;
     public Pose goalPose = new Pose(12.6, 135.5);
@@ -70,12 +70,15 @@ public class PresetPoses {
 
     // MAKE SURE CONSTRUCTOR GOES IN ORDER OF INCREASING DISTANCES
     public static double[][] powerTable = new double[][] {
-            {50, 0.55},
-            {60, 0.6},
-            {70, 0.65},
-            {80, 0.7},
-            {100, 0.75},
-            {150, 0.8}
+            {25.9946, 0.445},
+            {40.406847, 0.46},
+            {44, 0.465},
+            {53.4184, 0.4825},
+            {60.909, 0.51},
+            {73.8828, 0.52}, // elite
+            {96, 0.60},
+            {107, 0.63}, // pretty good
+            {129.89, 0.66},
     };
 
     public PresetPoses(Pose startPose, boolean isRed) {

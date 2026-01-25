@@ -205,6 +205,8 @@ public class RobotAutonFarBlue extends LinearOpMode {
             // telemetry
             log("Status", "RUNNING");
             log("Path State", pathState);
+            log("Outtake Tps: ", hardware.outtakeMotor.getVelocity());
+            log("Outtake Target Tps: ", outtake.getTargetTps());
             if (pathState == 0) {log("Path Name", "Shoot Preloaded");}
             else if (pathState == 1) {log("Path Name", "Go to PPG");}
             else if (pathState == 2) {log("Path Name", "Pickup PPG");}
