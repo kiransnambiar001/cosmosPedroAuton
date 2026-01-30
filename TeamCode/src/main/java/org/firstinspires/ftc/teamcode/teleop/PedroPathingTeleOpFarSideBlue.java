@@ -84,6 +84,7 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
 
     // Auto shoot sequence tracking
     boolean isAutoShooting = false;
+    String autoShootPreset;
     public static double slowModeMultiplier = 0.3;
 
     // toggles
@@ -324,12 +325,6 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
                 follower.startTeleOpDrive();
             }
         }
-
-        //      Storage Control
-        robotStorage.update();
-        if (rt2state >= 0.3 && !rb2state) {robotStorage.run(1.0);}
-        else if (rb2state && rt2state < 0.3) {robotStorage.run(-1.0);}
-        else {robotStorage.run(0.0);}
 
         // outtake preset running
         if (a2wP) {robotOuttake.reset();}
