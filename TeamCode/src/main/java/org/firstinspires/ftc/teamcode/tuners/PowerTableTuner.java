@@ -57,7 +57,7 @@ public class PowerTableTuner extends OpMode {
     public GamepadManager g1Manager, g2Manager;
 
     // pp vars
-    public Pose startPose = new Pose(35.96521, 135.9721, Math.toRadians(90));
+    public Pose startPose = new Pose(31.53307392996109, 127.89105058365757, Math.toRadians(90));
 
     public PresetPoses poses;
     public static Pose currentPose;

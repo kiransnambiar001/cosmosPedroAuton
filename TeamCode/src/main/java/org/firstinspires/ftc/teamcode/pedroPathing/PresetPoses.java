@@ -29,19 +29,21 @@ import com.pedropathing.paths.PathPoint;
 public class PresetPoses {
 
     // robot poses
-    public static double shootAngle = 320;
+    public static double shootAngle = 317.66; // original 320
     public static double farShootAngle = 290;
+    public static double powerDistOffset = 2;
     public boolean isRed = true;
     public Pose startPose;
-    public Pose goalPose = new Pose(12.6, 135.5);
+    public Pose goalPose = new Pose(9.168695652173914, 139.9304347826087);
     public Pose closeShootPose = new Pose(50, 95, Math.toRadians(shootAngle));
+    public Pose closeShootOffLinePose = new Pose(58.5, 132.67, Math.toRadians(351.64));
     public Pose farShootPose = new Pose(56.000, 13.0750, Math.toRadians(farShootAngle));;
-    public Pose gppStartPose = new Pose(52.000, 83.750, Math.toRadians(180));
+    public Pose gppStartPose = new Pose(52.000, 88.750, Math.toRadians(180)); // org y=83.750
     public Pose closeShootGppStartMidCurvePose = new Pose(61.918, 94.181);
-    public Pose gppEndPose = new Pose(16, 83.750, Math.toRadians(180));
-    public Pose pgpStartPose = new Pose(48.000, 60.000, Math.toRadians(180));
+    public Pose gppEndPose = new Pose(16, 93.750, Math.toRadians(180)); // org y=83.750
+    public Pose pgpStartPose = new Pose(48.000, 65.000, Math.toRadians(180)); // org y=70
     public Pose closeShootPgpEndMidCurvePose = new Pose(54, 59);
-    public Pose pgpEndPose = new Pose(20.000, 60.000, Math.toRadians(180));
+    public Pose pgpEndPose = new Pose(20.000, 65.000, Math.toRadians(180)); // org y=70
     public Pose parkLeverPose = new Pose(28.000, 70.500, Math.toRadians(90));
     public Pose ppgStartPose = new Pose(49.75, 35.500, Math.toRadians(180));
     public Pose farShootPpgStartMidCurvePose = new Pose(57.5, 34.8);
@@ -70,15 +72,13 @@ public class PresetPoses {
 
     // MAKE SURE CONSTRUCTOR GOES IN ORDER OF INCREASING DISTANCES
     public static double[][] powerTable = new double[][] {
-            {25.9946, 0.445},
-            {40.406847, 0.46},
-            {44, 0.465},
-            {53.4184, 0.4825},
-            {60.909, 0.51},
-            {73.8828, 0.52}, // elite
-            {96, 0.60},
-            {107, 0.63}, // pretty good
-            {129.89, 0.66},
+            {44.24, 0.445},
+            {56.74, 0.46},
+            {73.0619, 0.475},
+            {80.48, 0.5},
+            {90.8514, 0.525},
+            {112.78, 0.595},
+            {137.9374, 0.68}
     };
 
     public PresetPoses(Pose startPose, boolean isRed) {
@@ -149,7 +149,7 @@ public class PresetPoses {
     }
 
     public double getOptimalShooterPowerPercentage(Pose currentPose, boolean doLinearInterp) {
-        double distance = currentPose.distanceFrom(goalPose); // in inches (pedropathing coords are in inches)
+        double distance = currentPose.distanceFrom(goalPose) + powerDistOffset; // in inches (pedropathing coords are in inches)
         // clamp to least and highest indexes
         if (distance <= powerTable[0][0]) return powerTable[0][1];
         if (distance >= powerTable[powerTable.length - 1][0]) return powerTable[powerTable.length - 1][1];

@@ -141,13 +141,12 @@ public class RobotAutonGoalSideBlue3Pair extends LinearOpMode {
             ShootPGP = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierCurve(
+                            new BezierLine(
                                     poses.pgpEndPose,
-                                    poses.closeShootPgpEndMidCurvePose,
-                                    poses.closeShootPose
+                                    poses.closeShootOffLinePose
                             )
                     )
-                    .setLinearHeadingInterpolation(poses.pgpEndPose.getHeading(), poses.closeShootPose.getHeading())
+                    .setLinearHeadingInterpolation(poses.pgpEndPose.getHeading(), poses.closeShootOffLinePose.getHeading())
                     .build();
 
 
@@ -248,20 +247,21 @@ public class RobotAutonGoalSideBlue3Pair extends LinearOpMode {
     public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished, boolean storageRFTFinished) {
         switch (pathState) {
             case 0:
+                outtake.run("close");
                 follower.followPath(paths.ShootPreloaded);
                 nextState = 1;
                 pathState = 10; // shoot
                 break;
 
             case 1:
-                if (!follower.isBusy()) {
+                if (follower.getCurrentTValue() > 0.97) {
                     follower.followPath(paths.GotoGPP);
                     pathState = 2;
                 }
                 break;
 
             case 2:
-                if (!follower.isBusy()) {
+                if (follower.getCurrentTValue() > 0.97) {
                     follower.followPath(paths.PickupGPP, 0.4, true);
                     gate.setGateState(true);
                     intake.run(1);
@@ -270,7 +270,7 @@ public class RobotAutonGoalSideBlue3Pair extends LinearOpMode {
                 break;
 
             case 3:
-                if (!follower.isBusy()) {
+                if (follower.getCurrentTValue() > 0.97) {
                     intake.run(0);
                     follower.followPath(paths.ShootGPP);
                     nextState = 4;
@@ -279,12 +279,13 @@ public class RobotAutonGoalSideBlue3Pair extends LinearOpMode {
                 break;
 
             case 4:
-                if (!follower.isBusy()) {
+                if (follower.getCurrentTValue() > 0.97) {
                     follower.followPath(paths.GotoPGP);
+                    outtake.run(0.445);
                     pathState = 5;
                 }
             case 5:
-                if (!follower.isBusy()) {
+                if (follower.getCurrentTValue() > 0.97) {
                     follower.followPath(paths.PickupPGP, 0.4, true);
                     gate.setGateState(true);
                     intake.run(1);
@@ -292,17 +293,17 @@ public class RobotAutonGoalSideBlue3Pair extends LinearOpMode {
                 }
                 break;
             case 6:
-                if (!follower.isBusy()) {
+                if (follower.getCurrentTValue() > 0.97) {
                     intake.run(0);
                     follower.followPath(paths.ShootPGP);
                     nextState = 7;
-                    pathState = 10; // shoot
+                    pathState = 11; // shoot
                 }
                 break;
             case 7:
-                if(!follower.isBusy()) {
-                    follower.followPath(paths.GotoPGP);
+                if(follower.getCurrentTValue() > 0.97) {
                     pathState = -1;
+                    outtake.run(0);
                 }
 
 
@@ -342,35 +343,33 @@ public class RobotAutonGoalSideBlue3Pair extends LinearOpMode {
 //                break;
 
             case 10: // shoot
-                if (!follower.isBusy()) {
-                    if (!rampingUp && !shooting) {outtake.run("close"); rampingUp = true;}
+                if (follower.getCurrentTValue() > 0.97) {
+                    if (!rampingUp && !shooting) {rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         gate.setGateState(false);
-                        intake.runForTime(1, 5500); storage.runForTime(storageOuttakePower, 5500, true, 300);
+                        intake.runForTime(1, 5500); storage.runForTime(storageOuttakePower, 5500);
                         shooting = true;
                         rampingUp = false;
                     }
                     else if (shooting && (intakeRFTFinished || storageRFTFinished)) {
                         gate.setGateState(true);
                         rampingUp = false; shooting = false;
-                        outtake.run("idle");
                         pathState = nextState;
                     }
                 }
                 break;
             case 11: // shoot
-                if (!follower.isBusy()) {
-                    if (!rampingUp && !shooting) {outtake.run("close"); rampingUp = true;}
+                if (follower.getCurrentTValue() > 0.97) {
+                    if (!rampingUp && !shooting) {rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         gate.setGateState(false);
-                        intake.runForTime(1, 100000); storage.runForTime(storageOuttakePower, 100000, true, 300);
+                        intake.runForTime(1, 100000); storage.runForTime(storageOuttakePower, 100000);
                         shooting = true;
                         rampingUp = false;
                     }
                     else if (shooting && (intakeRFTFinished || storageRFTFinished)) {
                         gate.setGateState(true);
                         rampingUp = false; shooting = false;
-                        outtake.run("idle");
                         pathState = nextState;
                     }
                 }
