@@ -45,10 +45,10 @@ public class PresetPoses {
     public Pose closeShootPgpEndMidCurvePose = new Pose(54, 59);
     public Pose pgpEndPose = new Pose(20.000, 65.000, Math.toRadians(180)); // org y=70
     public Pose parkLeverPose = new Pose(28.000, 70.500, Math.toRadians(90));
-    public Pose ppgStartPose = new Pose(49.75, 35.500, Math.toRadians(180));
+    public Pose ppgStartPose = new Pose(49.75, 30.500, Math.toRadians(180));
     public Pose farShootPpgStartMidCurvePose = new Pose(57.5, 34.8);
-    public Pose ppgEndPose = new Pose(14, 35.500, Math.toRadians(180));
-    public Pose parkPose = new Pose(106, 33, Math.toRadians(90));
+    public Pose ppgEndPose = new Pose(14, 30.500, Math.toRadians(180));
+    public Pose parkPose = new Pose(32.34, 8.43, Math.toRadians(90));
     public Pose closeMoveOutOfWayPose = new Pose(55, 134.17565, Math.toRadians(270));
     public Pose farStartPose = new Pose(56.000, 8.000, Math.toRadians(270));
 

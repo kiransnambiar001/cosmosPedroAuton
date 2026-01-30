@@ -112,6 +112,7 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
     boolean a1prevState = false;
     boolean b2prevState = false;
     boolean y2prevState = false;
+    boolean x2prevState = false;
 
 
 
@@ -334,6 +335,7 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
         if (a2wP) {robotOuttake.reset();}
         else if (y2state) {robotOuttake.run("close"); gate.setGateState(false);} else if (y2prevState) {gate.setGateState(true);}
         else if (b2state) {robotOuttake.run("far"); gate.setGateState(false);} else if (b2prevState) {gate.setGateState(true);}
+        else if (x2state) {robotOuttake.run(poses.getOptimalShooterPowerPercentage(follower.getPose(), true)); gate.setGateState(false);} else if (x2prevState) {gate.setGateState(true);}
 
         else {robotOuttake.run("idle");}
         if (offToggle) {robotOuttake.run(0);}
@@ -386,5 +388,6 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
         b2prevState = b2state;
         y2prevState = y2state;
         dpr1prevState = dpr1state;
+        x2prevState = x2state;
     }
 }

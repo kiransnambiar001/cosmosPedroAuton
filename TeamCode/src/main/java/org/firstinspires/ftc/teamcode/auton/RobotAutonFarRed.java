@@ -257,7 +257,7 @@ public class RobotAutonFarRed extends LinearOpMode {
 
             case 4:
                 if (!follower.isBusy()) {
-                    follower.followPath(paths.GotoPPG);
+                    follower.followPath(paths.Park);
                     outtake.run(0);
                     pathState = -1; // terminate
                 }
