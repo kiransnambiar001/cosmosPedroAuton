@@ -45,7 +45,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
 @Configurable
 @TeleOp(name="FAR SIDE BLUE - PedroPathingTeleOp", group="LinearOpMode")
-public class PedroPathingTeleOpFarSideBlue extends OpMode {
+public class testTeleOp extends OpMode {
 
     // Create hardware object
     Hardware robotHardware = new Hardware();
@@ -324,6 +324,25 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
             }
         }
 
+        // Auto Shoot **
+        if (b2state) {robotOuttake.run(autoShootPreset);}
+        if (Math.abs(robotOuttake.getCurrentTps()-robotOuttake.getTargetTps()) <= 10)
+        {
+            if((follower.getPose().distanceFrom(poses.closeShootPose).y < 16))
+            {
+                autoShootPreset = "close";
+            } else if((follower.getPose().distanceFrom(poses.farShootPose).y >= 16))
+            {
+                autoShootPreset = "far";
+            }
+)
+        }
+        //      Storage Control
+        robotStorage.update();
+        if (rt2state >= 0.3 && !rb2state) {robotStorage.run(1.0);}
+        else if (rb2state && rt2state < 0.3) {robotStorage.run(-1.0);}
+        else {robotStorage.run(0.0);}
+
         // outtake preset running
         if (a2wP) {robotOuttake.reset();}
         else if (y2state) {robotOuttake.run("close"); gate.setGateState(false);} else if (y2prevState) {gate.setGateState(true);}
@@ -353,7 +372,7 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
         log("Following Path", follower.isBusy() ? "FOLLOWING" : "none");
         log("Auto-Shooting", isAutoShooting ? "ACTIVE" : "IDLE");
         log("Target Velocity (tps)", robotOuttake.getTargetTps());
-        log("Actual Velocity (tps)", robotHardware.outtakeMotor.getVelocity());
+        log("Actual Velocity (tps)", robotOuttake.getCurrentTps());
         log("IMU Heading (deg)", Math.toDegrees(imuHeading));
         log("Position", String.format("X: %.2f, Y: %.2f", currentPose.getX(), currentPose.getY()));
         log("Goal Pose", poses.goalPose);

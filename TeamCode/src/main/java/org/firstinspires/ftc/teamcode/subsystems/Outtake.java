@@ -90,7 +90,7 @@ public class Outtake {
     }
     public double getCurrentTps()
     {
-        return power;
+        return robotHardware.outtakeMotor.getVelocity();
     }
     public double getTargetTps()
     {
