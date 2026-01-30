@@ -317,6 +317,7 @@ public class PedroPathingTeleOpOutOfWayBlue extends OpMode {
             }
             if (!dpr1state && dpr1prevState) {
                 follower.breakFollowing();
+                follower.startTeleOpDrive();
             }
         }
 

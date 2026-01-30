@@ -44,20 +44,21 @@ import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
 
 @Configurable
-@TeleOp(name="FAR SIDE BLUE - PedroPathingTeleOp", group="LinearOpMode")
-public class PedroPathingTeleOpFarSideBlue extends OpMode {
+@TeleOp(name="EXPERIMENTAl - PedroPathingTeleOp", group="LinearOpMode")
+public class ExperimentalTeleOp extends OpMode {
 
     // Create hardware object
     Hardware robotHardware = new Hardware();
+    Gate gate;
+    Outtake robotOuttake;
+
     Intake robotIntake;
     CRServoStorage robotStorage;
-    Outtake robotOuttake;
-    Gate gate;
     boolean gateIsClosed = false;
     public GamepadManager g1Manager, g2Manager;
 
     // pp vars
-    public Pose startPose = new Pose(56.000, 8.000, Math.toRadians(270));
+    public Pose startPose = new Pose(31.53307392996109, 127.89105058365757, Math.toRadians(90));
 
     public PresetPoses poses;
     public static Pose currentPose;
@@ -84,7 +85,6 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
 
     // Auto shoot sequence tracking
     boolean isAutoShooting = false;
-    String autoShootPreset;
     public static double slowModeMultiplier = 0.3;
 
     // toggles
@@ -113,6 +113,7 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
     boolean a1prevState = false;
     boolean b2prevState = false;
     boolean y2prevState = false;
+    boolean x2prevState = false;
 
 
 
@@ -156,7 +157,7 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
         poses = new PresetPoses(startPose, false);
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(poses.ppgStartPose);
+        follower.setStartingPose(poses.startPose);
         follower.update();
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
@@ -242,6 +243,7 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
         boolean dpr2state = g2.dpad_right; // close auto shoot
         boolean dpl2state = g2.dpad_left; // far auto shoot
         boolean lb2state = g2.left_bumper;
+        boolean ljb2state = g2.left_stick_button; // intake
 
         boolean a2wP = a2state && !a2prevState;
         boolean dpu2wP = dpu2state && !dpu2prevState; // tune preset increment
@@ -293,13 +295,6 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
         //      Intake Control
         robotIntake.update();
 
-        if (!poses.isRed && x1wP) {
-            follower.setPose(PresetPoses.LOCALIZE_POSE_RIGHT);
-        }
-        else if (poses.isRed && x1wP) {
-            follower.setPose(PresetPoses.LOCALIZE_POSE_LEFT);
-        }
-
         // robot gate toggle (lb2wP)
         if (lb2wP) {
             gateIsClosed = !gateIsClosed;
@@ -325,13 +320,41 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
             }
         }
 
+        //      Storage Control
+        robotStorage.update();
+        if (rt2state >= 0.3 && !rb2state) {robotStorage.run(1.0);}
+        else if (rb2state && rt2state < 0.3) {robotStorage.run(-1.0);}
+        else {robotStorage.run(0.0);}
+
         // outtake preset running
         if (a2wP) {robotOuttake.reset();}
-        else if (y2state) {robotOuttake.run("close"); gate.setGateState(false);} else if (y2prevState) {gate.setGateState(true);}
-        else if (b2state) {robotOuttake.run("far"); gate.setGateState(false);} else if (b2prevState) {gate.setGateState(true);}
+        else if (y2state) {
+            robotOuttake.run("close"); gate.setGateState(false);
+            if (Math.abs(robotHardware.outtakeMotor.getVelocity() - robotOuttake.getTargetTps()) < 40) {
+                robotStorage.run(1);
+                robotIntake.run(1);
+            } else {
+                robotStorage.run(0);
+                robotIntake.run(0);
+            }
+        }
+        else if (y2prevState) {gate.setGateState(true);}
+        else if (x1state) {
+            robotOuttake.run(poses.getOptimalShooterPowerPercentage(follower.getPose(), true)); gate.setGateState(false);
+            if (Math.abs(robotHardware.outtakeMotor.getVelocity() - robotOuttake.getTargetTps()) < 40) {
+                robotStorage.run(1);
+                robotIntake.run(1);
+            } else {
+                robotStorage.run(0);
+                robotIntake.run(0);
+            }
+        }
+        else if (x1prevState) {gate.setGateState(true);}
 
         else {robotOuttake.run("idle");}
         if (offToggle) {robotOuttake.run(0);}
+
+        if (ljb2state) {robotIntake.run(1);}
 
         // Fine tune active preset
         if (dpu2wP && !offToggle && !b2state) {robotOuttake.tuneActivePreset(0.05);}
@@ -381,5 +404,6 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
         b2prevState = b2state;
         y2prevState = y2state;
         dpr1prevState = dpr1state;
+        x2prevState = x2state;
     }
 }

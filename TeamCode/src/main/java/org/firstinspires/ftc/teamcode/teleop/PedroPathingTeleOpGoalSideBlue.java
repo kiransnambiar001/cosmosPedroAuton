@@ -317,6 +317,7 @@ public class PedroPathingTeleOpGoalSideBlue extends OpMode {
             }
             if (!dpr1state && dpr1prevState) {
                 follower.breakFollowing();
+                follower.startTeleOpDrive();
             }
         }
 

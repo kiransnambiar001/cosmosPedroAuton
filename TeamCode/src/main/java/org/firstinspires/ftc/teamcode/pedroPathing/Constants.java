@@ -16,7 +16,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(8.1) // in kg
+            .mass(8.7) // in kg
             .useSecondaryHeadingPIDF(true)
             .headingPIDFCoefficients(new PIDFCoefficients(0.75, 0, 0.025, 0.01))
             .secondaryHeadingPIDFCoefficients(new PIDFCoefficients(1.9, 0, 0.03, 0.015))
@@ -42,10 +42,10 @@ public class Constants {
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD);
 
-    public static ThreeWheelIMUConstants localizerConstants = new ThreeWheelIMUConstants()
+    public static ThreeWheelConstants localizerConstants = new ThreeWheelConstants()
             .forwardTicksToInches(.0029787066224)
             .strafeTicksToInches(.0029495443792)
-            .turnTicksToInches(.0019958598246)
+            .turnTicksToInches(0.00284060484)
             .leftPodY(5.75) // offset from center of rotation INCHES
             .rightPodY(-5.75) // offset from center of rotation INCHES
             .strafePodX(1.5) // offset from center of rotation INCHES
@@ -54,9 +54,9 @@ public class Constants {
             .strafeEncoder_HardwareMapName("frontLeft")
             .leftEncoderDirection(Encoder.FORWARD)
             .rightEncoderDirection(Encoder.REVERSE)
-            .strafeEncoderDirection(Encoder.REVERSE)
-            .IMU_HardwareMapName("imu")
-            .IMU_Orientation(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.RIGHT, RevHubOrientationOnRobot.UsbFacingDirection.UP));
+            .strafeEncoderDirection(Encoder.REVERSE);
+//            .IMU_HardwareMapName("imu")
+//            .IMU_Orientation(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.RIGHT, RevHubOrientationOnRobot.UsbFacingDirection.UP));
 
     public static PathConstraints pathConstraints = new PathConstraints(
             0.99,
@@ -67,7 +67,7 @@ public class Constants {
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)
-                .threeWheelIMULocalizer(localizerConstants)
+                .threeWheelLocalizer(localizerConstants)
                 .pathConstraints(pathConstraints)
                 .mecanumDrivetrain(driveConstants)
                 .build();
