@@ -298,6 +298,15 @@ public class PedroPathingTeleOpGoalSideBlue extends OpMode {
             powerOffset = 0;
         }
 
+        if (!poses.isRed && a1wP) {
+            follower.setPose(PresetPoses.CLOSE_LOCALIZE_POSE_LEFT);
+            powerOffset = 0;
+        }
+        else if (poses.isRed && a1wP) {
+            follower.setPose(PresetPoses.CLOSE_LOCALIZE_POSE_RIGHT);
+            powerOffset = 0;
+        }
+
         // robot gate toggle (lb2wP)
         if (lb2wP) {
             gateIsClosed = !gateIsClosed;
@@ -340,9 +349,9 @@ public class PedroPathingTeleOpGoalSideBlue extends OpMode {
             initialPower = poses.getOptimalShooterPowerPercentage(follower.getPose(), true);
             robotOuttake.run(initialPower + powerOffset);
             gate.setGateState(false);
-            if (dpu2wP) {powerOffset += 0.03;}
-            else if (dpd2wP) {powerOffset -= 0.03;}
-            if(a2wP){powerOffset = 0;}
+            if (dpu2wP) {powerOffset += 0.01;}
+            else if (dpd2wP) {powerOffset -= 0.01;}
+            if(a2state){powerOffset = 0;}
         }
         else if (x2prevState) {gate.setGateState(true);}
 

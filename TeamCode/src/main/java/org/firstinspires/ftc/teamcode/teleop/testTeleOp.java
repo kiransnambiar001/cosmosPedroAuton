@@ -41,7 +41,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
 
 @Configurable
-@TeleOp(name="---testTeleOp", group="LinearOpMode")
+@TeleOp(name="--- test", group="LinearOpMode")
 public class testTeleOp extends OpMode {
 
     // Create hardware object
@@ -54,7 +54,7 @@ public class testTeleOp extends OpMode {
     public GamepadManager g1Manager, g2Manager;
 
     // pp vars
-    public Pose startPose = new Pose(56.000, 8.000, Math.toRadians(270));
+    public Pose startPose = PresetPoses.lastAutonPosition;
 
     public PresetPoses poses;
     public static Pose currentPose;
@@ -79,8 +79,10 @@ public class testTeleOp extends OpMode {
 
     public Pose holdingPose = new Pose(0,0,0);
 
-    // Auto shoot sequence tracking
+    // Auto shoot
     boolean isAutoShooting = false;
+    double initialPower;
+    double powerOffset = 0;
     public static double slowModeMultiplier = 0.3;
 
     // toggles
@@ -151,6 +153,7 @@ public class testTeleOp extends OpMode {
         gate = new Gate(robotHardware);
 
         poses = new PresetPoses(startPose, false);
+        powerOffset = 0;
 
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(poses.parkPose);
@@ -212,7 +215,7 @@ public class testTeleOp extends OpMode {
         boolean dpr1state = g1.dpad_right;
         boolean b1state = g1.b; // ball cam toggle
         boolean dpu1state = g1.dpad_up; // go to closest launch line pose
-        boolean x1state = g1.x; // right localize
+        boolean x1state = g1.x; // hp localize
         boolean a1state = g1.a; // left localize
         boolean y1state = g1.y; // abort autonomous drive
         boolean lt1state = g1.left_trigger > 0.3; // hold pose
@@ -291,9 +294,20 @@ public class testTeleOp extends OpMode {
 
         if (!poses.isRed && x1wP) {
             follower.setPose(PresetPoses.LOCALIZE_POSE_RIGHT);
+            powerOffset = 0;
         }
         else if (poses.isRed && x1wP) {
             follower.setPose(PresetPoses.LOCALIZE_POSE_LEFT);
+            powerOffset = 0;
+        }
+
+        if (!poses.isRed && a1wP) {
+            follower.setPose(PresetPoses.CLOSE_LOCALIZE_POSE_LEFT);
+            powerOffset = 0;
+        }
+        else if (poses.isRed && a1wP) {
+            follower.setPose(PresetPoses.CLOSE_LOCALIZE_POSE_RIGHT);
+            powerOffset = 0;
         }
 
         // robot gate toggle (lb2wP)
@@ -334,18 +348,25 @@ public class testTeleOp extends OpMode {
         if (a2wP) {robotOuttake.reset();}
         else if (y2state) {robotOuttake.run("close"); gate.setGateState(false);} else if (y2prevState) {gate.setGateState(true);}
         else if (b2state) {robotOuttake.run("far"); gate.setGateState(false);} else if (b2prevState) {gate.setGateState(true);}
-        else if (x2state) {robotOuttake.run(poses.getOptimalShooterPowerPercentage(follower.getPose(), true)); gate.setGateState(false);} else if (x2prevState) {gate.setGateState(true);}
+        else if (x2state) {
+            initialPower = poses.getOptimalShooterPowerPercentage(follower.getPose(), true);
+            robotOuttake.run(initialPower + powerOffset);
+            gate.setGateState(false);
+            if (dpu2wP) {powerOffset += 0.01;}
+            else if (dpd2wP) {powerOffset -= 0.01;}
+            if(a2state){powerOffset = 0;}
+        }
+        else if (x2prevState) {gate.setGateState(true);}
 
 
         else {robotOuttake.run("idle");}
         if (offToggle) {robotOuttake.run(0);}
 
         // Fine tune active preset
-        if (dpu2wP && !offToggle && !b2state) {robotOuttake.tuneActivePreset(0.05);}
-        else if (dpd2wP && !offToggle) {robotOuttake.tuneActivePreset(-0.05);}
+        if (dpu2wP && !offToggle && !x2state) {robotOuttake.tuneActivePreset(0.05);}
+        else if (dpd2wP && !offToggle && !x2state) {robotOuttake.tuneActivePreset(-0.05);}
 
         if (home1wP) {fcOffset = follower.getHeading();}
-
 
         // Reset outtake presets
         if (options1wP) {robotOuttake.reset();}
@@ -359,7 +380,7 @@ public class testTeleOp extends OpMode {
         log("Field Centric", fieldCentric ? "ON" : "OFF");
         log("Ball Cam", ballCamToggle ? "ON" : "OFF");
         log("Following Path", follower.isBusy() ? "FOLLOWING" : "none");
-        log("Auto-Shooting", isAutoShooting ? "ACTIVE" : "IDLE");
+        //log("Auto-Shooting", isAutoShooting ? "ACTIVE" : "IDLE");
         log("Target Velocity (tps)", robotOuttake.getTargetTps());
         log("Actual Velocity (tps)", robotHardware.outtakeMotor.getVelocity());
         log("IMU Heading (deg)", Math.toDegrees(imuHeading));
@@ -389,6 +410,7 @@ public class testTeleOp extends OpMode {
         y2prevState = y2state;
         dpr1prevState = dpr1state;
         x2prevState = x2state;
+        lt1prevState = lt1state;
 
     }
 }

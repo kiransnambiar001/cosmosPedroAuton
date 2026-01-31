@@ -35,6 +35,8 @@ public class PresetPoses {
     public static double powerDistOffset = 2;
     public static double farShootAngle = 312.73;
     public boolean isRed = true;
+    public static Pose lastAutonPosition;
+
     public Pose startPose;
     public Pose goalPose = new Pose(9.168695652173914, 139.9304347826087);
     public Pose closeShootPose = new Pose(50, 95, Math.toRadians(shootAngle));
@@ -59,6 +61,9 @@ public class PresetPoses {
 
     public static Pose LOCALIZE_POSE_LEFT = new Pose(7.9,7.7, Math.toRadians(90));
     public static Pose LOCALIZE_POSE_RIGHT = LOCALIZE_POSE_LEFT.mirror();
+
+    public static Pose CLOSE_LOCALIZE_POSE_LEFT = new Pose(27.77129521586929,132.84480746791132, Math.toRadians(144));
+    public static Pose CLOSE_LOCALIZE_POSE_RIGHT = CLOSE_LOCALIZE_POSE_LEFT.mirror();
 
 
     // launch line poses

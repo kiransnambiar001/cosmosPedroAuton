@@ -29,7 +29,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
 
-@Autonomous(name="GOAL SIDE BLUE - Auton", group="Autonomous")
+@Autonomous(name="GOAL SIDE BLUE - Backup Auton", group="Autonomous")
 @Configurable // for Panels
 @SuppressWarnings("FieldCanBeLocal") // android studio bugging
 public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {

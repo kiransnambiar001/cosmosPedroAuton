@@ -218,6 +218,8 @@ public class RobotAutonFarRed extends LinearOpMode {
             panelsTelemetry.update(telemetry);
             follower.update();
             draw();
+            PresetPoses.lastAutonPosition = currentPose;
+
         }
     }
 

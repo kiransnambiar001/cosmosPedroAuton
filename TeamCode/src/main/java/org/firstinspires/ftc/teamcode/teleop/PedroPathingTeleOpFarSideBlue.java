@@ -215,7 +215,7 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
         boolean dpr1state = g1.dpad_right;
         boolean b1state = g1.b; // ball cam toggle
         boolean dpu1state = g1.dpad_up; // go to closest launch line pose
-        boolean x1state = g1.x; // right localize
+        boolean x1state = g1.x; // hp localize
         boolean a1state = g1.a; // left localize
         boolean y1state = g1.y; // abort autonomous drive
         boolean lt1state = g1.left_trigger > 0.3; // hold pose
@@ -301,6 +301,15 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
             powerOffset = 0;
         }
 
+        if (!poses.isRed && a1wP) {
+            follower.setPose(PresetPoses.CLOSE_LOCALIZE_POSE_LEFT);
+            powerOffset = 0;
+        }
+        else if (poses.isRed && a1wP) {
+            follower.setPose(PresetPoses.CLOSE_LOCALIZE_POSE_RIGHT);
+            powerOffset = 0;
+        }
+
         // robot gate toggle (lb2wP)
         if (lb2wP) {
             gateIsClosed = !gateIsClosed;
@@ -343,9 +352,9 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
             initialPower = poses.getOptimalShooterPowerPercentage(follower.getPose(), true);
             robotOuttake.run(initialPower + powerOffset);
             gate.setGateState(false);
-            if (dpu2wP) {powerOffset += 0.03;}
-            else if (dpd2wP) {powerOffset -= 0.03;}
-            if(a2wP){powerOffset = 0;}
+            if (dpu2wP) {powerOffset += 0.01;}
+            else if (dpd2wP) {powerOffset -= 0.01;}
+            if(a2state){powerOffset = 0;}
         }
         else if (x2prevState) {gate.setGateState(true);}
 
