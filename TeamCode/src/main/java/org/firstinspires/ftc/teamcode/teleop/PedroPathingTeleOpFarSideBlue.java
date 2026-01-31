@@ -153,7 +153,7 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
         poses = new PresetPoses(startPose, false);
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(poses.ppgStartPose);
+        follower.setStartingPose(poses.parkPose);
         follower.update();
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
@@ -327,7 +327,9 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
         }
         //      Storage Control
         robotStorage.update();
-        if (rt2state >= 0.3 && !rb2state) {robotStorage.run(1.0);}
+        if ((rt2state >= 0.3 && !rb2state)
+            && Math.abs(robotHardware.outtakeMotor.getVelocity() - robotOuttake.getTargetTps()) < 40)
+        {robotStorage.run(1.0);}
         else if (rb2state && rt2state < 0.3) {robotStorage.run(-1.0);}
         else {robotStorage.run(0.0);}
 
