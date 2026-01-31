@@ -342,19 +342,18 @@ public class testTeleOp extends OpMode {
         else {robotOuttake.run("idle");}
         if (offToggle) {robotOuttake.run(0);}
 
-        //Auto Shoot **
-        if (lt2state) {robotOuttake.run(autoShootPreset);}
-        if (Math.abs(robotOuttake.getCurrentTps()-robotOuttake.getTargetTps()) <= 40)
-        {
-            if((follower.getPose().distanceFrom(poses.closeShootPose).y < 16))
-            {
-                autoShootPreset = "close";
-            } else if((follower.getPose().distanceFrom(poses.farShootPose).y >= 16))
-            {
-                autoShootPreset = "far";
-            }
-)
-        }
+//        //Auto Shoot **
+//        if (lt2state) {robotOuttake.run(autoShootPreset);}
+//        if (Math.abs(robotOuttake.getCurrentTps()-robotOuttake.getTargetTps()) <= 40)
+//        {
+//            if((follower.getPose().distanceFrom(poses.closeShootPose).y < 16))
+//            {
+//                autoShootPreset = "close";
+//            } else if((follower.getPose().distanceFrom(poses.farShootPose).y >= 16))
+//            {
+//                autoShootPreset = "far";
+//            }
+//        }
 
         // Fine tune active preset
         if (dpu2wP && !offToggle && !b2state) {robotOuttake.tuneActivePreset(0.05);}
