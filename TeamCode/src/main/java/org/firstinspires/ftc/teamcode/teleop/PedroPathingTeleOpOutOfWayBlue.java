@@ -307,7 +307,9 @@ public class PedroPathingTeleOpOutOfWayBlue extends OpMode {
         // ball cam toggle
         if (b1wP) {ballCamToggle = !ballCamToggle;}
 
-        if (ly2 >= 0.3) {robotIntake.run(1.0);}
+        if ((rt2state >= 0.3 && !rb2state)
+                && Math.abs(robotHardware.outtakeMotor.getVelocity() - robotOuttake.getTargetTps()) < 40)
+        {robotStorage.run(1.0);}
         else if (ly2 <= -0.3) {robotIntake.run(-1.0);}
         else {robotIntake.run(0);}
 
