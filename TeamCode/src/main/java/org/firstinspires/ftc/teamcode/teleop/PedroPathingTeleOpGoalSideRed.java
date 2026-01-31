@@ -94,6 +94,7 @@ public class PedroPathingTeleOpGoalSideRed extends OpMode {
     boolean options1prevState = false;
     boolean dpd1prevState = false;
     boolean dpr1prevState = false;
+    boolean lt1prevState = false;
     boolean rb1prevState = false;
     boolean lb1prevState = false;
     boolean b1prevState = false;
@@ -110,9 +111,6 @@ public class PedroPathingTeleOpGoalSideRed extends OpMode {
     boolean b2prevState = false;
     boolean y2prevState = false;
     boolean x2prevState = false;
-
-
-
 
     private void log(String caption, Object... text) {
         if (text.length == 1) {
@@ -204,7 +202,7 @@ public class PedroPathingTeleOpGoalSideRed extends OpMode {
         double ly1 = -g1.left_stick_y; // forward/backward driving
         double lx1 = -g1.left_stick_x; // strafing
         double rx1 = g1.right_stick_x / 2; // turning (decrease by factor of 2)
-        slowMode = (g1.right_trigger >= 0.5) ? true : false;
+        slowMode = g1.right_trigger >= 0.3;
         boolean home1state = g1.guide; // reset yaw value on gyro
         boolean options1state = g1.options; // field centric toggle
         boolean dpd1state = g1.dpad_down; // go to closest shoot pose
@@ -214,6 +212,7 @@ public class PedroPathingTeleOpGoalSideRed extends OpMode {
         boolean x1state = g1.x; // right localize
         boolean a1state = g1.a; // left localize
         boolean y1state = g1.y; // abort autonomous drive
+        boolean lt1state = g1.left_trigger > 0.3; // hold pose
 
         boolean home1wP = home1state && !home1prevState;
         boolean options1wP = options1state && !options1prevState;
@@ -237,14 +236,15 @@ public class PedroPathingTeleOpGoalSideRed extends OpMode {
         boolean dpd2state = g2.dpad_down; // tune preset decrement
         boolean dpr2state = g2.dpad_right; // close auto shoot
         boolean dpl2state = g2.dpad_left; // far auto shoot
-        boolean lb2state = g2.left_bumper;
+        boolean lb2state = g2.left_bumper; // gate toggle
 
         boolean a2wP = a2state && !a2prevState;
-        boolean dpu2wP = dpu2state && !dpu2prevState; // tune preset increment
-        boolean dpd2wP = dpd2state && !dpd2prevState; // tune preset decrement
-        boolean dpr2wP = dpr2state && !dpr2prevState; // close auto shoot
-        boolean dpl2wP = dpl2state && !dpl2prevState; // far auto shoot
+        boolean dpu2wP = dpu2state && !dpu2prevState;
+        boolean dpd2wP = dpd2state && !dpd2prevState;
+        boolean dpr2wP = dpr2state && !dpr2prevState;
+        boolean dpl2wP = dpl2state && !dpl2prevState;
         boolean lb2wP = lb2state && !lb2prevState;
+        boolean lt1wP = lt1state && !lt1prevState;
 
 
         double imuHeading = robotHardware.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
@@ -311,11 +311,11 @@ public class PedroPathingTeleOpGoalSideRed extends OpMode {
 
         // hold pos dpr1
         if (!follower.isBusy()) {
-            if (dpr1wP) {
+            if (lt1wP) {
                 holdingPose = follower.getPose();
                 follower.holdPoint(holdingPose);
             }
-            if (!dpr1state && dpr1prevState) {
+            if (!lt1state && lt1prevState) {
                 follower.breakFollowing();
                 follower.startTeleOpDrive();
             }

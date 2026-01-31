@@ -44,7 +44,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
 
 @Configurable
-@TeleOp(name="EXPERIMENTAl - PedroPathingTeleOp", group="LinearOpMode")
+@TeleOp(name="---EXPERIMENTAl - PedroPathingTeleOp", group="LinearOpMode")
 public class ExperimentalTeleOp extends OpMode {
 
     // Create hardware object

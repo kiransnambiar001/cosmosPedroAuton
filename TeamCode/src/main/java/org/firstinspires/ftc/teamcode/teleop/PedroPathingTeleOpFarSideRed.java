@@ -113,8 +113,6 @@ public class PedroPathingTeleOpFarSideRed extends OpMode {
     boolean x2prevState = false;
 
 
-
-
     private void log(String caption, Object... text) {
         if (text.length == 1) {
             telemetry.addData(caption, text[0]);

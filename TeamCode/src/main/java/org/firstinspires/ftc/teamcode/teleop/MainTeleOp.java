@@ -10,7 +10,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
-@TeleOp(name="Main TeleOp", group="LinearOpMode")
+@TeleOp(name="---Main TeleOp", group="LinearOpMode")
 public class MainTeleOp extends LinearOpMode
 {
 
