@@ -154,7 +154,7 @@ public class PedroPathingTeleOpFarSideBlue extends OpMode {
         poses = new PresetPoses(startPose, false);
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(poses.ppgStartPose);
+        follower.setStartingPose(poses.parkPose);
         follower.update();
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
