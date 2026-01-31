@@ -79,8 +79,10 @@ public class PedroPathingTeleOpOutOfWayBlue extends OpMode {
 
     public Pose holdingPose = new Pose(0,0,0);
 
-    // Auto shoot sequence tracking
+    // Auto shoot
     boolean isAutoShooting = false;
+    double initialPower;
+    double powerOffset = 0;
     public static double slowModeMultiplier = 0.3;
 
     // toggles
@@ -150,6 +152,8 @@ public class PedroPathingTeleOpOutOfWayBlue extends OpMode {
         gate = new Gate(robotHardware);
 
         poses = new PresetPoses(startPose, false);
+        powerOffset = 0;
+
 
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(poses.closeMoveOutOfWayPose);
@@ -288,9 +292,11 @@ public class PedroPathingTeleOpOutOfWayBlue extends OpMode {
 
         if (!poses.isRed && x1wP) {
             follower.setPose(PresetPoses.LOCALIZE_POSE_RIGHT);
+            powerOffset = 0;
         }
         else if (poses.isRed && x1wP) {
             follower.setPose(PresetPoses.LOCALIZE_POSE_LEFT);
+            powerOffset = 0;
         }
 
         // robot gate toggle (lb2wP)
@@ -331,14 +337,22 @@ public class PedroPathingTeleOpOutOfWayBlue extends OpMode {
         if (a2wP) {robotOuttake.reset();}
         else if (y2state) {robotOuttake.run("close"); gate.setGateState(false);} else if (y2prevState) {gate.setGateState(true);}
         else if (b2state) {robotOuttake.run("far"); gate.setGateState(false);} else if (b2prevState) {gate.setGateState(true);}
-        else if (x2state) {robotOuttake.run(poses.getOptimalShooterPowerPercentage(follower.getPose(), true)); gate.setGateState(false);} else if (x2prevState) {gate.setGateState(true);}
+        else if (x2state) {
+            initialPower = poses.getOptimalShooterPowerPercentage(follower.getPose(), true);
+            robotOuttake.run(initialPower + powerOffset);
+            gate.setGateState(false);
+            if (dpu2wP) {powerOffset += 0.03;}
+            else if (dpd2wP) {powerOffset -= 0.03;}
+            if(a2wP){powerOffset = 0;}
+        }
+        else if (x2prevState) {gate.setGateState(true);}
 
         else {robotOuttake.run("idle");}
         if (offToggle) {robotOuttake.run(0);}
 
         // Fine tune active preset
-        if (dpu2wP && !offToggle && !b2state) {robotOuttake.tuneActivePreset(0.05);}
-        else if (dpd2wP && !offToggle) {robotOuttake.tuneActivePreset(-0.05);}
+        if (dpu2wP && !offToggle && !x2state) {robotOuttake.tuneActivePreset(0.05);}
+        else if (dpd2wP && !offToggle && !x2state) {robotOuttake.tuneActivePreset(-0.05);}
 
         if (home1wP) {fcOffset = follower.getHeading();}
 
@@ -386,6 +400,5 @@ public class PedroPathingTeleOpOutOfWayBlue extends OpMode {
         dpr1prevState = dpr1state;
         x2prevState = x2state;
         lt1prevState = lt1state;
-
     }
 }
