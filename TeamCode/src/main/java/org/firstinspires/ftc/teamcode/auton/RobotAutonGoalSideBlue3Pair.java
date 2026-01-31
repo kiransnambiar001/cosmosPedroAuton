@@ -52,6 +52,7 @@ public class RobotAutonGoalSideBlue3Pair extends LinearOpMode {
     // shoot sequence
     public boolean rampingUp = false;
     public boolean shooting = false;
+    public double previousTime = 0;
 
     // intake sequence
     public boolean intaking = false;
@@ -60,7 +61,6 @@ public class RobotAutonGoalSideBlue3Pair extends LinearOpMode {
     public static double intakeMaxPower = 1;
 
 
-    private double previousTime;
     private Paths paths;
 
 
@@ -262,7 +262,7 @@ public class RobotAutonGoalSideBlue3Pair extends LinearOpMode {
 
             case 2:
                 if (follower.getCurrentTValue() > 0.97) {
-                    follower.followPath(paths.PickupGPP, 0.4, true);
+                    follower.followPath(paths.PickupGPP, 0.3, true);
                     gate.setGateState(true);
                     intake.run(1);
                     pathState = 3;
@@ -286,7 +286,7 @@ public class RobotAutonGoalSideBlue3Pair extends LinearOpMode {
                 }
             case 5:
                 if (follower.getCurrentTValue() > 0.97) {
-                    follower.followPath(paths.PickupPGP, 0.4, true);
+                    follower.followPath(paths.PickupPGP, 0.3, true);
                     gate.setGateState(true);
                     intake.run(1);
                     pathState = 6;
@@ -346,15 +346,26 @@ public class RobotAutonGoalSideBlue3Pair extends LinearOpMode {
                 if (follower.getCurrentTValue() > 0.97) {
                     if (!rampingUp && !shooting) {rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
+                        previousTime = hardware.timer.milliseconds();
                         gate.setGateState(false);
-                        intake.runForTime(1, 5500); storage.runForTime(storageOuttakePower, 5500);
+                        intake.run(1); storage.run(storageOuttakePower);
                         shooting = true;
                         rampingUp = false;
                     }
-                    else if (shooting && (intakeRFTFinished || storageRFTFinished)) {
-                        gate.setGateState(true);
-                        rampingUp = false; shooting = false;
-                        pathState = nextState;
+                    else if (shooting) {
+                        if ((hardware.timer.milliseconds() >= previousTime + 5350)) {
+                            gate.setGateState(true);
+                            rampingUp = false; shooting = false;
+                            pathState = nextState;
+                            intake.run(0); storage.run(0);
+
+                        }
+                        else if (Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
+                            intake.run(1); storage.run(storageOuttakePower);
+                        }
+                        else {
+                            intake.run(0); storage.run(0);
+                        }
                     }
                 }
                 break;
@@ -362,15 +373,26 @@ public class RobotAutonGoalSideBlue3Pair extends LinearOpMode {
                 if (follower.getCurrentTValue() > 0.97) {
                     if (!rampingUp && !shooting) {rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
+                        previousTime = hardware.timer.milliseconds();
                         gate.setGateState(false);
-                        intake.runForTime(1, 100000); storage.runForTime(storageOuttakePower, 100000);
+                        intake.run(1); storage.run(storageOuttakePower);
                         shooting = true;
                         rampingUp = false;
                     }
-                    else if (shooting && (intakeRFTFinished || storageRFTFinished)) {
-                        gate.setGateState(true);
-                        rampingUp = false; shooting = false;
-                        pathState = nextState;
+                    else if (shooting) {
+                        if ((hardware.timer.milliseconds() >= previousTime + 100000)) {
+                            gate.setGateState(true);
+                            rampingUp = false; shooting = false;
+                            pathState = nextState;
+                            intake.run(0); storage.run(0);
+
+                        }
+                        else if (Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
+                            intake.run(1); storage.run(storageOuttakePower);
+                        }
+                        else {
+                            intake.run(0); storage.run(0);
+                        }
                     }
                 }
                 break;

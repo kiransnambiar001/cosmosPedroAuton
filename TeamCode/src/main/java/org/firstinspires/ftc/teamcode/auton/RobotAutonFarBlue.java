@@ -225,8 +225,8 @@ public class RobotAutonFarBlue extends LinearOpMode {
     public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished, boolean storageRFTFinished) {
         switch (pathState) {
             case 0:
-                outtake.run("far");
-                follower.followPath(paths.ShootPreloaded, 0.3, true);
+                outtake.run(0.5);
+                follower.followPath(paths.ShootPreloaded, true);
                 nextState = 1;
                 pathState = 10; // shoot
                 break;
@@ -258,7 +258,7 @@ public class RobotAutonFarBlue extends LinearOpMode {
 
             case 4:
                 if (!follower.isBusy()) {
-                    follower.followPath(paths.GotoPPG);
+                    follower.followPath(paths.Park);
                     outtake.run(0);
                     pathState = -1; // terminate
                 }
@@ -266,17 +266,55 @@ public class RobotAutonFarBlue extends LinearOpMode {
 
             case 10: // shoot
                 if (!follower.isBusy()) {
-                    if (!rampingUp && !shooting) {outtake.run("far"); rampingUp = true;}
+                    if (!rampingUp && !shooting) {rampingUp = true; outtake.run(0.5);}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
+                        follower.holdPoint(paths.poses.farShootPose);
+                        previousTime = hardware.timer.milliseconds();
                         gate.setGateState(false);
-                        intake.runForTime(1, 5000); storage.runForTime(storageOuttakePower, 5000);
+                        intake.run(1); storage.run(storageOuttakePower);
                         shooting = true;
                         rampingUp = false;
                     }
-                    else if (shooting && (intakeRFTFinished || storageRFTFinished)) {
-                        gate.setGateState(true);
-                        rampingUp = false; shooting = false;
-                        pathState = nextState;
+                    else if (shooting) {
+                        if ((hardware.timer.milliseconds() >= previousTime + 7250)) {
+                            gate.setGateState(true);
+                            rampingUp = false; shooting = false;
+                            pathState = nextState;
+                            intake.run(0); storage.run(0);
+                            follower.breakFollowing();
+                        }
+                        else if (Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
+                            intake.run(1); storage.run(storageOuttakePower);
+                        }
+                        else {
+                            intake.run(0); storage.run(0);
+                        }
+                    }
+                }
+                break;
+            case 11: // shoot
+                if (!follower.isBusy()) {
+                    if (!rampingUp && !shooting) {rampingUp = true;}
+                    else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
+                        previousTime = hardware.timer.milliseconds();
+                        gate.setGateState(false);
+                        intake.run(1); storage.run(storageOuttakePower);
+                        shooting = true;
+                        rampingUp = false;
+                    }
+                    else if (shooting) {
+                        if ((hardware.timer.milliseconds() >= previousTime + 100000 )) {
+                            gate.setGateState(true);
+                            rampingUp = false; shooting = false;
+                            pathState = nextState;
+                            intake.run(0); storage.run(0);
+                        }
+                        else if (Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
+                            intake.run(1); storage.run(storageOuttakePower);
+                        }
+                        else {
+                            intake.run(0); storage.run(0);
+                        }
                     }
                 }
                 break;
