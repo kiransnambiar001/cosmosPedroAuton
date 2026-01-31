@@ -228,7 +228,7 @@ public class PedroPathingTeleOpOutOfWayBlue extends OpMode {
 
         //      Gamepad 2 inputs
         double ly2 = g2.left_stick_y; // robot intake run
-        double rt2state = g2.right_trigger; // storage forward
+        boolean rt2state = g2.right_trigger > 0.3; // storage forward
         boolean rb2state = g2.right_bumper; // storage reverse
         boolean a2state = g2.a; // outtake idle on/off
         boolean b2state = g2.b; // outtake preset for close shoot
@@ -286,11 +286,6 @@ public class PedroPathingTeleOpOutOfWayBlue extends OpMode {
             else {follower.setTeleOpDrive(ly1, lx1, -rx1, true);} // rbt centric
         }
 
-
-
-        //      Intake Control
-        robotIntake.update();
-
         if (!poses.isRed && x1wP) {
             follower.setPose(PresetPoses.LOCALIZE_POSE_RIGHT);
         }
@@ -307,12 +302,6 @@ public class PedroPathingTeleOpOutOfWayBlue extends OpMode {
         // ball cam toggle
         if (b1wP) {ballCamToggle = !ballCamToggle;}
 
-        if ((rt2state >= 0.3 && !rb2state)
-                && Math.abs(robotHardware.outtakeMotor.getVelocity() - robotOuttake.getTargetTps()) < 40)
-        {robotStorage.run(1.0);}
-        else if (ly2 <= -0.3) {robotIntake.run(-1.0);}
-        else {robotIntake.run(0);}
-
         // hold pos dpr1
         if (!follower.isBusy()) {
             if (lt1wP) {
@@ -325,11 +314,18 @@ public class PedroPathingTeleOpOutOfWayBlue extends OpMode {
             }
         }
 
-        //      Storage Control
+        //Storage and intake control
+        robotIntake.update();
         robotStorage.update();
-        if (rt2state >= 0.3 && !rb2state) {robotStorage.run(1.0);}
-        else if (rb2state && rt2state < 0.3) {robotStorage.run(-1.0);}
-        else {robotStorage.run(0.0);}
+        if ((rt2state && !rb2state)
+                && Math.abs(robotOuttake.getCurrentTps() - robotOuttake.getTargetTps()) < 45)
+        {robotStorage.run(1.0);}
+        else if (rb2state && !rt2state)
+        {robotStorage.run(-1.0);}
+        else {robotStorage.run(0);}
+        if (ly2 <= -0.3) {robotIntake.run(-1.0);}
+        else if(ly2 >0.3) {robotIntake.run(1.0);}
+        else{robotIntake.run(0);}
 
         // outtake preset running
         if (a2wP) {robotOuttake.reset();}
