@@ -252,7 +252,7 @@ public class RobotAutonFarRed extends LinearOpMode {
                     intake.run(0);
                     follower.followPath(paths.ShootPPG);
                     nextState = 4;
-                    pathState = 10; // shoot
+                    pathState = 12; // shoot
                 }
                 break;
 
@@ -308,6 +308,35 @@ public class RobotAutonFarRed extends LinearOpMode {
                             rampingUp = false; shooting = false;
                             pathState = nextState;
                             intake.run(0); storage.run(0);
+                        }
+                        else if (Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
+                            intake.run(1); storage.run(storageOuttakePower);
+                        }
+                        else {
+                            intake.run(0); storage.run(0);
+                        }
+                    }
+                }
+                break;
+
+            case 12: // shoot
+                if (!follower.isBusy()) {
+                    if (!rampingUp && !shooting) {rampingUp = true; outtake.run(0.53);}
+                    else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
+                        follower.holdPoint(paths.poses.farShootPose);
+                        previousTime = hardware.timer.milliseconds();
+                        gate.setGateState(false);
+                        intake.run(1); storage.run(storageOuttakePower);
+                        shooting = true;
+                        rampingUp = false;
+                    }
+                    else if (shooting) {
+                        if ((hardware.timer.milliseconds() >= previousTime + 7250)) {
+                            gate.setGateState(true);
+                            rampingUp = false; shooting = false;
+                            pathState = nextState;
+                            intake.run(0); storage.run(0);
+                            follower.breakFollowing();
                         }
                         else if (Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                             intake.run(1); storage.run(storageOuttakePower);
