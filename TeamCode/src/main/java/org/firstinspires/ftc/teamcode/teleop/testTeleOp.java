@@ -82,7 +82,6 @@ public class testTeleOp extends OpMode {
     // Auto shoot sequence tracking
     boolean isAutoShooting = false;
     public static double slowModeMultiplier = 0.3;
-    String autoShootPreset;
 
     // toggles
     boolean ballCamToggle = false;
@@ -154,7 +153,7 @@ public class testTeleOp extends OpMode {
         poses = new PresetPoses(startPose, false);
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(poses.ppgStartPose);
+        follower.setStartingPose(poses.parkPose);
         follower.update();
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
@@ -230,7 +229,7 @@ public class testTeleOp extends OpMode {
 
         //      Gamepad 2 inputs
         double ly2 = g2.left_stick_y; // robot intake run
-        double rt2state = g2.right_trigger; // storage forward
+        boolean rt2state = g2.right_trigger > 0.3; // storage forward
         boolean rb2state = g2.right_bumper; // storage reverse
         boolean a2state = g2.a; // outtake idle on/off
         boolean b2state = g2.b; // outtake preset for close shoot
@@ -290,11 +289,6 @@ public class testTeleOp extends OpMode {
             else {follower.setTeleOpDrive(ly1, lx1, -rx1, true);} // rbt centric
         }
 
-
-
-        //      Intake Control
-        robotIntake.update();
-
         if (!poses.isRed && x1wP) {
             follower.setPose(PresetPoses.LOCALIZE_POSE_RIGHT);
         }
@@ -311,10 +305,6 @@ public class testTeleOp extends OpMode {
         // ball cam toggle
         if (b1wP) {ballCamToggle = !ballCamToggle;}
 
-        if (ly2 >= 0.3) {robotIntake.run(1.0);}
-        else if (ly2 <= -0.3) {robotIntake.run(-1.0);}
-        else {robotIntake.run(0);}
-
         // hold pos dpr1
         if (!follower.isBusy()) {
             if (lt1wP) {
@@ -326,11 +316,19 @@ public class testTeleOp extends OpMode {
                 follower.startTeleOpDrive();
             }
         }
-        //      Storage Control
+
+        //Storage and intake control
+        robotIntake.update();
         robotStorage.update();
-        if (rt2state >= 0.3 && !rb2state) {robotStorage.run(1.0);}
-        else if (rb2state && rt2state < 0.3) {robotStorage.run(-1.0);}
-        else {robotStorage.run(0.0);}
+        if ((rt2state && !rb2state)
+                && Math.abs(robotOuttake.getCurrentTps() - robotOuttake.getTargetTps()) < 45)
+        {robotStorage.run(1.0);}
+        else if (rb2state && !rt2state)
+        {robotStorage.run(-1.0);}
+        else {robotStorage.run(0);}
+        if (ly2 <= -0.3) {robotIntake.run(-1.0);}
+        else if(ly2 >0.3) {robotIntake.run(1.0);}
+        else{robotIntake.run(0);}
 
         // outtake preset running
         if (a2wP) {robotOuttake.reset();}
@@ -341,19 +339,6 @@ public class testTeleOp extends OpMode {
 
         else {robotOuttake.run("idle");}
         if (offToggle) {robotOuttake.run(0);}
-
-//        //Auto Shoot **
-//        if (lt2state) {robotOuttake.run(autoShootPreset);}
-//        if (Math.abs(robotOuttake.getCurrentTps()-robotOuttake.getTargetTps()) <= 40)
-//        {
-//            if((follower.getPose().distanceFrom(poses.closeShootPose).y < 16))
-//            {
-//                autoShootPreset = "close";
-//            } else if((follower.getPose().distanceFrom(poses.farShootPose).y >= 16))
-//            {
-//                autoShootPreset = "far";
-//            }
-//        }
 
         // Fine tune active preset
         if (dpu2wP && !offToggle && !b2state) {robotOuttake.tuneActivePreset(0.05);}
