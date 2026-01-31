@@ -154,7 +154,7 @@ public class PedroPathingTeleOpGoalSideBlue extends OpMode {
         poses = new PresetPoses(startPose, false);
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(poses.pgpEndPose);
+        follower.setStartingPose(poses.closeShootOffLinePose);
         follower.update();
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
