@@ -385,6 +385,6 @@ public class PedroPathingTeleOpOutOfWayRed extends OpMode {
         y2prevState = y2state;
         dpr1prevState = dpr1state;
         x2prevState = x2state;
-
+        lt1prevState = lt1state;
     }
 }
