@@ -345,9 +345,9 @@ public class PedroPathingTeleOpFarSideRed extends OpMode {
 
         // outtake preset running
         if (a2wP) {robotOuttake.reset();}
-        else if (y2state) {robotOuttake.run("close"); gate.setGateState(false);} else if (y2prevState) {gate.setGateState(true);}
+        else if (x2state) {robotOuttake.run("close"); gate.setGateState(false);} else if (y2prevState) {gate.setGateState(true);}
         else if (b2state) {robotOuttake.run("far"); gate.setGateState(false);} else if (b2prevState) {gate.setGateState(true);}
-        else if (x2state) {
+        else if (y2state) {
             initialPower = poses.getOptimalShooterPowerPercentage(follower.getPose(), true);
             robotOuttake.run(initialPower + powerOffset);
             gate.setGateState(false);
@@ -355,14 +355,14 @@ public class PedroPathingTeleOpFarSideRed extends OpMode {
             else if (dpd2wP) {powerOffset -= 0.01;}
             if(a2state){powerOffset = 0;}
         }
-        else if (x2prevState) {gate.setGateState(true);}
+        else if (y2prevState) {gate.setGateState(true);}
 
         else {robotOuttake.run("idle");}
         if (offToggle) {robotOuttake.run(0);}
 
         // Fine tune active preset
-        if (dpu2wP && !offToggle && !x2state) {robotOuttake.tuneActivePreset(0.05);}
-        else if (dpd2wP && !offToggle && !x2state) {robotOuttake.tuneActivePreset(-0.05);}
+        if (dpu2wP && !offToggle && !y2state) {robotOuttake.tuneActivePreset(0.3);}
+        else if (dpd2wP && !offToggle && !y2state) {robotOuttake.tuneActivePreset(-0.3);}
 
         if (home1wP) {fcOffset = follower.getHeading();}
 

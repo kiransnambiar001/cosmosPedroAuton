@@ -183,9 +183,6 @@ public class MoveForwardAuton extends LinearOpMode {
         switch (pathState) {
             case 0:
                 outtake.run(0);
-
-
-
                 follower.followPath(paths.MoveForward, true);
                 pathState = 1;
                 break;
