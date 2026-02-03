@@ -203,7 +203,7 @@ public class RobotAutonGoalSideBluePreloaded extends LinearOpMode {
                     if (!rampingUp && !shooting) {outtake.run("close"); rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         gate.setGateState(false);
-                        intake.runForTime(1, 8000); storage.runForTime(storageOuttakePower, 8000);
+                        intake.runForTime(1, 6500); storage.runForTime(storageOuttakePower, 6500);
                         shooting = true;
                         rampingUp = false;
                     }

@@ -81,6 +81,7 @@ public class testTeleOp extends OpMode {
 
     // Auto shoot
     boolean isAutoShooting = false;
+    double targetAngleOffset = 0;
     double initialPower;
     double powerOffset = 0;
     public static double slowModeMultiplier = 0.3;
@@ -277,7 +278,7 @@ public class testTeleOp extends OpMode {
             if (fieldCentric) { // field centric
                 if (ballCamToggle) {
 
-                    double targetHeading = poses.getAngleTowardsGoal(currentPose) - Math.toRadians(180);
+                    double targetHeading = poses.getAngleTowardsGoal(currentPose) - Math.toRadians(180) + targetAngleOffset;
 
                     double error = MathFunctions.getTurnDirection(follower.getPose().getHeading(), targetHeading)
                             * MathFunctions.getSmallestAngleDifference(follower.getPose().getHeading(), targetHeading);
@@ -344,20 +345,32 @@ public class testTeleOp extends OpMode {
         else if(ly2 >0.3) {robotIntake.run(1.0);}
         else{robotIntake.run(0);}
 
-        // outtake preset running
         if (a2wP) {robotOuttake.reset();}
-        else if (y2state) {robotOuttake.run("close"); gate.setGateState(false);} else if (y2prevState) {gate.setGateState(true);}
-        else if (b2state) {robotOuttake.run("far"); gate.setGateState(false);} else if (b2prevState) {gate.setGateState(true);}
-        else if (x2state) {
+        else if (x2state) {robotOuttake.run("close"); gate.setGateState(false);} else if (x2prevState) {gate.setGateState(true);}
+        else if (y2state) {
+            fieldCentric = true;
+            ballCamToggle = true;
             initialPower = poses.getOptimalShooterPowerPercentage(follower.getPose(), true);
             robotOuttake.run(initialPower + powerOffset);
             gate.setGateState(false);
+            if(Math.abs(robotOuttake.getTargetTps() - robotOuttake.getCurrentTps()) < 45)
+            {
+                robotStorage.run(1);
+            }
             if (dpu2wP) {powerOffset += 0.01;}
             else if (dpd2wP) {powerOffset -= 0.01;}
+            if(dpr2wP) {targetAngleOffset += 2;}
+            if(dpl2wP) {targetAngleOffset -= 2;}
             if(a2state){powerOffset = 0;}
+            if (b2state){targetAngleOffset = 0;}
         }
-        else if (x2prevState) {gate.setGateState(true);}
-
+        else if (y2prevState){
+            gate.setGateState(true);
+            fieldCentric = false;
+            ballCamToggle = false;
+            robotStorage.run(0);
+        }
+        else if (b2state) {robotOuttake.run("far"); gate.setGateState(false);} else if (b2prevState) {gate.setGateState(true);}
 
         else {robotOuttake.run("idle");}
         if (offToggle) {robotOuttake.run(0);}

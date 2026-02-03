@@ -241,6 +241,7 @@ public class RobotAutonGoalSideRed2Pair extends LinearOpMode {
             panelsTelemetry.update(telemetry);
             follower.update();
             draw();
+            PresetPoses.lastAutonPosition = currentPose;
         }
     }
 
