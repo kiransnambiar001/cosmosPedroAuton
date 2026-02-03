@@ -29,7 +29,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
 
-@Autonomous(name="FAR SIDE RED - Auton", group="Autonomous")
+@Autonomous(name="FAR SIDE RED - Auton", group="Autonomous", preselectTeleOp = "FAR SIDE RED - PedroPathingTeleOp")
 @Configurable // for Panels
 @SuppressWarnings("FieldCanBeLocal") // android studio bugging
 public class RobotAutonFarRed extends LinearOpMode {

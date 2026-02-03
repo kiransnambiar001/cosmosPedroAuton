@@ -20,6 +20,7 @@ public class Hardware {
     public IMU imu;
     public ElapsedTime timer;
     public CRServo storageLeft, storageRight;
+    public Servo sStorageLeft, sStorageRight;
     public Servo gateServo;
     // Init hardwareMaps
 
@@ -44,6 +45,8 @@ public class Hardware {
         imu = hardwareMap.get(IMU.class, "imu");
         storageLeft = hardwareMap.get(CRServo.class, "storageLeft");
         storageRight = hardwareMap.get(CRServo.class, "storageRight");
+        sStorageLeft = hardwareMap.get(Servo.class, "storageLeft");
+        sStorageRight = hardwareMap.get(Servo.class, "storageRight");
         // Set motor zero power behavior to brake instead of move freely
 
         intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
