@@ -14,6 +14,7 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -23,22 +24,27 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.PresetPoses;
 import org.firstinspires.ftc.teamcode.subsystems.CRServoStorage;
 import org.firstinspires.ftc.teamcode.subsystems.Drawing;
+import org.firstinspires.ftc.teamcode.subsystems.FileController;
 import org.firstinspires.ftc.teamcode.subsystems.Gate;
 import org.firstinspires.ftc.teamcode.subsystems.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
+import java.util.ArrayList;
+import java.util.List;
 
-@Autonomous(name="FAR SIDE RED - Auton", group="Autonomous", preselectTeleOp = "FAR SIDE RED - PedroPathingTeleOp")
+
+@Autonomous(name="FAR SIDE RED - Auton", group="Autonomous", preselectTeleOp="FAR SIDE RED - PedroPathingTeleOp")
 @Configurable // for Panels
 @SuppressWarnings("FieldCanBeLocal") // android studio bugging
-public class RobotAutonFarRed extends LinearOpMode {
+public class RobotAutonFarRed extends OpMode {
 
     public Hardware hardware;
     public Outtake outtake;
     public Intake intake;
     public Gate gate;
     public CRServoStorage storage;
+    public FileController fileController;
 
 
     private final ElapsedTime timer = new ElapsedTime(); // runtime
@@ -157,7 +163,7 @@ public class RobotAutonFarRed extends LinearOpMode {
     }
 
     @Override
-    public void runOpMode() {
+    public void init() {
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
         // init pp follower
@@ -168,7 +174,7 @@ public class RobotAutonFarRed extends LinearOpMode {
 
         // init subsystems
         hardware = new Hardware();
-        hardware.initialize(hardwareMap, true);
+        hardware.initialize(hardwareMap, true, true);
         outtake = new Outtake(hardware, 200d, 0d, 0d, 13.989d);
         intake = new Intake(hardware);
         storage = new CRServoStorage(hardware);
@@ -179,10 +185,10 @@ public class RobotAutonFarRed extends LinearOpMode {
         drawOnlyCurrent();
         log("Status", "INITIALIZED");
         panelsTelemetry.update(telemetry);
+    }
 
-
-        // upon start operations
-        waitForStart();
+    @Override
+    public void start() {
         pathState = 0;
         timer.reset();
 
@@ -192,36 +198,50 @@ public class RobotAutonFarRed extends LinearOpMode {
         currentPose = follower.getPose();
 
         gate.setGateState(true);
-
-
-        while (opModeIsActive()) {
-            currentPose = follower.getPose();
-            // update subsystems
-            updatePath(outtake.update(), intake.update(), storage.update());
-
-
-
-
-            // telemetry
-            log("Status", "RUNNING");
-            log("Path State", pathState);
-            log("Outtake Tps: ", hardware.outtakeMotor.getVelocity());
-            log("Outtake Target Tps: ", outtake.getTargetTps());
-            if (pathState == 0) {log("Path Name", "Shoot Preloaded");}
-            else if (pathState == 1) {log("Path Name", "Go to PPG");}
-            else if (pathState == 2) {log("Path Name", "Pickup PPG");}
-            else if (pathState == 3) {log("Path Name", "Shoot GPP");}
-            else if (pathState == 4) {log("Path Name", "Park");}
-            else if (pathState == 10) {log("Path Name", "Shooting (Outtake)");}
-            else if (pathState == -1) {log("Path Name", "Autonomous Finished!");}
-            log("Current Pose", currentPose);
-            panelsTelemetry.update(telemetry);
-            follower.update();
-            draw();
-            PresetPoses.lastAutonPosition = currentPose;
-
-        }
     }
+
+    @Override
+    public void loop() {
+        currentPose = follower.getPose();
+        // update subsystems
+        updatePath(outtake.update(), intake.update(), storage.update());
+
+
+
+
+        // telemetry
+        log("Status", "RUNNING");
+        log("Path State", pathState);
+        log("Outtake Tps: ", hardware.outtakeMotor.getVelocity());
+        log("Outtake Target Tps: ", outtake.getTargetTps());
+        if (pathState == 0) {log("Path Name", "Shoot Preloaded");}
+        else if (pathState == 1) {log("Path Name", "Go to PPG");}
+        else if (pathState == 2) {log("Path Name", "Pickup PPG");}
+        else if (pathState == 3) {log("Path Name", "Shoot GPP");}
+        else if (pathState == 4) {log("Path Name", "Park");}
+        else if (pathState == 10) {log("Path Name", "Shooting (Outtake)");}
+        else if (pathState == -1) {log("Path Name", "Autonomous Finished!");}
+        log("Current Pose", currentPose);
+        panelsTelemetry.update(telemetry);
+        follower.update();
+        draw();
+    }
+
+    @Override
+    public void stop() {
+        List<Double> data = new ArrayList<>();
+        data.add(follower.getPose().getX());
+        data.add(follower.getPose().getY());
+        data.add(follower.getPose().getHeading());
+        if (paths.poses.isRed) {
+            data.add(1.0);
+        } else {
+            data.add(0.0);
+        }
+        FileController.write("Memory.txt", data);
+    }
+
+
 
     // shootpreloaded-->gotoppg-->pickupppg-->shootppg-->park
     public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished, boolean storageRFTFinished) {

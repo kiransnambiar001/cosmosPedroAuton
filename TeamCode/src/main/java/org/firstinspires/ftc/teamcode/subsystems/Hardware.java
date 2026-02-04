@@ -19,12 +19,12 @@ public class Hardware {
     public DcMotorEx outtakeMotor;
     public IMU imu;
     public ElapsedTime timer;
-    public CRServo storageLeft, storageRight;
-    public Servo sStorageLeft, sStorageRight;
+    public CRServo  storageLeft, storageRight;
+    public Servo servoStorageLeft, servoStorageRight;
     public Servo gateServo;
     // Init hardwareMaps
 
-    public void initialize(HardwareMap hardwareMap, boolean isPedro) {
+    public void initialize(HardwareMap hardwareMap, boolean isPedro, boolean isCRServo) {
         if (!isPedro) {
             frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
             frontRight = hardwareMap.get(DcMotor.class, "frontRight");
@@ -43,10 +43,13 @@ public class Hardware {
         outtakeMotor = hardwareMap.get(DcMotorEx.class, "outtakeMotor");
         gateServo = hardwareMap.get(Servo.class, "gate");
         imu = hardwareMap.get(IMU.class, "imu");
-        storageLeft = hardwareMap.get(CRServo.class, "storageLeft");
-        storageRight = hardwareMap.get(CRServo.class, "storageRight");
-        sStorageLeft = hardwareMap.get(Servo.class, "storageLeft");
-        sStorageRight = hardwareMap.get(Servo.class, "storageRight");
+        if (isCRServo) {
+            storageLeft = hardwareMap.get(CRServo.class, "storageLeft");
+            storageRight = hardwareMap.get(CRServo.class, "storageRight");
+        } else {
+            servoStorageLeft = hardwareMap.get(Servo.class, "storageLeft");
+            servoStorageRight = hardwareMap.get(Servo.class, "storageRight");
+        }
         // Set motor zero power behavior to brake instead of move freely
 
         intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -57,8 +60,10 @@ public class Hardware {
 
         intakeMotor.setDirection(DcMotor.Direction.FORWARD);
         outtakeMotor.setDirection(DcMotor.Direction.FORWARD);
-        storageLeft.setDirection(CRServo.Direction.REVERSE);
-        storageRight.setDirection(CRServo.Direction.FORWARD);
+        if (isCRServo) {
+            storageLeft.setDirection(CRServo.Direction.REVERSE);
+            storageRight.setDirection(CRServo.Direction.FORWARD);
+        }
 
         // pidf constants for outtake motor
 //        outtakeMotor.setVelocityPIDFCoefficients(0.01d,0d,0d,0.00052d);

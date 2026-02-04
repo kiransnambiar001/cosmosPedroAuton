@@ -47,7 +47,7 @@ public class PIDFSolversTuner extends OpMode {
 
     @Override
     public void init() {
-        robotHardware.initialize(hardwareMap, false);
+        robotHardware.initialize(hardwareMap, false, true);
         robotStorage = new CRServoStorage(robotHardware);
 
         fVal = 0.00052d;

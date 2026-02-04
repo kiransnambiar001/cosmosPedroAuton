@@ -8,28 +8,28 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 @Configurable
 public class ServoStorage {
 
-    private final Hardware robotHardware;
     //private boolean state = false;
 
-    public static double storageShootingPos = -1;
-    public static double storageIntakingPos = 0.4;
+    public static double storageLShootingPos = -1;
+    public static double storageLIntakingPos = 1;
+    public static double storageRShootingPos = 1;
+    public static double storageRIntakingPos = -1;
 
     public Servo storageL, storageR;
 
 
     public ServoStorage(Hardware hardware) {
-        robotHardware = hardware;
-        storageL = robotHardware.sStorageLeft;
-        storageR = robotHardware.sStorageRight;
+        storageL = hardware.servoStorageLeft;
+        storageR = hardware.servoStorageRight;
     }
 
     public void setPos(boolean isIntaking) {
         if (isIntaking) {
-            storageL.setPosition(storageShootingPos);
-            storageR.setPosition(storageShootingPos);
+            storageL.setPosition(storageLShootingPos);
+            storageR.setPosition(storageRShootingPos);
         } else {
-            storageL.setPosition(storageIntakingPos);
-            storageR.setPosition(storageIntakingPos);
+            storageL.setPosition(storageLIntakingPos);
+            storageR.setPosition(storageRIntakingPos);
         }
     }
 }

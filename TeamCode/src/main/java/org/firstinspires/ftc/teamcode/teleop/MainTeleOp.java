@@ -51,7 +51,7 @@ public class MainTeleOp extends LinearOpMode
     public void runOpMode() throws InterruptedException {
 
         // Initialize hardware
-        robotHardware.initialize(hardwareMap, false);
+        robotHardware.initialize(hardwareMap, false, true);
         robotIntake = new Intake(robotHardware);
         robotStorage = new CRServoStorage(robotHardware);
         robotOuttake = new Outtake(robotHardware, pcoefficient, icoefficient, dcoefficient, fcoefficient );

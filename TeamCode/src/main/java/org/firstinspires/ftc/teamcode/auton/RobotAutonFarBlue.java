@@ -14,6 +14,7 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -23,22 +24,27 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.PresetPoses;
 import org.firstinspires.ftc.teamcode.subsystems.CRServoStorage;
 import org.firstinspires.ftc.teamcode.subsystems.Drawing;
+import org.firstinspires.ftc.teamcode.subsystems.FileController;
 import org.firstinspires.ftc.teamcode.subsystems.Gate;
 import org.firstinspires.ftc.teamcode.subsystems.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Autonomous(name="FAR SIDE BLUE - Auton", group="Autonomous", preselectTeleOp="FAR SIDE BLUE - PedroPathingTeleOp")
 @Configurable // for Panels
 @SuppressWarnings("FieldCanBeLocal") // android studio bugging
-public class RobotAutonFarBlue extends LinearOpMode {
+public class RobotAutonFarBlue extends OpMode {
 
     public Hardware hardware;
     public Outtake outtake;
     public Intake intake;
     public Gate gate;
     public CRServoStorage storage;
+    public FileController fileController;
 
 
     private final ElapsedTime timer = new ElapsedTime(); // runtime
@@ -157,7 +163,7 @@ public class RobotAutonFarBlue extends LinearOpMode {
     }
 
     @Override
-    public void runOpMode() {
+    public void init() {
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
         // init pp follower
@@ -168,7 +174,7 @@ public class RobotAutonFarBlue extends LinearOpMode {
 
         // init subsystems
         hardware = new Hardware();
-        hardware.initialize(hardwareMap, true);
+        hardware.initialize(hardwareMap, true, true);
         outtake = new Outtake(hardware, 200d, 0d, 0d, 13.989d);
         intake = new Intake(hardware);
         storage = new CRServoStorage(hardware);
@@ -179,10 +185,10 @@ public class RobotAutonFarBlue extends LinearOpMode {
         drawOnlyCurrent();
         log("Status", "INITIALIZED");
         panelsTelemetry.update(telemetry);
+    }
 
-
-        // upon start operations
-        waitForStart();
+    @Override
+    public void start() {
         pathState = 0;
         timer.reset();
 
@@ -192,9 +198,10 @@ public class RobotAutonFarBlue extends LinearOpMode {
         currentPose = follower.getPose();
 
         gate.setGateState(true);
+    }
 
-
-        while (opModeIsActive()) {
+    @Override
+    public void loop() {
             currentPose = follower.getPose();
             // update subsystems
             updatePath(outtake.update(), intake.update(), storage.update());
@@ -218,8 +225,9 @@ public class RobotAutonFarBlue extends LinearOpMode {
             panelsTelemetry.update(telemetry);
             follower.update();
             draw();
-        }
     }
+
+
 
     // shootpreloaded-->gotoppg-->pickupppg-->shootppg-->park
     public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished, boolean storageRFTFinished) {

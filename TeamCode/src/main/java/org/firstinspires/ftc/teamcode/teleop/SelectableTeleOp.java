@@ -38,6 +38,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.PresetPoses;
 import org.firstinspires.ftc.teamcode.subsystems.CRServoStorage;
 import org.firstinspires.ftc.teamcode.subsystems.Drawing;
+import org.firstinspires.ftc.teamcode.subsystems.FileController;
 import org.firstinspires.ftc.teamcode.subsystems.Gate;
 import org.firstinspires.ftc.teamcode.subsystems.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
@@ -75,6 +76,7 @@ public class SelectableTeleOp extends SelectableOpMode {
             l.add("GOAL SIDE - RED", GoalSideRed::new);
             l.add("OUT OF WAY - BLUE", OOWBlue::new);
             l.add("OUT OF WAY - RED", OOWRed::new);
+            l.add("AUTON POS - ANY", AutonTeleop::new);
         });
     }
 
@@ -178,7 +180,7 @@ abstract class BaseTeleop extends OpMode {
     public void init() {
         setPresets();
         // Initialize hardware
-        robotHardware.initialize(hardwareMap,true);
+        robotHardware.initialize(hardwareMap,true, true);
         robotIntake = new Intake(robotHardware);
         robotStorage = new CRServoStorage(robotHardware);
         robotOuttake = new Outtake(robotHardware, 200d, 0d, 0d, 13.989d);
@@ -515,6 +517,27 @@ class OOWRed extends BaseTeleop {
         PresetPoses tempposes = new PresetPoses(new Pose(72,72, Math.toRadians(0)), false);
         poses = new PresetPoses(tempposes.closeMoveOutOfWayPose, true);
         fcOffset = 0;
+
+    }
+}
+
+class AutonTeleop extends BaseTeleop {
+    @Override
+    public void setPresets() {
+        List<Double> data = FileController.read("Memory.txt");
+        double x = data.get(0);
+        double y = data.get(1);
+        double heading = data.get(2);
+        boolean isRed = data.get(3) == 1;
+        Pose startPose = new Pose(x,y,heading);
+
+        if (isRed) {
+            poses = new PresetPoses(startPose.mirror(), true);
+        } else {
+            poses = new PresetPoses(startPose, false);
+        }
+
+        fcOffset = Math.toRadians(180);
 
     }
 }

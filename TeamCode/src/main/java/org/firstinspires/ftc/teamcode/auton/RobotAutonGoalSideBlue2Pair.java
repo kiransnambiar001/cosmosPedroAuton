@@ -14,6 +14,7 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -23,16 +24,20 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.PresetPoses;
 import org.firstinspires.ftc.teamcode.subsystems.CRServoStorage;
 import org.firstinspires.ftc.teamcode.subsystems.Drawing;
+import org.firstinspires.ftc.teamcode.subsystems.FileController;
 import org.firstinspires.ftc.teamcode.subsystems.Gate;
 import org.firstinspires.ftc.teamcode.subsystems.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Autonomous(name="GOAL SIDE BLUE - Backup Auton", group="Autonomous")
 @Configurable // for Panels
 @SuppressWarnings("FieldCanBeLocal") // android studio bugging
-public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
+public class RobotAutonGoalSideBlue2Pair extends OpMode {
 
     public Hardware hardware;
     public Outtake outtake;
@@ -189,7 +194,7 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
     }
 
     @Override
-    public void runOpMode() {
+    public void init() {
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
         // init pp follower
@@ -200,7 +205,7 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
 
         // init subsystems
         hardware = new Hardware();
-        hardware.initialize(hardwareMap, true);
+        hardware.initialize(hardwareMap, true, true);
         outtake = new Outtake(hardware, 200d, 0d, 0d, 13.989d);
         intake = new Intake(hardware);
         storage = new CRServoStorage(hardware);
@@ -211,10 +216,11 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
         drawOnlyCurrent();
         log("Status", "INITIALIZED");
         panelsTelemetry.update(telemetry);
+    }
 
-
+    @Override
+    public void start() {
         // upon start operations
-        waitForStart();
         pathState = 0;
         timer.reset();
 
@@ -224,9 +230,10 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
         currentPose = follower.getPose();
 
         gate.setGateState(true);
+    }
 
-
-        while (opModeIsActive()) {
+    @Override
+    public void loop() {
             currentPose = follower.getPose();
             // update subsystems
             updatePath(outtake.update(), intake.update(), storage.update());
@@ -242,7 +249,20 @@ public class RobotAutonGoalSideBlue2Pair extends LinearOpMode {
             follower.update();
             draw();
             PresetPoses.lastAutonPosition = currentPose;
+    }
+
+    @Override
+    public void stop() {
+        List<Double> data = new ArrayList<>();
+        data.add(follower.getPose().getX());
+        data.add(follower.getPose().getY());
+        data.add(follower.getPose().getHeading());
+        if (paths.poses.isRed) {
+            data.add(1.0);
+        } else {
+            data.add(0.0);
         }
+        FileController.write("Memory.txt", data);
     }
 
     // shootpreloaded-->gotoppg-->pickupppg-->shootppg-->park

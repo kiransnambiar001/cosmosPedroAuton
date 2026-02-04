@@ -147,7 +147,7 @@ public class testTeleOp extends OpMode {
     @Override
     public void init() {
         // Initialize hardware
-        robotHardware.initialize(hardwareMap,true);
+        robotHardware.initialize(hardwareMap,true, true);
         robotIntake = new Intake(robotHardware);
         robotStorage = new CRServoStorage(robotHardware);
         robotOuttake = new Outtake(robotHardware, 200d, 0d, 0d, 13.989d);

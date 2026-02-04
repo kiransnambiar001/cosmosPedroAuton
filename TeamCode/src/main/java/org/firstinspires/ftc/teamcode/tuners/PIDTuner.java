@@ -45,7 +45,7 @@ public class PIDTuner extends OpMode {
 
     @Override
     public void init() {
-        robotHardware.initialize(hardwareMap, false);
+        robotHardware.initialize(hardwareMap, false, true);
         robotOuttake = new Outtake(robotHardware, pVal, iVal, dVal, fVal);
         robotStorage = new CRServoStorage(robotHardware);
 

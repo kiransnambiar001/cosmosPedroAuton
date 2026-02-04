@@ -96,7 +96,7 @@ public class BallCamTuner extends OpMode {
     @Override
     public void init() {
         // Initialize hardware
-        robotHardware.initialize(hardwareMap,true);
+        robotHardware.initialize(hardwareMap,true, true);
 
 
         follower = Constants.createFollower(hardwareMap);
