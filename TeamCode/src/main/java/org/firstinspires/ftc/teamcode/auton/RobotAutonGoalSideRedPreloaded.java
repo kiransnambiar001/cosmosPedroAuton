@@ -29,6 +29,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Gate;
 import org.firstinspires.ftc.teamcode.subsystems.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
+import org.firstinspires.ftc.teamcode.subsystems.ServoStorage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +44,7 @@ public class RobotAutonGoalSideRedPreloaded extends OpMode {
     public Outtake outtake;
     public Intake intake;
     public Gate gate;
-    public CRServoStorage storage;
+    public ServoStorage storage;
 
 
     private final ElapsedTime timer = new ElapsedTime(); // runtime
@@ -142,10 +143,10 @@ public class RobotAutonGoalSideRedPreloaded extends OpMode {
 
         // init subsystems
         hardware = new Hardware();
-        hardware.initialize(hardwareMap, true, true);
+        hardware.initialize(hardwareMap, true, false);
         outtake = new Outtake(hardware, 200d, 0d, 0d, 13.989d);
         intake = new Intake(hardware);
-        storage = new CRServoStorage(hardware);
+        storage = new ServoStorage(hardware);
         gate = new Gate(hardware);
 
         Drawing.init();
@@ -172,7 +173,8 @@ public class RobotAutonGoalSideRedPreloaded extends OpMode {
     public void loop() {
         currentPose = follower.getPose();
         // update subsystems
-        updatePath(outtake.update(), intake.update(), storage.update());
+        updatePath(outtake.update(), intake.update());
+        storage.update();
 
         // telemetry
         log("Status", "RUNNING");
@@ -198,7 +200,7 @@ public class RobotAutonGoalSideRedPreloaded extends OpMode {
     }
 
     // shootpreloaded-->gotoppg-->pickupppg-->shootppg-->park
-    public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished, boolean storageRFTFinished) {
+    public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished) {
         switch (pathState) {
             case 0:
                 follower.followPath(paths.ShootPreloaded);
@@ -219,11 +221,11 @@ public class RobotAutonGoalSideRedPreloaded extends OpMode {
                     if (!rampingUp && !shooting) {outtake.run("close"); rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         gate.setGateState(false);
-                        intake.runForTime(1, 6500); storage.runForTime(storageOuttakePower, 6500);
+                        intake.runForTime(1, 6500);
                         shooting = true;
                         rampingUp = false;
                     }
-                    else if (shooting && (intakeRFTFinished || storageRFTFinished)) {
+                    else if (shooting && (intakeRFTFinished)) {
                         gate.setGateState(true);
                         rampingUp = false; shooting = false;
                         outtake.run("idle");
@@ -236,13 +238,14 @@ public class RobotAutonGoalSideRedPreloaded extends OpMode {
                     if (!rampingUp && !shooting) {outtake.run("close"); rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         gate.setGateState(false);
-                        intake.runForTime(1, 100000); storage.runForTime(storageOuttakePower, 100000);
+                        intake.runForTime(1, 100000); storage.cycle(true);
                         shooting = true;
                         rampingUp = false;
                     }
-                    else if (shooting && (intakeRFTFinished || storageRFTFinished)) {
+                    else if (shooting && (intakeRFTFinished)) {
                         gate.setGateState(true);
                         rampingUp = false; shooting = false;
+                        storage.cycle(false);
                         outtake.run("idle");
                         pathState = nextState;
                     }

@@ -29,11 +29,12 @@ import org.firstinspires.ftc.teamcode.subsystems.Gate;
 import org.firstinspires.ftc.teamcode.subsystems.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
+import org.firstinspires.ftc.teamcode.subsystems.ServoStorage;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Autonomous(name="GOAL SIDE RED - Auton", group="Autonomous", preselectTeleOp = "GOAL SIDE RED - PedroPathingTeleOp")
+@Autonomous(name="GOAL SIDE RED - Auton", group="Autonomous", preselectTeleOp = "SELECTABLE - PedroPathingTeleOp")
 @Configurable // for Panels
 @SuppressWarnings("FieldCanBeLocal") // android studio bugging
 public class RobotAutonGoalSideRed3Pair extends OpMode {
@@ -42,7 +43,7 @@ public class RobotAutonGoalSideRed3Pair extends OpMode {
     public Outtake outtake;
     public Intake intake;
     public Gate gate;
-    public CRServoStorage storage;
+    public ServoStorage storage;
 
 
     private final ElapsedTime timer = new ElapsedTime(); // runtime
@@ -203,10 +204,10 @@ public class RobotAutonGoalSideRed3Pair extends OpMode {
 
         // init subsystems
         hardware = new Hardware();
-        hardware.initialize(hardwareMap, true, true);
+        hardware.initialize(hardwareMap, true, false);
         outtake = new Outtake(hardware, 200d, 0d, 0d, 13.989d);
         intake = new Intake(hardware);
-        storage = new CRServoStorage(hardware);
+        storage = new ServoStorage(hardware);
         gate = new Gate(hardware);
 
         Drawing.init();
@@ -276,16 +277,16 @@ public class RobotAutonGoalSideRed3Pair extends OpMode {
 
             case 2:
                 if (follower.getCurrentTValue() > 0.97) {
-                    follower.followPath(paths.PickupGPP, 0.3, true);
+                    follower.followPath(paths.PickupGPP);
                     gate.setGateState(true);
-                    intake.run(1);
+                    intake.run(1); storage.setPos(-1);
                     pathState = 3;
                 }
                 break;
 
             case 3:
                 if (follower.getCurrentTValue() > 0.97) {
-                    intake.run(0);
+                    intake.run(0); storage.setPos(0);
                     follower.followPath(paths.ShootGPP);
                     nextState = 4;
                     pathState = 10; // shoot
@@ -300,15 +301,15 @@ public class RobotAutonGoalSideRed3Pair extends OpMode {
                 }
             case 5:
                 if (follower.getCurrentTValue() > 0.97) {
-                    follower.followPath(paths.PickupPGP, 0.3, true);
+                    follower.followPath(paths.PickupPGP);
                     gate.setGateState(true);
-                    intake.run(1);
+                    intake.run(1); storage.setPos(-1);
                     pathState = 6;
                 }
                 break;
             case 6:
                 if (follower.getCurrentTValue() > 0.97) {
-                    intake.run(0);
+                    intake.run(0); storage.setPos(0);
                     follower.followPath(paths.ShootPGP);
                     nextState = 7;
                     pathState = 11; // shoot
@@ -362,23 +363,18 @@ public class RobotAutonGoalSideRed3Pair extends OpMode {
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         previousTime = hardware.timer.milliseconds();
                         gate.setGateState(false);
-                        intake.run(1); storage.run(storageOuttakePower);
+                        intake.run(1); storage.cycle(3);
                         shooting = true;
                         rampingUp = false;
                     }
                     else if (shooting) {
-                        if ((hardware.timer.milliseconds() >= previousTime + 5350)) {
+                        if ((storageRFTFinished)) {
                             gate.setGateState(true);
-                            rampingUp = false; shooting = false;
+                            rampingUp = false;
+                            shooting = false;
                             pathState = nextState;
-                            intake.run(0); storage.run(0);
-
-                        }
-                        else if (Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
-                            intake.run(1); storage.run(storageOuttakePower);
-                        }
-                        else {
-                            intake.run(0); storage.run(0);
+                            intake.run(0);
+                            storage.cycle(false);
                         }
                     }
                 }
@@ -389,7 +385,7 @@ public class RobotAutonGoalSideRed3Pair extends OpMode {
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         previousTime = hardware.timer.milliseconds();
                         gate.setGateState(false);
-                        intake.run(1); storage.run(storageOuttakePower);
+                        intake.run(1); storage.cycle(true);
                         shooting = true;
                         rampingUp = false;
                     }
@@ -398,14 +394,14 @@ public class RobotAutonGoalSideRed3Pair extends OpMode {
                             gate.setGateState(true);
                             rampingUp = false; shooting = false;
                             pathState = nextState;
-                            intake.run(0); storage.run(0);
+                            intake.run(0); storage.cycle(false);
 
                         }
                         else if (Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
-                            intake.run(1); storage.run(storageOuttakePower);
+                            intake.run(1); storage.cycle(true);
                         }
                         else {
-                            intake.run(0); storage.run(0);
+                            intake.run(0); storage.cycle(false);
                         }
                     }
                 }

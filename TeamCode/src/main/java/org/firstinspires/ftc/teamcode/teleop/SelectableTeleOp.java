@@ -43,6 +43,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Gate;
 import org.firstinspires.ftc.teamcode.subsystems.Hardware;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
+import org.firstinspires.ftc.teamcode.subsystems.ServoStorage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +77,7 @@ public class SelectableTeleOp extends SelectableOpMode {
             l.add("GOAL SIDE - RED", GoalSideRed::new);
             l.add("OUT OF WAY - BLUE", OOWBlue::new);
             l.add("OUT OF WAY - RED", OOWRed::new);
-            l.add("AUTON POS - ANY", AutonTeleop::new);
+            l.add("AUTO END POSE - ANY", EndPoseTeleop::new);
         });
     }
 
@@ -89,7 +90,7 @@ public class SelectableTeleOp extends SelectableOpMode {
 abstract class BaseTeleop extends OpMode {
     Hardware robotHardware = new Hardware();
     Intake robotIntake;
-    CRServoStorage robotStorage;
+    ServoStorage robotStorage;
     Outtake robotOuttake;
     Gate gate;
     boolean gateIsClosed = false;
@@ -106,6 +107,7 @@ abstract class BaseTeleop extends OpMode {
     private Supplier<PathChain> toShootPosePath;
     private Function<Pose, PathChain> toLaunchLinePath;
     private TelemetryManager panelsTelemetry;
+    public double tpsTolerance = 50;
 
 
     // input vars
@@ -180,9 +182,9 @@ abstract class BaseTeleop extends OpMode {
     public void init() {
         setPresets();
         // Initialize hardware
-        robotHardware.initialize(hardwareMap,true, true);
+        robotHardware.initialize(hardwareMap,true, false);
         robotIntake = new Intake(robotHardware);
-        robotStorage = new CRServoStorage(robotHardware);
+        robotStorage = new ServoStorage(robotHardware);
         robotOuttake = new Outtake(robotHardware, 200d, 0d, 0d, 13.989d);
         gate = new Gate(robotHardware);
 
@@ -303,10 +305,8 @@ abstract class BaseTeleop extends OpMode {
         double imuHeading = robotHardware.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
         // rumble outtake feedback
-        double outtakeTargetTps = robotOuttake.getTargetTps();
-        double outtakeActualTps = robotHardware.outtakeMotor.getVelocity();
         if (robotOuttake.getCurrentPreset().equals("idle")) {gamepad2.stopRumble();}
-        else if (outtakeTargetTps - 50 < robotHardware.outtakeMotor.getVelocity() && robotHardware.outtakeMotor.getVelocity() < outtakeTargetTps + 50) {
+        else if (Math.abs(robotHardware.outtakeMotor.getVelocity() - robotOuttake.getTargetTps()) < tpsTolerance) {
             gamepad2.rumble(-1); // infinite
         }
         else {gamepad2.stopRumble();}
@@ -380,32 +380,43 @@ abstract class BaseTeleop extends OpMode {
         //Storage and intake control
         robotIntake.update();
         robotStorage.update();
-        if ((rt2state && !rb2state)
-                && Math.abs(robotOuttake.getCurrentTps() - robotOuttake.getTargetTps()) < 45)
-        {robotStorage.run(1.0);}
-        else if (rb2state && !rt2state)
-        {robotStorage.run(-1.0);}
-        else {robotStorage.run(0);}
-        if (ly2 <= -0.3) {robotIntake.run(-1.0);}
-        else if(ly2 >0.3) {robotIntake.run(1.0);}
-        else{robotIntake.run(0);}
+
+        if (ly2 <= -0.3) {robotIntake.run(-0.8);}
+        else if(ly2 >0.3) {robotIntake.run(0.8); robotStorage.setPos(-1);}
+        else {
+            robotIntake.run(0);
+        }
 
         // outtake preset running
         if (a2wP) {robotOuttake.reset();}
-        else if (y2state) {robotOuttake.run("close"); gate.setGateState("open");} else if (y2prevState) {gate.setGateState("close");}
-        else if (b2state) {robotOuttake.run("far"); gate.setGateState("open");} else if (b2prevState) {gate.setGateState("close");}
+        else if (y2state)
+        {
+            robotOuttake.run("close");
+            gate.setGateState("open");
+            if (robotOuttake.upToSpeed) {robotStorage.cycle(true);}
+        }
+        else if (y2prevState) {gate.setGateState("close");}
+        else if (b2state)
+        {
+            robotOuttake.run("far");
+            gate.setGateState("open");
+            if(robotOuttake.upToSpeed) {robotStorage.cycle(true);}
+        }
+        else if (b2prevState) {gate.setGateState("close");}
         else if (x2state) {
             initialPower = poses.getOptimalShooterPowerPercentage(follower.getPose(), true);
             robotOuttake.run(initialPower + powerOffset);
+            if(robotOuttake.upToSpeed){robotStorage.cycle(true);}
             gate.setGateState("open");
             if (dpu2wP) {powerOffset += 0.01;}
             else if (dpd2wP) {powerOffset -= 0.01;}
             if(a2state){powerOffset = 0;}
         }
         else if (x2prevState) {gate.setGateState("close");}
-
-
-        else {robotOuttake.run("idle");}
+        else {
+            robotOuttake.run("idle");
+            robotStorage.cycle(false);
+            }
         if (offToggle) {robotOuttake.run(0);}
 
         // Fine tune active preset
@@ -422,6 +433,12 @@ abstract class BaseTeleop extends OpMode {
             follower.startTeleOpDrive(); autoDriving = false;
         }
 
+        if (!x2state && !y2state && !b2state && !(ly2 > 0.3)) {
+            robotStorage.setPos(0);
+            robotStorage.cycle(false);
+        }
+
+        log(initMsg);
         log("Status", "Running");
         log("Field Centric", fieldCentric ? "ON" : "OFF");
         log("Ball Cam", ballCamToggle ? "ON" : "OFF");
@@ -468,6 +485,8 @@ class FarSideBlue extends BaseTeleop {
         PresetPoses tempposes = new PresetPoses(new Pose(72,72, Math.toRadians(0)), false);
         poses = new PresetPoses(tempposes.parkPose, false);
         fcOffset = Math.toRadians(180);
+        initMsg = "FAR SIDE BLUE";
+
     }
 }
 
@@ -477,6 +496,7 @@ class FarSideRed extends BaseTeleop {
         PresetPoses tempposes = new PresetPoses(new Pose(72,72, Math.toRadians(0)), false);
         poses = new PresetPoses(tempposes.parkPose, true);
         fcOffset = 0;
+        initMsg = "FAR SIDE RED";
 
     }
 }
@@ -487,6 +507,8 @@ class GoalSideBlue extends BaseTeleop {
         PresetPoses tempposes = new PresetPoses(new Pose(72,72, Math.toRadians(0)), false);
         poses = new PresetPoses(tempposes.closeShootOffLinePose, false);
         fcOffset = Math.toRadians(180);
+        initMsg = "GOAL SIDE BLUE";
+
 
     }
 }
@@ -497,6 +519,8 @@ class GoalSideRed extends BaseTeleop {
         PresetPoses tempposes = new PresetPoses(new Pose(72,72, Math.toRadians(0)), false);
         poses = new PresetPoses(tempposes.closeShootOffLinePose, true);
         fcOffset = 0;
+        initMsg = "GOAL SIDE RED";
+
 
     }
 }
@@ -507,6 +531,8 @@ class OOWBlue extends BaseTeleop {
         PresetPoses tempposes = new PresetPoses(new Pose(72,72, Math.toRadians(0)), false);
         poses = new PresetPoses(tempposes.closeMoveOutOfWayPose, false);
         fcOffset = Math.toRadians(180);
+        initMsg = "OUT OF WAY BLUE";
+
     }
 }
 
@@ -516,10 +542,13 @@ class OOWRed extends BaseTeleop {
         PresetPoses tempposes = new PresetPoses(new Pose(72,72, Math.toRadians(0)), false);
         poses = new PresetPoses(tempposes.closeMoveOutOfWayPose, true);
         fcOffset = 0;
+        initMsg = "OUT OF WAY RED";
+
+
     }
 }
 
-class AutonTeleop extends BaseTeleop {
+class EndPoseTeleop extends BaseTeleop {
     @Override
     public void setPresets() {
         List<Double> data = FileController.read("Memory.txt");
@@ -535,5 +564,8 @@ class AutonTeleop extends BaseTeleop {
             poses = new PresetPoses(startPose, false);
         }
         fcOffset = Math.toRadians(180);
+        initMsg = "AUTON POSE TELEOP";
+
+
     }
 }

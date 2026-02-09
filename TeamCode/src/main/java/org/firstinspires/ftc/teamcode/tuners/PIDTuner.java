@@ -19,7 +19,6 @@ public class PIDTuner extends OpMode {
     Hardware robotHardware = new Hardware();
     Outtake robotOuttake;
 
-    CRServoStorage robotStorage;
 
     public static double pVal, fVal, dVal, iVal;
     public static double idle;
@@ -47,12 +46,11 @@ public class PIDTuner extends OpMode {
     public void init() {
         robotHardware.initialize(hardwareMap, false, true);
         robotOuttake = new Outtake(robotHardware, pVal, iVal, dVal, fVal);
-        robotStorage = new CRServoStorage(robotHardware);
 
-        fVal = 12.35;
-        dVal = 0;
-        iVal = 0;
-        pVal = 150;
+        fVal = 13.989d;
+        dVal = 0d;
+        iVal = 0d;
+        pVal = 200d;
         idle = 0.2;
 
         panels = PanelsTelemetry.INSTANCE.getTelemetry();
@@ -75,14 +73,6 @@ public class PIDTuner extends OpMode {
         double rt2 = gamepad2.right_trigger;
         double lt2 = gamepad2.left_trigger;
         double ry2 = gamepad2.right_stick_y;
-
-        if (ry2 > 0.5) {
-            robotStorage.run(1);
-        } else if (ry2 < -0.5) {
-            robotStorage.run(-1);
-        } else {
-            robotStorage.run(0);
-        }
 
 
         if (rb2wP) {pVal += increment;}
