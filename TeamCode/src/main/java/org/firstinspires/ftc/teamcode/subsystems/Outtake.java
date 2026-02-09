@@ -35,6 +35,7 @@ public class Outtake {
         closeShotPower = Math.max(idlePower, Math.min(maxPower, closeShotPower));
         farShotPower = Math.max(idlePower, Math.min(maxPower, farShotPower));
     }
+    /** power percentage from 0.0-1.0, and the function turns the percentage into tps**/
     public void run(double power)
     {
         double targetRpm = power * Hardware.OUTTAKE_MAX_RPM;
@@ -43,6 +44,7 @@ public class Outtake {
 
         isTimedRunActive = false;
     }
+    /** three presets: close, far, and idle **/
     public void run(String presetName) {
         if (presetName.equals("close"))
         {

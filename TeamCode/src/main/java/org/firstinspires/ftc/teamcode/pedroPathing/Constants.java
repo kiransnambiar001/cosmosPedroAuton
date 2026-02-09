@@ -43,12 +43,12 @@ public class Constants {
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD);
 
     public static ThreeWheelConstants localizerConstants = new ThreeWheelConstants()
-            .forwardTicksToInches(.0029787066224)
-            .strafeTicksToInches(.0029495443792)
-            .turnTicksToInches(0.00284060484)
-            .leftPodY(5.75) // offset from center of rotation INCHES
-            .rightPodY(-5.75) // offset from center of rotation INCHES
-            .strafePodX(1.5) // offset from center of rotation INCHES
+            .forwardTicksToInches(0.00297989480049735916)
+            .strafeTicksToInches(0.00292239284429164286)
+            .turnTicksToInches(0.003075130776676564416)
+            .leftPodY(6.25) // offset from center of rotation INCHES
+            .rightPodY(-6.25) // offset from center of rotation INCHES
+            .strafePodX(1.265) // offset from center of rotation INCHES
             .leftEncoder_HardwareMapName("backRight")
             .rightEncoder_HardwareMapName("frontRight")
             .strafeEncoder_HardwareMapName("frontLeft")
@@ -61,7 +61,7 @@ public class Constants {
     public static PathConstraints pathConstraints = new PathConstraints(
             0.99,
             100,
-            0.8,
+            1,
             1
     );
 

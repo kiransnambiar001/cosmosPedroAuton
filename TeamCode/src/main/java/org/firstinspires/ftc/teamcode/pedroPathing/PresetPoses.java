@@ -43,16 +43,16 @@ public class PresetPoses {
     public Pose closeShootOffLinePose = new Pose(60.590434782608696, 118.94347826086954, Math.toRadians(offLineShootAngle));
 //    public Pose farShootPose = new Pose(56.000, 13.0750, Math.toRadians(farShootAngle));;
     public Pose farShootPose = new Pose(62.09304347826088,82.63043478260869, Math.toRadians(farShootAngle));
-    public Pose gppStartPose = new Pose(52.000, 85.25, Math.toRadians(180)); // org y=83.750
+    public Pose gppStartPose = new Pose(50, 72.06260869565217, Math.toRadians(180)); // org y=83.750
     public Pose closeShootGppStartMidCurvePose = new Pose(61.918, 94.181);
-    public Pose gppEndPose = new Pose(14.8, 85.25, Math.toRadians(180)); // org y=83.750
-    public Pose pgpStartPose = new Pose(48.000, 62.000, Math.toRadians(180)); // org y=701
+    public Pose gppEndPose = new Pose(100.07652173913043, 72.06260869565217, Math.toRadians(180)); // org y=83.750
+    public Pose pgpStartPose = new Pose(48.000, 59.84000000000002, Math.toRadians(180)); // org y=701
     public Pose closeShootPgpEndMidCurvePose = new Pose(54, 59);
-    public Pose pgpEndPose = new Pose(19.023043478260874, 61.500, Math.toRadians(180)); // org y=70 // org x=20
+    public Pose pgpEndPose = new Pose(98.32347826086955, 59.84000000000002, Math.toRadians(180)); // org y=70 // org x=20
     public Pose parkLeverPose = new Pose(28.000, 70.500, Math.toRadians(90));
-    public Pose ppgStartPose = new Pose(49.75, 36, Math.toRadians(180));
+    public Pose ppgStartPose = new Pose(49.75, 35.54782608695653, Math.toRadians(180));
     public Pose farShootPpgStartMidCurvePose = new Pose(52.74173913043478, 43.31478260869564);
-    public Pose ppgEndPose = new Pose(9.000869565217405, 36, Math.toRadians(180));
+    public Pose ppgEndPose = new Pose(98.32347826086955, 35.54782608695653, Math.toRadians(180));
     public Pose parkPose = new Pose(60.5904347826087, 49.823478260869564, Math.toRadians(90));
     public Pose hpStartPose = new Pose(26.280869565217387, 13.25999999999999, Math.toRadians(180));
     public Pose hpEndPose = new Pose(9.503043478260869, 13.25999999999999, Math.toRadians(180));
@@ -153,13 +153,13 @@ public class PresetPoses {
         return MathFunctions.normalizeAngle(angle);
     }
 
-    public static double normalizeAngle(double angle) {
-        double TWO_PI = 2 * Math.PI;
-        double newAngle = angle % TWO_PI;
-        if (newAngle <= -Math.PI) newAngle += TWO_PI;
-        if (newAngle > Math.PI) newAngle -= TWO_PI;
-        return newAngle;
-    }
+//    public static double normalizeAngle(double angle) {
+//        double TWO_PI = 2 * Math.PI;
+//        double newAngle = angle % TWO_PI;
+//        if (newAngle <= -Math.PI) newAngle += TWO_PI;
+//        if (newAngle > Math.PI) newAngle -= TWO_PI;
+//        return newAngle;
+//    }
 
     public double getOptimalShooterPowerPercentage(Pose currentPose, boolean doLinearInterp) {
         double distance = currentPose.distanceFrom(goalPose) + powerDistOffset; // in inches (pedropathing coords are in inches)
