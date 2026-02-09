@@ -358,7 +358,8 @@ abstract class BaseTeleop extends OpMode {
         // robot gate toggle (lb2wP)
         if (lb2wP) {
             gateIsClosed = !gateIsClosed;
-            gate.setGateState(gateIsClosed);
+            if(gateIsClosed){{gate.setGateState("close");}}
+            else {gate.setGateState("open");}
         }
 
         // ball cam toggle
@@ -391,17 +392,17 @@ abstract class BaseTeleop extends OpMode {
 
         // outtake preset running
         if (a2wP) {robotOuttake.reset();}
-        else if (y2state) {robotOuttake.run("close"); gate.setGateState(false);} else if (y2prevState) {gate.setGateState(true);}
-        else if (b2state) {robotOuttake.run("far"); gate.setGateState(false);} else if (b2prevState) {gate.setGateState(true);}
+        else if (y2state) {robotOuttake.run("close"); gate.setGateState("open");} else if (y2prevState) {gate.setGateState("close");}
+        else if (b2state) {robotOuttake.run("far"); gate.setGateState("open");} else if (b2prevState) {gate.setGateState("close");}
         else if (x2state) {
             initialPower = poses.getOptimalShooterPowerPercentage(follower.getPose(), true);
             robotOuttake.run(initialPower + powerOffset);
-            gate.setGateState(false);
+            gate.setGateState("open");
             if (dpu2wP) {powerOffset += 0.01;}
             else if (dpd2wP) {powerOffset -= 0.01;}
             if(a2state){powerOffset = 0;}
         }
-        else if (x2prevState) {gate.setGateState(true);}
+        else if (x2prevState) {gate.setGateState("close");}
 
 
         else {robotOuttake.run("idle");}
@@ -467,7 +468,6 @@ class FarSideBlue extends BaseTeleop {
         PresetPoses tempposes = new PresetPoses(new Pose(72,72, Math.toRadians(0)), false);
         poses = new PresetPoses(tempposes.parkPose, false);
         fcOffset = Math.toRadians(180);
-
     }
 }
 
@@ -507,7 +507,6 @@ class OOWBlue extends BaseTeleop {
         PresetPoses tempposes = new PresetPoses(new Pose(72,72, Math.toRadians(0)), false);
         poses = new PresetPoses(tempposes.closeMoveOutOfWayPose, false);
         fcOffset = Math.toRadians(180);
-
     }
 }
 
@@ -517,7 +516,6 @@ class OOWRed extends BaseTeleop {
         PresetPoses tempposes = new PresetPoses(new Pose(72,72, Math.toRadians(0)), false);
         poses = new PresetPoses(tempposes.closeMoveOutOfWayPose, true);
         fcOffset = 0;
-
     }
 }
 
@@ -536,8 +534,6 @@ class AutonTeleop extends BaseTeleop {
         } else {
             poses = new PresetPoses(startPose, false);
         }
-
         fcOffset = Math.toRadians(180);
-
     }
 }

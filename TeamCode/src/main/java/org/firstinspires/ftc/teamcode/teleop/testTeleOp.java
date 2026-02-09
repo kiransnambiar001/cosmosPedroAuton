@@ -75,6 +75,7 @@ public class testTeleOp extends OpMode {
 
     // input vars
     boolean fieldCentric = false;
+    boolean fieldCentricPrevState = false;
     double fcOffset = Math.toRadians(180);
 
     public Pose holdingPose = new Pose(0,0,0);
@@ -88,6 +89,7 @@ public class testTeleOp extends OpMode {
 
     // toggles
     boolean ballCamToggle = false;
+    boolean ballCamTogglePrevState = false;
     PIDFController headingPIDFController = new PIDFController(new PIDFCoefficients(0,0,0,0));
     boolean slowMode = false;
     boolean offToggle = false;
@@ -109,8 +111,8 @@ public class testTeleOp extends OpMode {
     boolean a2prevState = false;
     boolean dpr2prevState = false;
     boolean dpl2prevState = false;
-    boolean lb2prevState = false;
-    boolean lt2prevstate = false;
+    boolean rb2prevState = false;
+    boolean lt2prevState = false;
     boolean a1prevState = false;
     boolean b2prevState = false;
     boolean y2prevState = false;
@@ -251,9 +253,9 @@ public class testTeleOp extends OpMode {
         boolean dpd2wP = dpd2state && !dpd2prevState;
         boolean dpr2wP = dpr2state && !dpr2prevState;
         boolean dpl2wP = dpl2state && !dpl2prevState;
-        boolean lb2wP = lb2state && !lb2prevState;
+        boolean rb2wP = rb2state && !rb2prevState;
         boolean lt1wP = lt1state && !lt1prevState;
-        boolean lt2wp = lt2state && !lt2prevstate;
+        boolean lt2wp = lt2state && !lt2prevState;
 
 
         double imuHeading = robotHardware.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
@@ -276,21 +278,23 @@ public class testTeleOp extends OpMode {
             if (slowMode) {ly1*=slowModeMultiplier; lx1*=slowModeMultiplier; rx1*=slowModeMultiplier;}
 
             if (fieldCentric) { // field centric
-                if (ballCamToggle) {
-
-                    double targetHeading = poses.getAngleTowardsGoal(currentPose) - Math.toRadians(180) + targetAngleOffset;
-
-                    double error = MathFunctions.getTurnDirection(follower.getPose().getHeading(), targetHeading)
-                            * MathFunctions.getSmallestAngleDifference(follower.getPose().getHeading(), targetHeading);
-
-                    headingPIDFController.updateError(error);
-
-                    follower.setTeleOpDrive(ly1, lx1, headingPIDFController.run(), false, fcOffset);
-
-                }
-                else {follower.setTeleOpDrive(ly1, lx1, -rx1, false, fcOffset);} // normal field centric
+                follower.setTeleOpDrive(ly1, lx1, -rx1, false, fcOffset); // normal field centric
             }
             else {follower.setTeleOpDrive(ly1, lx1, -rx1, true);} // rbt centric
+        }
+
+        if (ballCamToggle) {
+            double offset = 0;
+            if(isAutoShooting){offset = targetAngleOffset;}
+                double targetHeading = poses.getAngleTowardsGoal(currentPose) - Math.toRadians(180) + offset;
+
+            double error = MathFunctions.getTurnDirection(follower.getPose().getHeading(), targetHeading)
+                    * MathFunctions.getSmallestAngleDifference(follower.getPose().getHeading(), targetHeading);
+
+            headingPIDFController.updateError(error);
+
+            follower.setTeleOpDrive(ly1, lx1, headingPIDFController.run(), false, fcOffset);
+
         }
 
         if (!poses.isRed && x1wP) {
@@ -312,9 +316,9 @@ public class testTeleOp extends OpMode {
         }
 
         // robot gate toggle (lb2wP)
-        if (lb2wP) {
+        if (rb2wP) {
             gateIsClosed = !gateIsClosed;
-            gate.setGateState(gateIsClosed);
+            gate.setGateState("");
         }
 
         // ball cam toggle
@@ -335,10 +339,10 @@ public class testTeleOp extends OpMode {
         //Storage and intake control
         robotIntake.update();
         robotStorage.update();
-        if ((rt2state && !rb2state)
+        if ((lt2state && !lb2state && !isAutoShooting)
                 && Math.abs(robotOuttake.getCurrentTps() - robotOuttake.getTargetTps()) < 45)
         {robotStorage.run(1.0);}
-        else if (rb2state && !rt2state)
+        else if (rb2state && !rt2state && !isAutoShooting)
         {robotStorage.run(-1.0);}
         else {robotStorage.run(0);}
         if (ly2 <= -0.3) {robotIntake.run(-1.0);}
@@ -346,17 +350,19 @@ public class testTeleOp extends OpMode {
         else{robotIntake.run(0);}
 
         if (a2wP) {robotOuttake.reset();}
-        else if (x2state) {robotOuttake.run("close"); gate.setGateState(false);} else if (x2prevState) {gate.setGateState(true);}
+        else if (x2state) {robotOuttake.run("close"); gate.setGateState("open");} else if (x2prevState) {gate.setGateState("close");}
         else if (y2state) {
+            isAutoShooting = true;
             fieldCentric = true;
             ballCamToggle = true;
             initialPower = poses.getOptimalShooterPowerPercentage(follower.getPose(), true);
             robotOuttake.run(initialPower + powerOffset);
-            gate.setGateState(false);
-            if(Math.abs(robotOuttake.getTargetTps() - robotOuttake.getCurrentTps()) < 45)
+            gate.setGateState("open");
+            if((Math.abs(robotOuttake.getTargetTps() - robotOuttake.getCurrentTps()) < 45) && !rt2state)
             {
                 robotStorage.run(1);
-            }
+            } else {robotStorage.run(0);}
+            if (rb2state)
             if (dpu2wP) {powerOffset += 0.01;}
             else if (dpd2wP) {powerOffset -= 0.01;}
             if(dpr2wP) {targetAngleOffset += 2;}
@@ -365,12 +371,14 @@ public class testTeleOp extends OpMode {
             if (b2state){targetAngleOffset = 0;}
         }
         else if (y2prevState){
-            gate.setGateState(true);
-            fieldCentric = false;
-            ballCamToggle = false;
+            gate.setGateState("close");
+            robotStorage.run(0);
+            isAutoShooting = false;
+            fieldCentric = fieldCentricPrevState;
+            ballCamToggle = ballCamTogglePrevState;
             robotStorage.run(0);
         }
-        else if (b2state) {robotOuttake.run("far"); gate.setGateState(false);} else if (b2prevState) {gate.setGateState(true);}
+        else if (b2state) {robotOuttake.run("far"); gate.setGateState("open");} else if (b2prevState) {gate.setGateState("close");}
 
         else {robotOuttake.run("idle");}
         if (offToggle) {robotOuttake.run(0);}
@@ -393,7 +401,7 @@ public class testTeleOp extends OpMode {
         log("Field Centric", fieldCentric ? "ON" : "OFF");
         log("Ball Cam", ballCamToggle ? "ON" : "OFF");
         log("Following Path", follower.isBusy() ? "FOLLOWING" : "none");
-        //log("Auto-Shooting", isAutoShooting ? "ACTIVE" : "IDLE");
+        log("Auto-Shooting", isAutoShooting ? "ACTIVE" : "IDLE");
         log("Target Velocity (tps)", robotOuttake.getTargetTps());
         log("Actual Velocity (tps)", robotHardware.outtakeMotor.getVelocity());
         log("IMU Heading (deg)", Math.toDegrees(imuHeading));
@@ -404,7 +412,8 @@ public class testTeleOp extends OpMode {
         follower.update();
         draw();
 
-
+        fieldCentricPrevState = fieldCentric;
+        ballCamTogglePrevState = ballCamToggle;
         home1prevState = home1state;
         options1prevState = options1state;
         dpd1prevState = dpd1state;
@@ -413,12 +422,12 @@ public class testTeleOp extends OpMode {
         x1prevState = x1state;
         a1prevState = a1state;
         y1prevState = y1state;
-        dpu2prevState = dpu2state; // tune preset increment
-        dpd2prevState = dpd2state; // tune preset decrement
+        dpu2prevState = dpu2state;
+        dpd2prevState = dpd2state;
         a2prevState = a2state;
         dpr2prevState = dpr2state;
         dpl2prevState = dpl2state;
-        lb2prevState = lb2state;
+        rb2prevState = rb2state;
         b2prevState = b2state;
         y2prevState = y2state;
         dpr1prevState = dpr1state;

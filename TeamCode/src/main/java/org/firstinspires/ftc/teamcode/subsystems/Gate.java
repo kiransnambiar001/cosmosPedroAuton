@@ -16,8 +16,8 @@ public class Gate {
         robotHardware = hardware;
     }
 
-    public void setGateState(boolean isClosed) {
-        if (isClosed) {robotHardware.gateServo.setPosition(gateClosedPos);}
-        else {robotHardware.gateServo.setPosition(gateOpenPos);}
+    public void setGateState(String state) {
+        if (state.equalsIgnoreCase("close")) {robotHardware.gateServo.setPosition(gateClosedPos);}
+        else if (state.equalsIgnoreCase("open")) {robotHardware.gateServo.setPosition(gateOpenPos);}
     }
 }
