@@ -13,6 +13,8 @@ public class Outtake {
     private final double startingFarShotPower = farShotPower;
     private final double idlePower = 0.2;
     private final double maxPower = 0.8;
+    private final double tpsTolerance = 50;
+
 
     private double targetTps = 0.0;
     double stopTimeMs;
@@ -80,6 +82,10 @@ public class Outtake {
             isTimedRunActive = true;
             run(power);
         }
+    }
+    public boolean isUpToSpeed()
+    {
+        return Math.abs(robotHardware.outtakeMotor.getVelocity() - targetTps) < tpsTolerance;
     }
     public boolean update()
     {

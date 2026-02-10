@@ -36,7 +36,6 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.PresetPoses;
-import org.firstinspires.ftc.teamcode.subsystems.CRServoStorage;
 import org.firstinspires.ftc.teamcode.subsystems.Drawing;
 import org.firstinspires.ftc.teamcode.subsystems.FileController;
 import org.firstinspires.ftc.teamcode.subsystems.Gate;
@@ -107,7 +106,6 @@ abstract class BaseTeleop extends OpMode {
     private Supplier<PathChain> toShootPosePath;
     private Function<Pose, PathChain> toLaunchLinePath;
     private TelemetryManager panelsTelemetry;
-    public double tpsTolerance = 50;
 
 
     // input vars
@@ -306,7 +304,7 @@ abstract class BaseTeleop extends OpMode {
 
         // rumble outtake feedback
         if (robotOuttake.getCurrentPreset().equals("idle")) {gamepad2.stopRumble();}
-        else if (Math.abs(robotHardware.outtakeMotor.getVelocity() - robotOuttake.getTargetTps()) < tpsTolerance) {
+        else if (robotOuttake.isUpToSpeed()) {
             gamepad2.rumble(-1); // infinite
         }
         else {gamepad2.stopRumble();}
@@ -316,23 +314,23 @@ abstract class BaseTeleop extends OpMode {
         if (home1wP && fieldCentric) {robotHardware.imu.resetYaw();}
         if (options1wP) {fieldCentric = !fieldCentric;}
 
+        if (ballCamToggle) {
+
+            double targetHeading = poses.getAngleTowardsGoal(currentPose) - Math.toRadians(180);
+
+            double error = MathFunctions.getTurnDirection(follower.getPose().getHeading(), targetHeading)
+                    * MathFunctions.getSmallestAngleDifference(follower.getPose().getHeading(), targetHeading);
+
+            headingPIDFController.updateError(error);
+
+            follower.setTeleOpDrive(ly1, lx1, headingPIDFController.run(), false, fcOffset);
+
+        }
+
         if (!autoDriving) {
             if (slowMode) {ly1*=slowModeMultiplier; lx1*=slowModeMultiplier; rx1*=slowModeMultiplier;}
-
             if (fieldCentric) { // field centric
-                if (ballCamToggle) {
-
-                    double targetHeading = poses.getAngleTowardsGoal(currentPose) - Math.toRadians(180);
-
-                    double error = MathFunctions.getTurnDirection(follower.getPose().getHeading(), targetHeading)
-                            * MathFunctions.getSmallestAngleDifference(follower.getPose().getHeading(), targetHeading);
-
-                    headingPIDFController.updateError(error);
-
-                    follower.setTeleOpDrive(ly1, lx1, headingPIDFController.run(), false, fcOffset);
-
-                }
-                else {follower.setTeleOpDrive(ly1, lx1, -rx1, false, fcOffset);} // normal field centric
+                follower.setTeleOpDrive(ly1, lx1, -rx1, false, fcOffset); // normal field centric
             }
             else {follower.setTeleOpDrive(ly1, lx1, -rx1, true);} // rbt centric
         }
@@ -393,20 +391,20 @@ abstract class BaseTeleop extends OpMode {
         {
             robotOuttake.run("close");
             gate.setGateState("open");
-            if (robotOuttake.upToSpeed) {robotStorage.cycle(true);}
+            if (robotOuttake.isUpToSpeed()) {robotStorage.cycle(true);}
         }
         else if (y2prevState) {gate.setGateState("close");}
         else if (b2state)
         {
             robotOuttake.run("far");
             gate.setGateState("open");
-            if(robotOuttake.upToSpeed) {robotStorage.cycle(true);}
+            if(robotOuttake.isUpToSpeed()) {robotStorage.cycle(true);}
         }
         else if (b2prevState) {gate.setGateState("close");}
         else if (x2state) {
             initialPower = poses.getOptimalShooterPowerPercentage(follower.getPose(), true);
             robotOuttake.run(initialPower + powerOffset);
-            if(robotOuttake.upToSpeed){robotStorage.cycle(true);}
+            if(robotOuttake.isUpToSpeed()){robotStorage.cycle(true);}
             gate.setGateState("open");
             if (dpu2wP) {powerOffset += 0.01;}
             else if (dpd2wP) {powerOffset -= 0.01;}
@@ -414,9 +412,11 @@ abstract class BaseTeleop extends OpMode {
         }
         else if (x2prevState) {gate.setGateState("close");}
         else {
-            robotOuttake.run("idle");
-            robotStorage.cycle(false);
+            if (!autoDriving) {
+                robotOuttake.run("idle");
+                robotStorage.cycle(false);
             }
+        }
         if (offToggle) {robotOuttake.run(0);}
 
         // Fine tune active preset
