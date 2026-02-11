@@ -198,35 +198,35 @@ public class RobotAutonFarBlue extends OpMode {
         panelsTelemetry.update();
         currentPose = follower.getPose();
 
-        gate.setGateState(true);
+        gate.setGateState("close");
     }
 
     @Override
     public void loop() {
-            currentPose = follower.getPose();
-            // update subsystems
-            updatePath(outtake.update(), intake.update());
-            storage.update();
+        currentPose = follower.getPose();
+        // update subsystems
+        updatePath(outtake.update(), intake.update());
+        storage.update();
 
 
 
 
-            // telemetry
-            log("Status", "RUNNING");
-            log("Path State", pathState);
-            log("Outtake Tps: ", hardware.outtakeMotor.getVelocity());
-            log("Outtake Target Tps: ", outtake.getTargetTps());
-            if (pathState == 0) {log("Path Name", "Shoot Preloaded");}
-            else if (pathState == 1) {log("Path Name", "Go to PPG");}
-            else if (pathState == 2) {log("Path Name", "Pickup PPG");}
-            else if (pathState == 3) {log("Path Name", "Shoot GPP");}
-            else if (pathState == 4) {log("Path Name", "Park");}
-            else if (pathState == 10) {log("Path Name", "Shooting (Outtake)");}
-            else if (pathState == -1) {log("Path Name", "Autonomous Finished!");}
-            log("Current Pose", currentPose);
-            panelsTelemetry.update(telemetry);
-            follower.update();
-            draw();
+        // telemetry
+        log("Status", "RUNNING");
+        log("Path State", pathState);
+        log("Outtake Tps: ", hardware.outtakeMotor.getVelocity());
+        log("Outtake Target Tps: ", outtake.getTargetTps());
+        if (pathState == 0) {log("Path Name", "Shoot Preloaded");}
+        else if (pathState == 1) {log("Path Name", "Go to PPG");}
+        else if (pathState == 2) {log("Path Name", "Pickup PPG");}
+        else if (pathState == 3) {log("Path Name", "Shoot GPP");}
+        else if (pathState == 4) {log("Path Name", "Park");}
+        else if (pathState == 10) {log("Path Name", "Shooting (Outtake)");}
+        else if (pathState == -1) {log("Path Name", "Autonomous Finished!");}
+        log("Current Pose", currentPose);
+        panelsTelemetry.update(telemetry);
+        follower.update();
+        draw();
     }
 
 
@@ -251,7 +251,7 @@ public class RobotAutonFarBlue extends OpMode {
             case 2:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.PickupPPG, 0.3, true);
-                    gate.setGateState(true);
+                    gate.setGateState("close");
                     intake.run(1);
                     storage.setPos(-1);
                     pathState = 3;
@@ -282,14 +282,14 @@ public class RobotAutonFarBlue extends OpMode {
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         follower.holdPoint(paths.poses.farShootPose);
                         previousTime = hardware.timer.milliseconds();
-                        gate.setGateState(false);
+                        gate.setGateState("open");
                         intake.run(1); storage.cycle(true);
                         shooting = true;
                         rampingUp = false;
                     }
                     else if (shooting) {
                         if ((hardware.timer.milliseconds() >= previousTime + 7250)) {
-                            gate.setGateState(true);
+                            gate.setGateState("close");
                             rampingUp = false; shooting = false;
                             pathState = nextState;
                             intake.run(0); storage.cycle(false);
@@ -309,14 +309,14 @@ public class RobotAutonFarBlue extends OpMode {
                     if (!rampingUp && !shooting) {rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         previousTime = hardware.timer.milliseconds();
-                        gate.setGateState(false);
+                        gate.setGateState("open");
                         intake.run(1); storage.cycle(true);
                         shooting = true;
                         rampingUp = false;
                     }
                     else if (shooting) {
                         if ((hardware.timer.milliseconds() >= previousTime + 100000 )) {
-                            gate.setGateState(true);
+                            gate.setGateState("close");
                             rampingUp = false; shooting = false;
                             pathState = nextState;
                             intake.run(0); storage.cycle(false);
@@ -337,14 +337,14 @@ public class RobotAutonFarBlue extends OpMode {
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         follower.holdPoint(paths.poses.farShootPose);
                         previousTime = hardware.timer.milliseconds();
-                        gate.setGateState(false);
+                        gate.setGateState("open");
                         intake.run(1); storage.cycle(true);
                         shooting = true;
                         rampingUp = false;
                     }
                     else if (shooting) {
                         if ((hardware.timer.milliseconds() >= previousTime + 7250)) {
-                            gate.setGateState(true);
+                            gate.setGateState("close");
                             rampingUp = false; shooting = false;
                             pathState = nextState;
                             intake.run(0); storage.cycle(false);

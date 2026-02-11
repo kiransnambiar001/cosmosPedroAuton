@@ -34,18 +34,16 @@ import org.firstinspires.ftc.teamcode.subsystems.ServoStorage;
 import java.util.ArrayList;
 import java.util.List;
 
-
-@Autonomous(name="FAR SIDE RED - Auton", group="Autonomous", preselectTeleOp="SELECTABLE - PedroPathingTeleOp")
+@Autonomous(name="GOAL SIDE BLUE - Gate Auton", group="Autonomous", preselectTeleOp = "SELECTABLE - PedroPathingTeleOp")
 @Configurable // for Panels
 @SuppressWarnings("FieldCanBeLocal") // android studio bugging
-public class RobotAutonFarRed extends OpMode {
+public class RobotAutonGoalSideBlue3PairGate extends OpMode {
 
     public Hardware hardware;
     public Outtake outtake;
     public Intake intake;
     public Gate gate;
     public ServoStorage storage;
-    public FileController fileController;
 
 
     private final ElapsedTime timer = new ElapsedTime(); // runtime
@@ -59,6 +57,7 @@ public class RobotAutonFarRed extends OpMode {
     // shoot sequence
     public boolean rampingUp = false;
     public boolean shooting = false;
+    public double previousTime = 0;
 
     // intake sequence
     public boolean intaking = false;
@@ -67,7 +66,6 @@ public class RobotAutonFarRed extends OpMode {
     public static double intakeMaxPower = 1;
 
 
-    private double previousTime;
     private Paths paths;
 
 
@@ -75,63 +73,102 @@ public class RobotAutonFarRed extends OpMode {
 
 
         public PathChain ShootPreloaded;
-        public PathChain GotoPPG;
-        public PathChain PickupPPG;
-        public PathChain ShootPPG;
-        public PathChain Park;
+        public PathChain GotoPGP;
+        public PathChain PickupPGP;
+        public PathChain ShootPGP;
+        public PathChain GotoGPP;
+        public PathChain PickupGPP;
+        public PathChain ShootGPP;
+        public PathChain GotoLever;
 
-        private Pose startPose = new Pose(56.000, 8.000, Math.toRadians(270));
-        private PresetPoses poses = new PresetPoses(startPose, true);
+        private Pose startPose = new Pose(28.5, 136, Math.toRadians(270));
+        private PresetPoses poses = new PresetPoses(startPose, false);
 
 
         public Paths(Follower follower) {
             ShootPreloaded = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(poses.startPose, poses.farShootPose)
+                            new BezierLine(poses.startPose, poses.closeShootPose)
                     )
-                    .setLinearHeadingInterpolation(poses.startPose.getHeading(), poses.farShootPose.getHeading())
+                    .setLinearHeadingInterpolation(startPose.getHeading(), poses.closeShootPose.getHeading())
                     .build();
 
 
-
-            GotoPPG = follower
+            GotoGPP = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierCurve(
-                                    poses.farShootPose,
-                                    poses.farShootPpgStartMidCurvePose,
-                                    poses.ppgStartPose
+                            new BezierLine(
+                                    poses.closeShootPose,
+                                    poses.gppStartPose
                             )
                     )
-                    .setLinearHeadingInterpolation(poses.farShootPose.getHeading(), poses.ppgStartPose.getHeading())
+                    .setLinearHeadingInterpolation(poses.closeShootPose.getHeading(), poses.gppStartPose.getHeading())
                     .build();
 
 
-            PickupPPG = follower
+            PickupGPP = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(poses.ppgStartPose, poses.ppgEndPose)
+                            new BezierLine(poses.gppStartPose, poses.gppEndPose)
                     )
                     .setTangentHeadingInterpolation()
                     .build();
 
 
-            ShootPPG = follower
+            ShootGPP = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(poses.ppgEndPose, poses.farShootPose)
+                            new BezierLine(poses.gppEndPose, poses.closeShootPose)
                     )
-                    .setLinearHeadingInterpolation(poses.ppgEndPose.getHeading(), poses.farShootPose.getHeading())
+                    .setLinearHeadingInterpolation(poses.gppEndPose.getHeading(), poses.closeShootPose.getHeading())
                     .build();
 
 
-            Park = follower
+            GotoPGP = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(poses.farShootPose, poses.parkPose)
+                            new BezierLine(poses.closeShootPose, poses.pgpStartPose)
                     )
-                    .setLinearHeadingInterpolation(poses.farShootPose.getHeading(), poses.parkPose.getHeading())
+                    .setLinearHeadingInterpolation(poses.closeShootPose.getHeading(), poses.pgpStartPose.getHeading())
+                    .build();
+
+
+            PickupPGP = follower
+                    .pathBuilder()
+                    .addPath(
+                            new BezierLine(poses.pgpStartPose, poses.pgpEndPose)
+                    )
+                    .setTangentHeadingInterpolation()
+                    .addPath(
+                            new BezierCurve(
+                                    poses.pgpEndPose,
+                                    poses.leverPoseppgEndPoseCurvePose,
+                                    poses.leverPose
+                            )
+                    )
+                    .setLinearHeadingInterpolation(poses.pgpEndPose.getHeading(), poses.leverPose.getHeading())
+                    .build();
+
+
+            ShootPGP = follower
+                    .pathBuilder()
+                    .addPath(
+                            new BezierLine(
+                                    poses.leverPose,
+                                    poses.closeShootOffLinePose
+                            )
+                    )
+                    .setLinearHeadingInterpolation(poses.leverPose.getHeading(), poses.closeShootOffLinePose.getHeading())
+                    .build();
+
+
+            GotoLever = follower
+                    .pathBuilder()
+                    .addPath(
+                            new BezierLine(poses.closeShootPose, poses.parkLeverPose)
+                    )
+                    .setLinearHeadingInterpolation(poses.closeShootPose.getHeading(), poses.parkLeverPose.getHeading())
                     .build();
         }
     }
@@ -200,112 +237,158 @@ public class RobotAutonFarRed extends OpMode {
 
         gate.setGateState("close");
     }
-
     @Override
     public void loop() {
         currentPose = follower.getPose();
         // update subsystems
-        updatePath(outtake.update(), intake.update());
-        storage.update();
-
-
-
+        updatePath(outtake.update(), intake.update(), storage.update());
 
         // telemetry
         log("Status", "RUNNING");
         log("Path State", pathState);
-        log("Outtake Tps: ", hardware.outtakeMotor.getVelocity());
-        log("Outtake Target Tps: ", outtake.getTargetTps());
-        if (pathState == 0) {log("Path Name", "Shoot Preloaded");}
-        else if (pathState == 1) {log("Path Name", "Go to PPG");}
-        else if (pathState == 2) {log("Path Name", "Pickup PPG");}
-        else if (pathState == 3) {log("Path Name", "Shoot GPP");}
-        else if (pathState == 4) {log("Path Name", "Park");}
-        else if (pathState == 10) {log("Path Name", "Shooting (Outtake)");}
-        else if (pathState == -1) {log("Path Name", "Autonomous Finished!");}
         log("Current Pose", currentPose);
         panelsTelemetry.update(telemetry);
         follower.update();
         draw();
     }
 
-
+    @Override
+    public void stop() {
+        List<Double> data = new ArrayList<>();
+        data.add(follower.getPose().getX());
+        data.add(follower.getPose().getY());
+        data.add(follower.getPose().getHeading());
+        if (paths.poses.isRed) {
+            data.add(1.0);
+        } else {
+            data.add(0.0);
+        }
+        FileController.write("Memory.txt", data);
+    }
 
     // shootpreloaded-->gotoppg-->pickupppg-->shootppg-->park
-    public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished) {
+    public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished, boolean storageRFTFinished) {
         switch (pathState) {
             case 0:
-                outtake.run(0.5);
-                follower.followPath(paths.ShootPreloaded, true);
+                outtake.run("close");
+                follower.followPath(paths.ShootPreloaded);
                 nextState = 1;
                 pathState = 10; // shoot
                 break;
 
             case 1:
-                if (!follower.isBusy()) {
-                    follower.followPath(paths.GotoPPG);
+                if (follower.getCurrentTValue() > 0.97) {
+                    follower.followPath(paths.GotoPGP);
                     pathState = 2;
                 }
                 break;
 
             case 2:
-                if (!follower.isBusy()) {
-                    follower.followPath(paths.PickupPPG, 0.3, true);
+                if (follower.getCurrentTValue() > 0.97) {
+                    follower.followPath(paths.PickupPGP);
                     gate.setGateState("close");
-                    intake.run(1);
-                    storage.setPos(-1);
+                    intake.run(1); storage.setPos(-1);
                     pathState = 3;
                 }
                 break;
 
             case 3:
-                if (!follower.isBusy()) {
-                    intake.run(0);
-                    storage.setPos(0);
-                    follower.followPath(paths.ShootPPG);
+                if (follower.getCurrentTValue() > 0.97) {
+                    intake.run(0); storage.setPos(0);
+                    follower.followPath(paths.ShootPGP);
                     nextState = 4;
-                    pathState = 12; // shoot
+                    pathState = 10; // shoot
                 }
                 break;
 
             case 4:
-                if (!follower.isBusy()) {
-                    follower.followPath(paths.Park);
-                    outtake.run(0);
-                    pathState = -1; // terminate
+                if (follower.getCurrentTValue() > 0.97) {
+                    follower.followPath(paths.GotoGPP);
+                    outtake.run(0.445);
+                    pathState = 5;
+                }
+            case 5:
+                if (follower.getCurrentTValue() > 0.97) {
+                    follower.followPath(paths.PickupGPP);
+                    gate.setGateState("close");
+                    intake.run(1); storage.setPos(-1);
+                    pathState = 6;
                 }
                 break;
+            case 6:
+                if (follower.getCurrentTValue() > 0.97) {
+                    intake.run(0); storage.setPos(0);
+                    follower.followPath(paths.ShootGPP);
+                    nextState = 7;
+                    pathState = 11; // shoot
+                }
+                break;
+            case 7:
+                if(follower.getCurrentTValue() > 0.97) {
+                    pathState = -1;
+                    outtake.run(0);
+                }
+
+
+
+
+//            case 4:
+//                if (!follower.isBusy()) {
+//                    follower.followPath(paths.GotoPGP);
+//                    pathState = 5;
+//                }
+//                break;
+//
+//            case 5:
+//                if (!follower.isBusy()) {
+//                    follower.followPath(paths.PickupPGP, 0.3, true);
+//                    gate.setGateState(true);
+//                    intake.run(1);
+//                    pathState =6;
+//                }
+//                break;
+//
+//            case 6:
+//                if (!follower.isBusy()) {
+//                    intake.run(0);
+//                    follower.followPath(paths.ShootPGP);
+//                    nextState = 7;
+//                    pathState = 10; // shoot
+//                }
+//                break;
+//
+//            case 7:
+//                if (!follower.isBusy()) {
+//                    follower.followPath(paths.GotoLever);
+//                    outtake.run(0);
+//                    pathState = -1; // terminate
+//                }
+//                break;
 
             case 10: // shoot
-                if (!follower.isBusy()) {
-                    if (!rampingUp && !shooting) {rampingUp = true; outtake.run(0.5);}
+                if (follower.getCurrentTValue() > 0.97) {
+                    if (!rampingUp && !shooting) {rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
-                        follower.holdPoint(paths.poses.farShootPose);
                         previousTime = hardware.timer.milliseconds();
                         gate.setGateState("open");
-                        intake.run(1); storage.cycle(true);
+                        intake.run(1); storage.cycle(3);
                         shooting = true;
                         rampingUp = false;
                     }
                     else if (shooting) {
-                        if ((hardware.timer.milliseconds() >= previousTime + 7250)) {
+                        if ((storageRFTFinished)) {
                             gate.setGateState("close");
-                            rampingUp = false; shooting = false;
+                            rampingUp = false;
+                            shooting = false;
                             pathState = nextState;
-                            intake.run(0); storage.cycle(false);
-                            follower.breakFollowing();
-                        }
-                        else if (Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
-                            intake.run(1); storage.cycle(true);
-                        }
-                        else {
-                            intake.run(0); storage.cycle(false);
+                            intake.run(0);
+                            storage.cycle(false);
                         }
                     }
                 }
                 break;
             case 11: // shoot
-                if (!follower.isBusy()) {
+                if (follower.getCurrentTValue() > 0.97) {
                     if (!rampingUp && !shooting) {rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         previousTime = hardware.timer.milliseconds();
@@ -315,40 +398,12 @@ public class RobotAutonFarRed extends OpMode {
                         rampingUp = false;
                     }
                     else if (shooting) {
-                        if ((hardware.timer.milliseconds() >= previousTime + 100000 )) {
+                        if ((hardware.timer.milliseconds() >= previousTime + 100000)) {
                             gate.setGateState("close");
                             rampingUp = false; shooting = false;
                             pathState = nextState;
                             intake.run(0); storage.cycle(false);
-                        }
-                        else if (Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
-                            intake.run(1); storage.cycle(true);
-                        }
-                        else {
-                            intake.run(0); storage.cycle(false);
-                        }
-                    }
-                }
-                break;
 
-            case 12: // shoot
-                if (!follower.isBusy()) {
-                    if (!rampingUp && !shooting) {rampingUp = true; outtake.run(0.53);}
-                    else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
-                        follower.holdPoint(paths.poses.farShootPose);
-                        previousTime = hardware.timer.milliseconds();
-                        gate.setGateState("open");
-                        intake.run(1); storage.cycle(true);
-                        shooting = true;
-                        rampingUp = false;
-                    }
-                    else if (shooting) {
-                        if ((hardware.timer.milliseconds() >= previousTime + 7250)) {
-                            gate.setGateState("close");
-                            rampingUp = false; shooting = false;
-                            pathState = nextState;
-                            intake.run(0); storage.cycle(false);
-                            follower.breakFollowing();
                         }
                         else if (Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                             intake.run(1); storage.cycle(true);

@@ -45,14 +45,17 @@ public class PresetPoses {
     public Pose farShootPose = new Pose(62.09304347826088,82.63043478260869, Math.toRadians(farShootAngle));
     public Pose gppStartPose = new Pose(50, 72.06260869565217, Math.toRadians(180)); // org y=83.750
     public Pose closeShootGppStartMidCurvePose = new Pose(61.918, 94.181);
-    public Pose gppEndPose = new Pose(100.07652173913043, 72.06260869565217, Math.toRadians(180)); // org y=83.750
+    public Pose gppEndPose = new Pose(15.001757469244293, 72.06260869565217, Math.toRadians(180)); // org y=83.750
     public Pose pgpStartPose = new Pose(48.000, 59.84000000000002, Math.toRadians(180)); // org y=701
     public Pose closeShootPgpEndMidCurvePose = new Pose(54, 59);
-    public Pose pgpEndPose = new Pose(98.32347826086955, 59.84000000000002, Math.toRadians(180)); // org y=70 // org x=20
+    public Pose pgpEndPose = new Pose(9.419130434782593, 59.84000000000002, Math.toRadians(180)); // org y=70 // org x=20
+
     public Pose parkLeverPose = new Pose(28.000, 70.500, Math.toRadians(90));
     public Pose ppgStartPose = new Pose(49.75, 35.54782608695653, Math.toRadians(180));
     public Pose farShootPpgStartMidCurvePose = new Pose(52.74173913043478, 43.31478260869564);
-    public Pose ppgEndPose = new Pose(98.32347826086955, 35.54782608695653, Math.toRadians(180));
+    public Pose ppgEndPose = new Pose(9.419130434782593, 35.54782608695653, Math.toRadians(180));
+    public Pose leverPoseppgEndPoseCurvePose = new Pose(57.50782608695652,52.549565217391304);
+    public Pose leverPose = new Pose(14.942608695652172,69.85739130434783,Math.toRadians(0));
     public Pose parkPose = new Pose(60.5904347826087, 49.823478260869564, Math.toRadians(90));
     public Pose hpStartPose = new Pose(26.280869565217387, 13.25999999999999, Math.toRadians(180));
     public Pose hpEndPose = new Pose(9.503043478260869, 13.25999999999999, Math.toRadians(180));

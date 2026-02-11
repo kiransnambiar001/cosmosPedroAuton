@@ -148,7 +148,7 @@ public class MoveForwardAuton extends LinearOpMode {
         panelsTelemetry.update();
         currentPose = follower.getPose();
 
-        gate.setGateState(true);
+        gate.setGateState("close");
 
 
         while (opModeIsActive()) {

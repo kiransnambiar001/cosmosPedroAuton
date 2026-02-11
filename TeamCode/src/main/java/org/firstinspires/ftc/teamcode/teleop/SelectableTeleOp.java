@@ -391,7 +391,7 @@ abstract class BaseTeleop extends OpMode {
             gate.setGateState("open");
             if (robotOuttake.isUpToSpeed()) {robotStorage.cycle(true);}
         }
-        else if (y2prevState) {gate.setGateState("close");}
+        else if (x2prevState) {gate.setGateState("close");}
         else if (b2state)
         {
             robotOuttake.run("far");
@@ -410,7 +410,7 @@ abstract class BaseTeleop extends OpMode {
             else if (dpd2wP) {powerOffset -= 0.01;}
             if(a2state){powerOffset = 0;}
         }
-        else if (x2prevState) {gate.setGateState("close");}
+        else if (y2prevState) {gate.setGateState("close");}
         else {
             if (!isRobotBusy) {
                 robotOuttake.run("idle");

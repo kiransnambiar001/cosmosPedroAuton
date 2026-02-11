@@ -166,7 +166,7 @@ public class RobotAutonGoalSideBluePreloaded extends OpMode {
         panelsTelemetry.update();
         currentPose = follower.getPose();
 
-        gate.setGateState(true);
+        gate.setGateState("close");
     }
 
     @Override
@@ -220,13 +220,13 @@ public class RobotAutonGoalSideBluePreloaded extends OpMode {
                 if (!follower.isBusy()) {
                     if (!rampingUp && !shooting) {outtake.run("close"); rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
-                        gate.setGateState(false);
+                        gate.setGateState("open");
                         intake.runForTime(1, 6500);
                         shooting = true;
                         rampingUp = false;
                     }
                     else if (shooting && (intakeRFTFinished)) {
-                        gate.setGateState(true);
+                        gate.setGateState("close");
                         rampingUp = false; shooting = false;
                         outtake.run("idle");
                         pathState = nextState;
@@ -237,13 +237,13 @@ public class RobotAutonGoalSideBluePreloaded extends OpMode {
                 if (!follower.isBusy()) {
                     if (!rampingUp && !shooting) {outtake.run("close"); rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
-                        gate.setGateState(false);
+                        gate.setGateState("open");
                         intake.runForTime(1, 100000); storage.cycle(true);
                         shooting = true;
                         rampingUp = false;
                     }
                     else if (shooting && (intakeRFTFinished)) {
-                        gate.setGateState(true);
+                        gate.setGateState("close");
                         rampingUp = false; shooting = false;
                         storage.cycle(false);
                         outtake.run("idle");
