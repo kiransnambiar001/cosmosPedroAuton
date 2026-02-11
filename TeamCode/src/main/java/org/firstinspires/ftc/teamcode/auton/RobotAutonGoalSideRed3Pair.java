@@ -33,6 +33,7 @@ import org.firstinspires.ftc.teamcode.subsystems.ServoStorage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 @Autonomous(name="GOAL SIDE RED - Auton", group="Autonomous", preselectTeleOp = "SELECTABLE - PedroPathingTeleOp")
 @Configurable // for Panels
@@ -44,6 +45,7 @@ public class RobotAutonGoalSideRed3Pair extends OpMode {
     public Intake intake;
     public Gate gate;
     public ServoStorage storage;
+    private Supplier<PathChain> toParkPosePath;
 
 
     private final ElapsedTime timer = new ElapsedTime(); // runtime
@@ -212,6 +214,12 @@ public class RobotAutonGoalSideRed3Pair extends OpMode {
 
         Drawing.init();
 
+
+        toParkPosePath = () -> follower.pathBuilder()
+                .addPath(new Path(new BezierLine(follower::getPose, paths.poses.closeShootOffLinePose)))
+                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, paths.poses.closeShootOffLinePose.getHeading(), 0.8))
+                .build();
+
         drawOnlyCurrent();
         log("Status", "INITIALIZED");
         panelsTelemetry.update(telemetry);
@@ -227,13 +235,18 @@ public class RobotAutonGoalSideRed3Pair extends OpMode {
         panelsTelemetry.update();
         currentPose = follower.getPose();
 
-        gate.setGateState(true);
+        gate.setGateState("close");
     }
     @Override
     public void loop() {
         currentPose = follower.getPose();
         // update subsystems
         updatePath(outtake.update(), intake.update(), storage.update());
+
+        if (timer.milliseconds() > 28000) {
+            pathState = -2;
+        }
+
 
         // telemetry
         log("Status", "RUNNING");
@@ -261,6 +274,8 @@ public class RobotAutonGoalSideRed3Pair extends OpMode {
     // shootpreloaded-->gotoppg-->pickupppg-->shootppg-->park
     public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished, boolean storageRFTFinished) {
         switch (pathState) {
+            case -2:
+                follower.followPath(toParkPosePath.get());
             case 0:
                 outtake.run("close");
                 follower.followPath(paths.ShootPreloaded);
@@ -278,7 +293,7 @@ public class RobotAutonGoalSideRed3Pair extends OpMode {
             case 2:
                 if (follower.getCurrentTValue() > 0.97) {
                     follower.followPath(paths.PickupGPP);
-                    gate.setGateState(true);
+                    gate.setGateState("close");
                     intake.run(1); storage.setPos(-1);
                     pathState = 3;
                 }
@@ -302,7 +317,7 @@ public class RobotAutonGoalSideRed3Pair extends OpMode {
             case 5:
                 if (follower.getCurrentTValue() > 0.97) {
                     follower.followPath(paths.PickupPGP);
-                    gate.setGateState(true);
+                    gate.setGateState("close");
                     intake.run(1); storage.setPos(-1);
                     pathState = 6;
                 }
@@ -362,14 +377,14 @@ public class RobotAutonGoalSideRed3Pair extends OpMode {
                     if (!rampingUp && !shooting) {rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         previousTime = hardware.timer.milliseconds();
-                        gate.setGateState(false);
+                        gate.setGateState("open");
                         intake.run(1); storage.cycle(3);
                         shooting = true;
                         rampingUp = false;
                     }
                     else if (shooting) {
                         if ((storageRFTFinished)) {
-                            gate.setGateState(true);
+                            gate.setGateState("close");
                             rampingUp = false;
                             shooting = false;
                             pathState = nextState;
@@ -384,14 +399,14 @@ public class RobotAutonGoalSideRed3Pair extends OpMode {
                     if (!rampingUp && !shooting) {rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         previousTime = hardware.timer.milliseconds();
-                        gate.setGateState(false);
+                        gate.setGateState("open");
                         intake.run(1); storage.cycle(true);
                         shooting = true;
                         rampingUp = false;
                     }
                     else if (shooting) {
                         if ((hardware.timer.milliseconds() >= previousTime + 100000)) {
-                            gate.setGateState(true);
+                            gate.setGateState("close");
                             rampingUp = false; shooting = false;
                             pathState = nextState;
                             intake.run(0); storage.cycle(false);

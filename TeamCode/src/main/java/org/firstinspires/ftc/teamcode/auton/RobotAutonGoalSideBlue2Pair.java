@@ -230,7 +230,7 @@ public class RobotAutonGoalSideBlue2Pair extends OpMode {
         panelsTelemetry.update();
         currentPose = follower.getPose();
 
-        gate.setGateState(true);
+        gate.setGateState("close");
     }
 
     @Override
@@ -286,7 +286,7 @@ public class RobotAutonGoalSideBlue2Pair extends OpMode {
             case 2:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.PickupGPP, 0.3, true);
-                    gate.setGateState(true);
+                    gate.setGateState("close");
                     intake.run(1); storage.setPos(-1);
                     pathState = 3;
                 }
@@ -346,13 +346,14 @@ public class RobotAutonGoalSideBlue2Pair extends OpMode {
                 if (!follower.isBusy()) {
                     if (!rampingUp && !shooting) {outtake.run("close"); rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
-                        gate.setGateState(false);
+                        gate.setGateState("open");
                         intake.runForTime(1, 7000); storage.cycle(true);
                         shooting = true;
                         rampingUp = false;
                     }
                     else if (shooting && (intakeRFTFinished)) {
-                        gate.setGateState(true); storage.cycle(false);
+                        gate.setGateState("close");
+                        storage.cycle(false);
                         rampingUp = false; shooting = false;
                         outtake.run("idle");
                         pathState = nextState;
@@ -363,13 +364,14 @@ public class RobotAutonGoalSideBlue2Pair extends OpMode {
                 if (!follower.isBusy()) {
                     if (!rampingUp && !shooting) {outtake.run("close"); rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
-                        gate.setGateState(false);
+                        gate.setGateState("open");
                         intake.runForTime(1, 100000); storage.cycle(true);
                         shooting = true;
                         rampingUp = false;
                     }
                     else if (shooting && (intakeRFTFinished)) {
-                        gate.setGateState(true); storage.cycle(false);
+                        gate.setGateState("close");
+                        storage.cycle(false);
                         rampingUp = false; shooting = false;
                         outtake.run("idle");
                         pathState = nextState;

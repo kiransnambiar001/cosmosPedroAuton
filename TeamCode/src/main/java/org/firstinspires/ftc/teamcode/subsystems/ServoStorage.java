@@ -69,6 +69,7 @@ public class ServoStorage {
         cycleOn = true;
         isIntCycle = true;
         cycleCount = 3;
+        previousTime = storageTimer.milliseconds();
     }
 
 

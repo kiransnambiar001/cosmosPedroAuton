@@ -385,13 +385,13 @@ abstract class BaseTeleop extends OpMode {
 
         // outtake preset running
         if (a2wP) {robotOuttake.reset();}
-        else if (y2state)
+        else if (x2state)
         {
             robotOuttake.run("close");
             gate.setGateState("open");
             if (robotOuttake.isUpToSpeed()) {robotStorage.cycle(true);}
         }
-        else if (y2prevState) {gate.setGateState("close");}
+        else if (x2prevState) {gate.setGateState("close");}
         else if (b2state)
         {
             robotOuttake.run("far");
@@ -399,7 +399,7 @@ abstract class BaseTeleop extends OpMode {
             if(robotOuttake.isUpToSpeed()) {robotStorage.cycle(true);}
         }
         else if (b2prevState) {gate.setGateState("close");}
-        else if (x2state && !isAutoDriving) {
+        else if (y2state && !isAutoDriving) {
             isAutoShooting = true;
             initialPower = poses.getOptimalShooterPowerPercentage(follower.getPose(), true);
             ballCamToggle = true;
@@ -410,7 +410,7 @@ abstract class BaseTeleop extends OpMode {
             else if (dpd2wP) {powerOffset -= 0.01;}
             if(a2state){powerOffset = 0;}
         }
-        else if (x2prevState) {gate.setGateState("close");}
+        else if (y2prevState) {gate.setGateState("close");}
         else {
             if (!isRobotBusy) {
                 robotOuttake.run("idle");
