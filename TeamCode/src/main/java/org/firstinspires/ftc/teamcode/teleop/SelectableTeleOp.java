@@ -400,7 +400,7 @@ abstract class BaseTeleop extends OpMode {
         else if (y2state && !isAutoDriving) {
             isAutoShooting = true;
             initialPower = poses.getOptimalShooterPowerPercentage(follower.getPose(), true);
-            ballCamToggle = true;
+//            ballCamToggle = true;
             robotOuttake.run(initialPower + powerOffset);
             gate.setGateState("open");
             if(robotOuttake.isUpToSpeed()){robotStorage.cycle(true);}
@@ -413,6 +413,7 @@ abstract class BaseTeleop extends OpMode {
             if (!isRobotBusy && !x2state && !b2state && !y2state && !(ly2 > 0.3)) {
                 robotOuttake.run("idle");
                 robotStorage.cycle(false);
+                ballCamToggle = false;
             }
             isAutoShooting = false;
         }
