@@ -274,9 +274,9 @@ abstract class BaseTeleop extends OpMode {
         boolean rt2state = g2.right_trigger > 0.3; // storage forward
         boolean rb2state = g2.right_bumper; // storage reverse
         boolean a2state = g2.a; // outtake idle on/off
-        boolean b2state = g2.b; // outtake preset for close shoot
-        boolean y2state = g2.y; // outtake preset for far shoot
-        boolean x2state = g2.x; // set outtake power based on power tables
+        boolean b2state = g2.b; // outtake preset for far shoot
+        boolean y2state = g2.y; // outtake preset for close shoot
+        boolean x2state = g2.x; // Auto shooting
         boolean dpu2state = g2.dpad_up; // tune preset increment
         boolean dpd2state = g2.dpad_down; // tune preset decrement
         boolean dpr2state = g2.dpad_right;
