@@ -126,6 +126,8 @@ abstract class BaseTeleop extends OpMode {
     boolean offToggle = false;
 
     // for button wasPressed detection
+    boolean ballCamTogglePrevState = false;
+    boolean fieldCentricPrevState = false;
     boolean home1prevState = false;
     boolean options1prevState = false;
     boolean dpd1prevState = false;
@@ -316,7 +318,7 @@ abstract class BaseTeleop extends OpMode {
 
         if (ballCamToggle) {
 
-            double targetHeading = poses.getAngleTowardsGoal(currentPose) - Math.toRadians(180);
+            double targetHeading = poses.getAngleTowardsGoal(currentPose) - Math.PI - powerOffset;
 
             double error = MathFunctions.getTurnDirection(follower.getPose().getHeading(), targetHeading)
                     * MathFunctions.getSmallestAngleDifference(follower.getPose().getHeading(), targetHeading);
@@ -403,9 +405,10 @@ abstract class BaseTeleop extends OpMode {
         else if (b2prevState) {gate.setGateState("close");}
         else if (x2state) {
             initialPower = poses.getOptimalShooterPowerPercentage(follower.getPose(), true);
+            ballCamToggle = true;
             robotOuttake.run(initialPower + powerOffset);
-            if(robotOuttake.isUpToSpeed()){robotStorage.cycle(true);}
             gate.setGateState("open");
+            if(robotOuttake.isUpToSpeed()){robotStorage.cycle(true);}
             if (dpu2wP) {powerOffset += 0.01;}
             else if (dpd2wP) {powerOffset -= 0.01;}
             if(a2state){powerOffset = 0;}
@@ -454,7 +457,8 @@ abstract class BaseTeleop extends OpMode {
         follower.update();
         draw();
 
-
+        fieldCentricPrevState = fieldCentric;
+        ballCamTogglePrevState = ballCamToggle;
         home1prevState = home1state;
         options1prevState = options1state;
         dpd1prevState = dpd1state;
@@ -463,8 +467,8 @@ abstract class BaseTeleop extends OpMode {
         x1prevState = x1state;
         a1prevState = a1state;
         y1prevState = y1state;
-        dpu2prevState = dpu2state; // tune preset increment
-        dpd2prevState = dpd2state; // tune preset decrement
+        dpu2prevState = dpu2state;
+        dpd2prevState = dpd2state;
         a2prevState = a2state;
         dpr2prevState = dpr2state;
         dpl2prevState = dpl2state;
