@@ -376,11 +376,9 @@ abstract class BaseTeleop extends OpMode {
         robotStorage.update();
 
         if (ly2 <= -0.3) {robotIntake.run(-0.8);}
-        else if(ly2 >0.3 && !isAutoShooting) {robotIntake.run(0.8); robotStorage.setPos(-1);}
+        else if(ly2 >0.3) {robotIntake.run(0.8); robotStorage.setPos(-1);}
         else {
-            if(isAutoShooting) {
-                robotIntake.run(0);
-            }
+            robotIntake.run(0);
         }
 
         // outtake preset running
@@ -437,7 +435,7 @@ abstract class BaseTeleop extends OpMode {
             isHoldingPose = false;
         }
 
-        if (!x2state && !y2state && !b2state && (ly2 < 0.3)) {
+        if (!x2state && !y2state && !(ly2 > 0.3)) {
             robotStorage.setPos(0);
             robotStorage.cycle(false);
         }
