@@ -1,14 +1,5 @@
 package org.firstinspires.ftc.teamcode.teleop;
-
-
-
-
-import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.draw;
-import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.drawOnlyCurrent;
-import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
-
 import android.annotation.SuppressLint;
-
 import com.bylazar.configurables.PanelsConfigurables;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.configurables.annotations.IgnoreConfigurable;
@@ -88,6 +79,7 @@ public class SelectableTeleOp extends SelectableOpMode {
 
 abstract class BaseTeleop extends OpMode {
     Hardware robotHardware = new Hardware();
+
     Intake robotIntake;
     ServoStorage robotStorage;
     Outtake robotOuttake;
@@ -102,7 +94,8 @@ abstract class BaseTeleop extends OpMode {
     public PresetPoses poses;
     public static Pose currentPose;
     private Follower follower;
-    public boolean autoDriving = false;
+    public boolean isAutoDriving = false;
+    public boolean isHoldingPose = false;
     private Supplier<PathChain> toShootPosePath;
     private Function<Pose, PathChain> toLaunchLinePath;
     private TelemetryManager panelsTelemetry;
@@ -117,6 +110,8 @@ abstract class BaseTeleop extends OpMode {
     // Auto shoot
     double initialPower;
     double powerOffset = 0;
+    boolean isRobotBusy = false;
+    boolean isAutoShooting = false;
     public static double slowModeMultiplier = 0.3;
 
     // toggles
@@ -166,6 +161,7 @@ abstract class BaseTeleop extends OpMode {
         }
     }
 
+
     public void drawOnlyCurrent() {
         try {
             Drawing.drawRobot(follower.getPose());
@@ -214,7 +210,7 @@ abstract class BaseTeleop extends OpMode {
         g2Manager = PanelsGamepad.INSTANCE.getSecondManager();
 
         log("Status", "INITIALIZED");
-        log(initMsg);
+        log("Mode", initMsg);
         panelsTelemetry.update(telemetry);
 
         drawOnlyCurrent();
@@ -225,7 +221,7 @@ abstract class BaseTeleop extends OpMode {
     public void init_loop() {
         follower.update();
         log("Status", "INITIALIZED");
-        log(initMsg);
+        log("Mode", initMsg);
         panelsTelemetry.update(telemetry);
         drawOnlyCurrent();
 
@@ -233,19 +229,15 @@ abstract class BaseTeleop extends OpMode {
 
     @Override
     public void start() {
-
-
         follower.update();
         robotHardware.imu.resetYaw();
         follower.startTeleOpDrive();
-
-
+        headingPIDFController.setCoefficients(follower.constants.coefficientsHeadingPIDF);
     }
 
     @SuppressLint("DefaultLocale")
     @Override
     public void loop() {
-        headingPIDFController.setCoefficients(follower.constants.coefficientsHeadingPIDF);
         currentPose = follower.getPose();
         Gamepad g1 = g1Manager.asCombinedFTCGamepad(gamepad1);
         Gamepad g2 = g2Manager.asCombinedFTCGamepad(gamepad2);
@@ -300,8 +292,10 @@ abstract class BaseTeleop extends OpMode {
         boolean lb2wP = lb2state && !lb2prevState;
         boolean lt1wP = lt1state && !lt1prevState;
         boolean lt2wp = lt2state && !lt2prevstate;
+        boolean sticksMoved = (Math.abs(ly1) > 0.05 || Math.abs(lx1) > 0.05 || Math.abs(rx1) > 0.05);
 
 
+        isRobotBusy = (isAutoDriving || isHoldingPose || isAutoShooting) && !sticksMoved;
         double imuHeading = robotHardware.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
         // rumble outtake feedback
@@ -316,7 +310,7 @@ abstract class BaseTeleop extends OpMode {
         if (home1wP && fieldCentric) {robotHardware.imu.resetYaw();}
         if (options1wP) {fieldCentric = !fieldCentric;}
 
-        if (ballCamToggle) {
+        if (ballCamToggle && !isRobotBusy) {
 
             double targetHeading = poses.getAngleTowardsGoal(currentPose) - Math.PI - powerOffset;
 
@@ -329,12 +323,12 @@ abstract class BaseTeleop extends OpMode {
 
         }
 
-        if (!autoDriving) {
+        else if (!isRobotBusy || sticksMoved) {
             if (slowMode) {ly1*=slowModeMultiplier; lx1*=slowModeMultiplier; rx1*=slowModeMultiplier;}
             if (fieldCentric) { // field centric
                 follower.setTeleOpDrive(ly1, lx1, -rx1, false, fcOffset); // normal field centric
             }
-            else {follower.setTeleOpDrive(ly1, lx1, -rx1, true);} // rbt centric
+            else {follower.setTeleOpDrive(ly1, lx1, -rx1, true);} // robot centric
         }
 
         if (!poses.isRed && x1wP) {
@@ -366,25 +360,27 @@ abstract class BaseTeleop extends OpMode {
         if (b1wP) {ballCamToggle = !ballCamToggle;}
 
         // hold pos dpr1
-        if (!follower.isBusy()) {
-            if (lt1wP) {
+            if (lt1wP && !isRobotBusy) {
+                isHoldingPose = true;
                 holdingPose = follower.getPose();
                 follower.holdPoint(holdingPose);
             }
-            if (!lt1state && lt1prevState) {
+            if (isHoldingPose && (!lt1state || sticksMoved)) {
+                isHoldingPose = false;
                 follower.breakFollowing();
                 follower.startTeleOpDrive();
             }
-        }
 
         //Storage and intake control
         robotIntake.update();
         robotStorage.update();
 
         if (ly2 <= -0.3) {robotIntake.run(-0.8);}
-        else if(ly2 >0.3) {robotIntake.run(0.8); robotStorage.setPos(-1);}
+        else if(ly2 >0.3 && !isAutoShooting) {robotIntake.run(0.8); robotStorage.setPos(-1);}
         else {
-            robotIntake.run(0);
+            if(isAutoShooting) {
+                robotIntake.run(0);
+            }
         }
 
         // outtake preset running
@@ -403,7 +399,8 @@ abstract class BaseTeleop extends OpMode {
             if(robotOuttake.isUpToSpeed()) {robotStorage.cycle(true);}
         }
         else if (b2prevState) {gate.setGateState("close");}
-        else if (x2state) {
+        else if (x2state && !isAutoDriving) {
+            isAutoShooting = true;
             initialPower = poses.getOptimalShooterPowerPercentage(follower.getPose(), true);
             ballCamToggle = true;
             robotOuttake.run(initialPower + powerOffset);
@@ -415,10 +412,11 @@ abstract class BaseTeleop extends OpMode {
         }
         else if (x2prevState) {gate.setGateState("close");}
         else {
-            if (!autoDriving) {
+            if (!isRobotBusy) {
                 robotOuttake.run("idle");
                 robotStorage.cycle(false);
             }
+            isAutoShooting = false;
         }
         if (offToggle) {robotOuttake.run(0);}
 
@@ -430,23 +428,26 @@ abstract class BaseTeleop extends OpMode {
 
         // Reset outtake presets
         if (options1wP) {robotOuttake.reset();}
-        if (dpu1wP) {autoDriving = true; follower.followPath(toShootPosePath.get()); }
-        if (dpd1wP) {autoDriving = true; follower.followPath(toLaunchLinePath.apply(poses.findClosestLaunchPose(currentPose)));}
-        if ((autoDriving) && (y1wP || !follower.isBusy())) {
-            follower.startTeleOpDrive(); autoDriving = false;
+        if (dpu1wP) {isAutoDriving = true; follower.followPath(toShootPosePath.get()); }
+        if (dpd1wP) {isAutoDriving = true; follower.followPath(toLaunchLinePath.apply(poses.findClosestLaunchPose(currentPose)));}
+        if ((isAutoDriving) && (sticksMoved || y1wP || !follower.isBusy())) {
+            follower.breakFollowing();
+            follower.startTeleOpDrive();
+            isAutoDriving = false;
+            isHoldingPose = false;
         }
 
-        if (!x2state && !y2state && !b2state && !(ly2 > 0.3)) {
+        if (!x2state && !y2state && !b2state && (ly2 < 0.3)) {
             robotStorage.setPos(0);
             robotStorage.cycle(false);
         }
 
-        log(initMsg);
+        log("Mode", initMsg);
         log("Status", "Running");
         log("Field Centric", fieldCentric ? "ON" : "OFF");
         log("Ball Cam", ballCamToggle ? "ON" : "OFF");
         log("Following Path", follower.isBusy() ? "FOLLOWING" : "none");
-        //log("Auto-Shooting", isAutoShooting ? "ACTIVE" : "IDLE");
+        log("Auto-Shooting", isAutoShooting ? "ACTIVE" : "IDLE");
         log("Target Velocity (tps)", robotOuttake.getTargetTps());
         log("Actual Velocity (tps)", robotHardware.outtakeMotor.getVelocity());
         log("IMU Heading (deg)", Math.toDegrees(imuHeading));
@@ -473,6 +474,7 @@ abstract class BaseTeleop extends OpMode {
         dpr2prevState = dpr2state;
         dpl2prevState = dpl2state;
         lb2prevState = lb2state;
+        lt2prevstate = lt2state;
         b2prevState = b2state;
         y2prevState = y2state;
         dpr1prevState = dpr1state;
@@ -486,11 +488,10 @@ abstract class BaseTeleop extends OpMode {
 class FarSideBlue extends BaseTeleop {
     @Override
     public void setPresets() {
-        PresetPoses tempposes = new PresetPoses(new Pose(72,72, Math.toRadians(0)), false);
-        poses = new PresetPoses(tempposes.parkPose, false);
-        fcOffset = Math.toRadians(180);
-        initMsg = "FAR SIDE BLUE";
-
+            PresetPoses tempposes = new PresetPoses(new Pose(72, 72, Math.toRadians(0)), false);
+            poses = new PresetPoses(tempposes.parkPose, false);
+            fcOffset = Math.toRadians(180);
+            initMsg = "FAR SIDE BLUE";
     }
 }
 
@@ -556,20 +557,24 @@ class EndPoseTeleop extends BaseTeleop {
     @Override
     public void setPresets() {
         List<Double> data = FileController.read("Memory.txt");
-        double x = data.get(0);
-        double y = data.get(1);
-        double heading = data.get(2);
-        boolean isRed = data.get(3) == 1;
-        Pose startPose = new Pose(x,y,heading);
+        if (data.size() >= 4) {
+            double x = data.get(0);
+            double y = data.get(1);
+            double heading = data.get(2);
+            boolean isRed = data.get(3) == 1;
+            Pose startPose = new Pose(x, y, heading);
 
-        if (isRed) {
-            poses = new PresetPoses(startPose.mirror(), true);
-        } else {
-            poses = new PresetPoses(startPose, false);
+            if (isRed) {
+                poses = new PresetPoses(startPose.mirror(), true);
+            } else {
+                poses = new PresetPoses(startPose, false);
+            }
+            fcOffset = Math.toRadians(180);
+            initMsg = "AUTON POSE TELEOP";
         }
-        fcOffset = Math.toRadians(180);
-        initMsg = "AUTON POSE TELEOP";
-
-
+        else {
+            poses = new PresetPoses(new Pose(72, 72, Math.toRadians(0)), false);
+            initMsg = "WARNING: NO POSE IN MEMORY - USING DEFAULT";
+        }
     }
 }
