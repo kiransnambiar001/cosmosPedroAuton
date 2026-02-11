@@ -410,7 +410,7 @@ abstract class BaseTeleop extends OpMode {
         }
         else if (y2prevState) {gate.setGateState("close");}
         else {
-            if (!isRobotBusy) {
+            if (!isRobotBusy && !x2state && !b2state && !y2state && !(ly2 > 0.3)) {
                 robotOuttake.run("idle");
                 robotStorage.cycle(false);
             }
