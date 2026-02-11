@@ -275,8 +275,8 @@ abstract class BaseTeleop extends OpMode {
         boolean rb2state = g2.right_bumper; // storage reverse
         boolean a2state = g2.a; // outtake idle on/off
         boolean b2state = g2.b; // outtake preset for close shoot
-        boolean y2state = g2.y; // outtake preset for far shoot
-        boolean x2state = g2.x; // set outtake power based on power tables
+        boolean y2state = g2.y; // set outtake power based on power tables
+        boolean x2state = g2.x; // outtake preset for far shoot
         boolean dpu2state = g2.dpad_up; // tune preset increment
         boolean dpd2state = g2.dpad_down; // tune preset decrement
         boolean dpr2state = g2.dpad_right;
@@ -385,7 +385,7 @@ abstract class BaseTeleop extends OpMode {
 
         // outtake preset running
         if (a2wP) {robotOuttake.reset();}
-        else if (y2state)
+        else if (x2state)
         {
             robotOuttake.run("close");
             gate.setGateState("open");
@@ -399,7 +399,7 @@ abstract class BaseTeleop extends OpMode {
             if(robotOuttake.isUpToSpeed()) {robotStorage.cycle(true);}
         }
         else if (b2prevState) {gate.setGateState("close");}
-        else if (x2state && !isAutoDriving) {
+        else if (y2state && !isAutoDriving) {
             isAutoShooting = true;
             initialPower = poses.getOptimalShooterPowerPercentage(follower.getPose(), true);
             ballCamToggle = true;
@@ -421,8 +421,8 @@ abstract class BaseTeleop extends OpMode {
         if (offToggle) {robotOuttake.run(0);}
 
         // Fine tune active preset
-        if (dpu2wP && !offToggle && !x2state) {robotOuttake.tuneActivePreset(0.05);}
-        else if (dpd2wP && !offToggle && !x2state) {robotOuttake.tuneActivePreset(-0.05);}
+        if (dpu2wP && !offToggle && !y2state) {robotOuttake.tuneActivePreset(0.05);}
+        else if (dpd2wP && !offToggle && !y2state) {robotOuttake.tuneActivePreset(-0.05);}
 
         if (home1wP) {fcOffset = follower.getHeading();}
 
@@ -437,7 +437,7 @@ abstract class BaseTeleop extends OpMode {
             isHoldingPose = false;
         }
 
-        if (!x2state && !y2state && !b2state && (ly2 < 0.3)) {
+        if (!y2state && !x2state && !b2state && (ly2 < 0.3)) {
             robotStorage.setPos(0);
             robotStorage.cycle(false);
         }
