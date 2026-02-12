@@ -99,6 +99,7 @@ abstract class BaseTeleop extends OpMode {
     private Supplier<PathChain> toShootPosePath;
     private Function<Pose, PathChain> toLaunchLinePath;
     private TelemetryManager panelsTelemetry;
+    private String shootingMode = "OFF";
 
 
     // input vars
@@ -310,7 +311,7 @@ abstract class BaseTeleop extends OpMode {
         if (home1wP && fieldCentric) {robotHardware.imu.resetYaw();}
         if (options1wP) {fieldCentric = !fieldCentric;}
 
-        if (ballCamToggle && !isRobotBusy) {
+        if (ballCamToggle) {
 
             double targetHeading = poses.getAngleTowardsGoal(currentPose) - Math.PI - powerOffset;
 
@@ -323,7 +324,7 @@ abstract class BaseTeleop extends OpMode {
 
         }
 
-        else if (!isRobotBusy || sticksMoved) {
+        else {
             if (slowMode) {ly1*=slowModeMultiplier; lx1*=slowModeMultiplier; rx1*=slowModeMultiplier;}
             if (fieldCentric) { // field centric
                 follower.setTeleOpDrive(ly1, lx1, -rx1, false, fcOffset); // normal field centric
@@ -385,6 +386,7 @@ abstract class BaseTeleop extends OpMode {
         if (a2wP) {robotOuttake.reset();}
         else if (x2state)
         {
+            shootingMode = "CONSTANT (CLOSE)";
             robotOuttake.run("close");
             gate.setGateState("open");
             if (robotOuttake.isUpToSpeed()) {robotStorage.cycle(true);}
@@ -392,12 +394,14 @@ abstract class BaseTeleop extends OpMode {
         else if (x2prevState) {gate.setGateState("close");}
         else if (b2state)
         {
+            shootingMode = "CONSTANT (FAR)";
             robotOuttake.run("far");
             gate.setGateState("open");
             if(robotOuttake.isUpToSpeed()) {robotStorage.cycle(true);}
         }
         else if (b2prevState) {gate.setGateState("close");}
         else if (y2state && !isAutoDriving) {
+            shootingMode = "VARIABLE";
             isAutoShooting = true;
             initialPower = poses.getOptimalShooterPowerPercentage(follower.getPose(), true);
 //            ballCamToggle = true;
@@ -413,9 +417,9 @@ abstract class BaseTeleop extends OpMode {
             if (!isRobotBusy && !x2state && !b2state && !y2state && !(ly2 > 0.3)) {
                 robotOuttake.run("idle");
                 robotStorage.cycle(false);
-                ballCamToggle = false;
             }
             isAutoShooting = false;
+            shootingMode = "OFF";
         }
         if (offToggle) {robotOuttake.run(0);}
 
@@ -449,10 +453,7 @@ abstract class BaseTeleop extends OpMode {
         log("Auto-Shooting", isAutoShooting ? "ACTIVE" : "IDLE");
         log("Target Velocity (tps)", robotOuttake.getTargetTps());
         log("Actual Velocity (tps)", robotHardware.outtakeMotor.getVelocity());
-        log("IMU Heading (deg)", Math.toDegrees(imuHeading));
-        log("Position", String.format("X: %.2f, Y: %.2f", currentPose.getX(), currentPose.getY()));
-        log("Goal Pose", poses.goalPose);
-        log("Target Angle for Goal", Math.toDegrees(poses.getAngleTowardsGoal(currentPose)));
+        log("Shooting Mode", shootingMode);
         panelsTelemetry.update(telemetry);
         follower.update();
         draw();

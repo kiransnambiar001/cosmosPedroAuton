@@ -17,7 +17,7 @@ public class ServoStorage {
     private static double storageRLoadingPos = 0.55;
     private static double storageRIntakingPos = 0;
     private ElapsedTime storageTimer = new ElapsedTime();
-    public static double[] cycleDelay = {650, 500};
+    public static double[] cycleDelay = {650, 400};
     private static int cycleState = 0;
     private boolean cycleOn = false;
     private static int cycleCount = 0;

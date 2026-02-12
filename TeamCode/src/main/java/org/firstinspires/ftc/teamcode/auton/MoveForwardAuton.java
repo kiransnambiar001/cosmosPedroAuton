@@ -125,7 +125,7 @@ public class MoveForwardAuton extends LinearOpMode {
 
         // init subsystems
         hardware = new Hardware();
-        hardware.initialize(hardwareMap, true, true);
+        hardware.initialize(hardwareMap, true, false);
         outtake = new Outtake(hardware, 200d, 0d, 0d, 13.989d);
         intake = new Intake(hardware);
         storage = new CRServoStorage(hardware);

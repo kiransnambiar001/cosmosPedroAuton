@@ -250,7 +250,7 @@ public class RobotAutonFarBlue extends OpMode {
 
             case 2:
                 if (!follower.isBusy()) {
-                    follower.followPath(paths.PickupPPG, 0.3, true);
+                    follower.followPath(paths.PickupPPG);
                     gate.setGateState("close");
                     intake.run(1);
                     storage.setPos(-1);

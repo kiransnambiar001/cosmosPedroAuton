@@ -289,41 +289,45 @@ public class RobotAutonGoalSideBlue3PairGate extends OpMode {
                     gate.setGateState("close");
                     intake.run(1); storage.setPos(-1);
                     pathState = 3;
+                    previousTime = timer.milliseconds();
                 }
                 break;
-
             case 3:
+                if (timer.milliseconds() + 3000 <= previousTime) {
+                    pathState = 4;
+                }
+            case 4:
                 if (follower.getCurrentTValue() > 0.97) {
                     intake.run(0); storage.setPos(0);
                     follower.followPath(paths.ShootPGP);
-                    nextState = 4;
+                    nextState = 5;
                     pathState = 10; // shoot
                 }
                 break;
 
-            case 4:
+            case 5:
                 if (follower.getCurrentTValue() > 0.97) {
                     follower.followPath(paths.GotoGPP);
                     outtake.run(0.445);
-                    pathState = 5;
+                    pathState = 6;
                 }
-            case 5:
+            case 6:
                 if (follower.getCurrentTValue() > 0.97) {
                     follower.followPath(paths.PickupGPP);
                     gate.setGateState("close");
                     intake.run(1); storage.setPos(-1);
-                    pathState = 6;
-                }
-                break;
-            case 6:
-                if (follower.getCurrentTValue() > 0.97) {
-                    intake.run(0); storage.setPos(0);
-                    follower.followPath(paths.ShootGPP);
-                    nextState = 7;
-                    pathState = 11; // shoot
+                    pathState = 7;
                 }
                 break;
             case 7:
+                if (follower.getCurrentTValue() > 0.97) {
+                    intake.run(0); storage.setPos(0);
+                    follower.followPath(paths.ShootGPP);
+                    nextState = 8;
+                    pathState = 11; // shoot
+                }
+                break;
+            case 8:
                 if(follower.getCurrentTValue() > 0.97) {
                     pathState = -1;
                     outtake.run(0);

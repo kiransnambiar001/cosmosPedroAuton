@@ -55,7 +55,7 @@ public class PresetPoses {
     public Pose farShootPpgStartMidCurvePose = new Pose(52.74173913043478, 43.31478260869564);
     public Pose ppgEndPose = new Pose(9.419130434782593, 35.54782608695653, Math.toRadians(180));
     public Pose leverPoseppgEndPoseCurvePose = new Pose(57.50782608695652,52.549565217391304);
-    public Pose leverPose = new Pose(14.942608695652172,69.85739130434783,Math.toRadians(0));
+    public Pose leverPose = new Pose(56,36,Math.toRadians(135));
     public Pose parkPose = new Pose(60.5904347826087, 49.823478260869564, Math.toRadians(90));
     public Pose hpStartPose = new Pose(26.280869565217387, 13.25999999999999, Math.toRadians(180));
     public Pose hpEndPose = new Pose(9.503043478260869, 13.25999999999999, Math.toRadians(180));
