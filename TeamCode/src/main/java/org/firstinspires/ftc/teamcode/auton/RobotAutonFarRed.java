@@ -283,23 +283,17 @@ public class RobotAutonFarRed extends OpMode {
                         follower.holdPoint(paths.poses.farShootPose);
                         previousTime = hardware.timer.milliseconds();
                         gate.setGateState("open");
-                        intake.run(1); storage.cycle(true);
+                        intake.run(1); storage.cycle(3);
                         shooting = true;
                         rampingUp = false;
                     }
                     else if (shooting) {
-                        if ((hardware.timer.milliseconds() >= previousTime + 7250)) {
+                        if (!storage.isBusy()) {
                             gate.setGateState("close");
                             rampingUp = false; shooting = false;
                             pathState = nextState;
                             intake.run(0); storage.cycle(false);
                             follower.breakFollowing();
-                        }
-                        else if (Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
-                            intake.run(1); storage.cycle(true);
-                        }
-                        else {
-                            intake.run(0); storage.cycle(false);
                         }
                     }
                 }
@@ -310,22 +304,20 @@ public class RobotAutonFarRed extends OpMode {
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         previousTime = hardware.timer.milliseconds();
                         gate.setGateState("open");
-                        intake.run(1); storage.cycle(true);
+                        intake.run(1); storage.cycle(3);
                         shooting = true;
                         rampingUp = false;
                     }
                     else if (shooting) {
-                        if ((hardware.timer.milliseconds() >= previousTime + 100000 )) {
+                        if (!storage.isBusy()) {
                             gate.setGateState("close");
-                            rampingUp = false; shooting = false;
+                            shooting = false;
+
+                            intake.run(0);
+                            storage.cycle(false);
+
                             pathState = nextState;
-                            intake.run(0); storage.cycle(false);
-                        }
-                        else if (Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
-                            intake.run(1); storage.cycle(true);
-                        }
-                        else {
-                            intake.run(0); storage.cycle(false);
+                            follower.breakFollowing();
                         }
                     }
                 }
@@ -333,17 +325,17 @@ public class RobotAutonFarRed extends OpMode {
 
             case 12: // shoot
                 if (!follower.isBusy()) {
-                    if (!rampingUp && !shooting) {rampingUp = true; outtake.run(0.53);}
+                    if (!storage.isBusy() && !rampingUp && !shooting) {rampingUp = true; outtake.run(0.53);}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         follower.holdPoint(paths.poses.farShootPose);
                         previousTime = hardware.timer.milliseconds();
                         gate.setGateState("open");
-                        intake.run(1); storage.cycle(true);
+                        intake.run(1); storage.cycle(3);
                         shooting = true;
                         rampingUp = false;
                     }
                     else if (shooting) {
-                        if ((hardware.timer.milliseconds() >= previousTime + 7250)) {
+                        if (!storage.isBusy()) {
                             gate.setGateState("close");
                             rampingUp = false; shooting = false;
                             pathState = nextState;

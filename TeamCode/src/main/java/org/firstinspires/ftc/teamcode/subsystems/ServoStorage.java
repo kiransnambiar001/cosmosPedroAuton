@@ -18,10 +18,14 @@ public class ServoStorage {
     private static double storageRIntakingPos = 0;
     private ElapsedTime storageTimer = new ElapsedTime();
     public static double[] cycleDelay = {650, 500};
-    private static int cycleState = 0;
+    private int cycleState = 0;
     private boolean cycleOn = false;
     private static int cycleCount = 0;
     private static boolean isIntCycle = false;
+    private boolean isMoving = false;
+    private double moveStartTime = 0;
+    private static double servoMoveDelay = 300; // ms for servos to reach position
+
     private double previousTime = 0;
 
     public Servo storageL, storageR;
@@ -35,6 +39,8 @@ public class ServoStorage {
 
     /** position: -1 is intaking, 0 is loading, 1 is shooting**/
     public void setPos(int position) {
+        isMoving = true;
+        moveStartTime = storageTimer.milliseconds();
         switch (position) {
             case -1:
                 storageL.setPosition(storageLIntakingPos);
@@ -50,15 +56,17 @@ public class ServoStorage {
                 break;
         }
     }
-
+    public boolean isBusy() {
+        return cycleOn || isMoving;
+    }
     /**
      * cycle will cycle between shooting and loading
      * cycleDelay[0]: delay between loading and shooting pos
      * cycleDelay[1]: delay between shooting and loading pos
     **/
-    public void cycle(boolean on){
-        cycleOn = on;
-        if (!on) {
+    public void cycle(boolean state){
+        cycleOn = state;
+        if (!state) {
             storageL.setPosition(storageLLoadingPos);
             storageR.setPosition(storageRLoadingPos);
             isIntCycle = false;
@@ -68,7 +76,7 @@ public class ServoStorage {
     public void cycle(int balls){
         cycleOn = true;
         isIntCycle = true;
-        cycleCount = 3;
+        cycleCount = balls;
         previousTime = storageTimer.milliseconds();
     }
 
@@ -76,6 +84,10 @@ public class ServoStorage {
     /** returns true if the int cycle finished **/
     public boolean update() {
         boolean justFinished = false;
+        if (isMoving && storageTimer.milliseconds() - moveStartTime >= servoMoveDelay)
+        {
+            isMoving = false;
+        }
         if (cycleOn && !isIntCycle) {
             switch (cycleState) {
                 case 0:
@@ -125,5 +137,4 @@ public class ServoStorage {
 
         return justFinished;
     }
-
 }
