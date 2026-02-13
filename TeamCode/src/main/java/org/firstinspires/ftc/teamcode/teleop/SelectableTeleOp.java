@@ -112,6 +112,8 @@ abstract class BaseTeleop extends OpMode {
     double powerOffset = 0;
     boolean isRobotBusy = false;
     boolean isAutoShooting = false;
+    double autoShootStartTime = 0;
+    boolean hasStartedShootingCycle;
     public static double slowModeMultiplier = 0.3;
 
     // toggles
@@ -285,6 +287,9 @@ abstract class BaseTeleop extends OpMode {
         boolean lt2state = g2.left_trigger > 0.3;
 
         boolean a2wP = a2state && !a2prevState;
+        boolean y2wP = y2state && !y2prevState;
+        boolean x2wP = x2state && !x2prevState;
+        boolean b2wP = b2state && !b2prevState;
         boolean dpu2wP = dpu2state && !dpu2prevState;
         boolean dpd2wP = dpd2state && !dpd2prevState;
         boolean dpr2wP = dpr2state && !dpr2prevState;
@@ -297,6 +302,7 @@ abstract class BaseTeleop extends OpMode {
 
         isRobotBusy = (isAutoDriving || isHoldingPose || isAutoShooting) && !sticksMoved;
         double imuHeading = robotHardware.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+        boolean isStorageBusy = robotStorage.update();
 
         // rumble outtake feedback
         if (robotOuttake.getCurrentPreset().equals("idle")) {gamepad2.stopRumble();}
@@ -373,7 +379,6 @@ abstract class BaseTeleop extends OpMode {
 
         //Storage and intake control
         robotIntake.update();
-        robotStorage.update();
 
         if (ly2 <= -0.3) {robotIntake.run(-0.8);}
         else if(ly2 >0.3 && !isAutoShooting) {robotIntake.run(0.8); robotStorage.setPos(-1);}
@@ -385,37 +390,47 @@ abstract class BaseTeleop extends OpMode {
 
         // outtake preset running
         if (a2wP) {robotOuttake.reset();}
-        else if (y2state)
+        else if (y2wP)
         {
             robotOuttake.run("close");
             gate.setGateState("open");
-            if (robotOuttake.isUpToSpeed()) {robotStorage.cycle(true);}
         }
-        else if (y2prevState) {gate.setGateState("close");}
-        else if (b2state)
+        else if (b2wP)
         {
             robotOuttake.run("far");
             gate.setGateState("open");
-            if(robotOuttake.isUpToSpeed()) {robotStorage.cycle(true);}
         }
-        else if (b2prevState) {gate.setGateState("close");}
-        else if (x2state && !isAutoDriving) {
+        // Auto Shooting **
+        if(isAutoShooting) {
+            if (dpu2wP) {
+                powerOffset += 0.01;
+            } else if (dpd2wP) {
+                powerOffset -= 0.01;
+            }
+            if (a2state) {
+                powerOffset = 0;
+            }
+        }
+        else if (x2wP && !isAutoDriving) {
             isAutoShooting = true;
-            initialPower = poses.getOptimalShooterPowerPercentage(follower.getPose(), true);
+            hasStartedShootingCycle = false;
+            autoShootStartTime = robotHardware.timer.milliseconds();
             ballCamToggle = true;
+            initialPower = poses.getOptimalShooterPowerPercentage(follower.getPose(), true);
             robotOuttake.run(initialPower + powerOffset);
             gate.setGateState("open");
-            if(robotOuttake.isUpToSpeed()){robotStorage.cycle(true);}
-            if (dpu2wP) {powerOffset += 0.01;}
-            else if (dpd2wP) {powerOffset -= 0.01;}
-            if(a2state){powerOffset = 0;}
         }
-        else if (x2prevState) {gate.setGateState("close");}
-        else {
-            if (!isRobotBusy) {
-                robotOuttake.run("idle");
-                robotStorage.cycle(false);
-            }
+        boolean isTimedOut = (robotHardware.timer.milliseconds() - autoShootStartTime) > 1000;
+
+        if (isAutoShooting && !hasStartedShootingCycle && robotOuttake.isUpToSpeed()) {
+            robotStorage.cycle(3);
+            hasStartedShootingCycle = true;
+        }
+        else if(!isStorageBusy && isAutoShooting && (hasStartedShootingCycle || isTimedOut)) {
+
+            gate.setGateState("close");
+            robotOuttake.run("idle");
+            robotStorage.cycle(false);
             isAutoShooting = false;
         }
         if (offToggle) {robotOuttake.run(0);}

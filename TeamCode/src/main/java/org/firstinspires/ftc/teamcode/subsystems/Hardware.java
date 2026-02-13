@@ -1,7 +1,8 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 // motors
-
+import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -22,6 +23,7 @@ public class Hardware {
     public CRServo  storageLeft, storageRight;
     public Servo servoStorageLeft, servoStorageRight;
     public Servo gateServo;
+    public DistanceSensor storageDistanceSensor;
     // Init hardwareMaps
 
     public void initialize(HardwareMap hardwareMap, boolean isPedro, boolean isCRServo) {
@@ -43,6 +45,7 @@ public class Hardware {
         outtakeMotor = hardwareMap.get(DcMotorEx.class, "outtakeMotor");
         gateServo = hardwareMap.get(Servo.class, "gate");
         imu = hardwareMap.get(IMU.class, "imu");
+        storageDistanceSensor = hardwareMap.get(DistanceSensor.class, "storageDistanceSensor");
         if (isCRServo) {
             storageLeft = hardwareMap.get(CRServo.class, "storageLeft");
             storageRight = hardwareMap.get(CRServo.class, "storageRight");
