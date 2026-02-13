@@ -92,9 +92,6 @@ public class RobotAutonFarRed extends OpMode {
                     )
                     .setLinearHeadingInterpolation(poses.startPose.getHeading(), poses.farShootPose.getHeading())
                     .build();
-
-
-
             GotoPPG = follower
                     .pathBuilder()
                     .addPath(
@@ -135,7 +132,6 @@ public class RobotAutonFarRed extends OpMode {
                     .build();
         }
     }
-
     private void log(String caption, Object... text) {
         if (text.length == 1) {
             telemetry.addData(caption, text[0]);
