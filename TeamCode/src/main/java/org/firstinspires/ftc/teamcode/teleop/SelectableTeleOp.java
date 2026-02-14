@@ -111,6 +111,7 @@ abstract class BaseTeleop extends OpMode {
     // Auto shoot
     double initialPower;
     double powerOffset = 0;
+    double angleOffset = 0;
     boolean isRobotBusy = false;
     boolean isAutoShooting = false;
     public static double slowModeMultiplier = 0.3;
@@ -316,7 +317,7 @@ abstract class BaseTeleop extends OpMode {
 
         if (ballCamToggle) {
 
-            double targetHeading = poses.getAngleTowardsGoal(currentPose) - Math.PI - powerOffset;
+            double targetHeading = poses.getAngleTowardsGoal(currentPose) - Math.PI + angleOffset;
 
             double error = MathFunctions.getTurnDirection(follower.getPose().getHeading(), targetHeading)
                     * MathFunctions.getSmallestAngleDifference(follower.getPose().getHeading(), targetHeading);
@@ -338,19 +339,23 @@ abstract class BaseTeleop extends OpMode {
         if (!poses.isRed && x1wP) {
             follower.setPose(PresetPoses.LOCALIZE_POSE_RIGHT);
             powerOffset = 0;
+            angleOffset = 0;
         }
         else if (poses.isRed && x1wP) {
             follower.setPose(PresetPoses.LOCALIZE_POSE_LEFT);
             powerOffset = 0;
+            angleOffset = 0;
         }
 
         if (!poses.isRed && a1wP) {
             follower.setPose(PresetPoses.CLOSE_LOCALIZE_POSE_LEFT);
             powerOffset = 0;
+            angleOffset = 0;
         }
         else if (poses.isRed && a1wP) {
             follower.setPose(PresetPoses.CLOSE_LOCALIZE_POSE_RIGHT);
             powerOffset = 0;
+            angleOffset = 0;
         }
 
         // robot gate toggle (lb2wP)
@@ -404,15 +409,18 @@ abstract class BaseTeleop extends OpMode {
             ballCamToggle = true;
             robotOuttake.run(initialPower + powerOffset);
             gate.setGateState("open");
-            if (follower.getVelocity().getMagnitude() > 5 && Math.abs(follower.getAngularVelocity()) >  1.5){
-                robotStorage.cycle(false);
-            } else {
+            if (Math.abs(follower.getVelocity().getMagnitude()) < 5 && Math.abs(follower.getAngularVelocity()) <  2 && robotOuttake.isUpToSpeed()) {
                 robotStorage.cycle(true);
+            }
+            else {
+                robotStorage.cycle(false);
             }
 
             if(robotOuttake.isUpToSpeed()){robotStorage.cycle(true);robotIntake.run(-1);}
             if (dpu2wP) {powerOffset += 0.01;}
             else if (dpd2wP) {powerOffset -= 0.01;}
+            if(dpr2wP) {angleOffset += Math.toRadians(1);}
+            if(dpl2wP) {angleOffset -= Math.toRadians(1);}
             if(a2state){powerOffset = 0;}
             robotIntake.run(1);
         }
@@ -425,9 +433,6 @@ abstract class BaseTeleop extends OpMode {
             robotOuttake.run(initialPower + powerOffset);
             gate.setGateState("open");
             if(robotOuttake.isUpToSpeed()){robotStorage.cycle(true);robotIntake.run(-1);}
-            if (dpu2wP) {powerOffset += 0.01;}
-            else if (dpd2wP) {powerOffset -= 0.01;}
-            if(a2state){powerOffset = 0;}
             robotIntake.run(1);
         }
         else if (y2prevState) {gate.setGateState("close"); robotIntake.run(0);}
@@ -458,7 +463,7 @@ abstract class BaseTeleop extends OpMode {
             isHoldingPose = false;
         }
 
-        if (!x2state && !y2state && !(ly2 > 0.3) && !(ly2 < -0.3)) {
+        if (!x2state && !y2state && !b2state && !(ly2 > 0.3) && !(ly2 < -0.3)) {
             robotStorage.setPos(0);
             robotStorage.cycle(false);
         }
