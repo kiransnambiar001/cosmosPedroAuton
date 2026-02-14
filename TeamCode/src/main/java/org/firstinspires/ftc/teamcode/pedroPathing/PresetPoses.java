@@ -119,6 +119,7 @@ public class PresetPoses {
             this.closeShootOffLinePose = closeShootOffLinePose.mirror();
             this.hpEndPose = hpEndPose.mirror();
             this.hpStartPose = hpStartPose.mirror();
+            this.leverPose = leverPose.mirror();
             this.leverIntakePose = leverIntakePose.mirror();
             this.leverIntakePose = leverIntakePose.mirror();
             this.leverIntakeCurvePose = leverIntakeCurvePose.mirror();

@@ -117,8 +117,10 @@ abstract class BaseTeleop extends OpMode {
 
     // toggles
     boolean ballCamToggle = false;
+    public static double[] headingPIDFcoefficients = {0.75, 0, 0.025, 0.01};
     PIDFController headingPIDFController = new PIDFController(new PIDFCoefficients(0,0,0,0));
     boolean slowMode = false;
+    public boolean wasMovingStopShooting = false;
     boolean offToggle = false;
 
     // for button wasPressed detection
@@ -233,7 +235,7 @@ abstract class BaseTeleop extends OpMode {
         follower.update();
         robotHardware.imu.resetYaw();
         follower.startTeleOpDrive();
-        headingPIDFController.setCoefficients(follower.constants.coefficientsHeadingPIDF);
+        headingPIDFController.setCoefficients(new PIDFCoefficients(headingPIDFcoefficients[0], headingPIDFcoefficients[1], headingPIDFcoefficients[2], headingPIDFcoefficients[3]));
     }
 
     @SuppressLint("DefaultLocale")
@@ -242,6 +244,7 @@ abstract class BaseTeleop extends OpMode {
         currentPose = follower.getPose();
         Gamepad g1 = g1Manager.asCombinedFTCGamepad(gamepad1);
         Gamepad g2 = g2Manager.asCombinedFTCGamepad(gamepad2);
+        headingPIDFController.setCoefficients(new PIDFCoefficients(headingPIDFcoefficients[0], headingPIDFcoefficients[1], headingPIDFcoefficients[2], headingPIDFcoefficients[3]));
 
 
         //      Gamepad 1 inputs
@@ -320,7 +323,7 @@ abstract class BaseTeleop extends OpMode {
 
             headingPIDFController.updateError(error);
 
-            follower.setTeleOpDrive(ly1, lx1, headingPIDFController.run(), false, fcOffset);
+            follower.setTeleOpDrive(ly1, lx1, headingPIDFController.run(), false, targetHeading+Math.toRadians(180));
 
         }
 
@@ -401,6 +404,14 @@ abstract class BaseTeleop extends OpMode {
             ballCamToggle = true;
             robotOuttake.run(initialPower + powerOffset);
             gate.setGateState("open");
+//            if (follower.getVelocity().getMagnitude() > 3) {
+//                robotStorage.cycle(false);
+//                wasMovingStopShooting = true;
+//            } else if (wasMovingStopShooting) {
+//                robotStorage.cycle(true);
+//                wasMovingStopShooting = false;
+//            }
+
             if(robotOuttake.isUpToSpeed()){robotStorage.cycle(true);robotIntake.run(-1);}
             if (dpu2wP) {powerOffset += 0.01;}
             else if (dpd2wP) {powerOffset -= 0.01;}
@@ -463,6 +474,8 @@ abstract class BaseTeleop extends OpMode {
         log("Target Velocity (tps)", robotOuttake.getTargetTps());
         log("Actual Velocity (tps)", robotHardware.outtakeMotor.getVelocity());
         log("Shooting Mode", shootingMode);
+        log("X&Y Magnitude", follower.getVelocity().getMagnitude());
+        log("Angular Velocity", follower.getAngularVelocity());
         panelsTelemetry.update(telemetry);
         follower.update();
         draw();

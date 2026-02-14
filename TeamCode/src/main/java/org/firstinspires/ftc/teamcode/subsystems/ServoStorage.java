@@ -11,11 +11,11 @@ public class ServoStorage {
     //private boolean state = false;
 
     private static double storageLShootingPos = 0;
-    private static double storageLLoadingPos = 0.55;
-    private static double storageLIntakingPos = 0.70;
+    private static double storageLLoadingPos = 0.5;
+    private static double storageLIntakingPos = 0.775;
     private static double storageRShootingPos = 1;
-    private static double storageRLoadingPos = 0.175;
-    private static double storageRIntakingPos = 0;
+    private static double storageRLoadingPos = 0.3;
+    private static double storageRIntakingPos = 0.025;
     private ElapsedTime storageTimer = new ElapsedTime();
     public static double[] cycleDelay = {650, 650};
     private int cycleState = 0;
