@@ -40,10 +40,11 @@ public class SelectableAutonomous extends SelectableOpMode {
                 l.add("FAR SIDE BLUE - 2 Pair", RobotAutonFarBlue::new);
                 l.add("FAR SIDE RED - 2 Pair", RobotAutonFarRed::new);
             });
-            s.folder("3 or 4 Pair", l -> {
+            s.folder("3 Pair", l -> {
                 l.add("GOAL SIDE BLUE - 3 Pair", RobotAutonGoalSideBlue3Pair::new);
                 l.add("GOAL SIDE RED - 3 Pair", RobotAutonGoalSideRed3Pair::new);
-
+            });
+            s.folder("4 Pair", l -> {
                 l.add("GOAL SIDE BLUE - 4 Pair Gate", RobotAutonGoalSideBlue4PairGate::new);
                 l.add("GOAL SIDE RED - 4 Pair Gate", RobotAutonGoalSideRed4PairGate::new);
 

@@ -205,8 +205,7 @@ public class RobotAutonFarRed extends OpMode {
     public void loop() {
         currentPose = follower.getPose();
         // update subsystems
-        updatePath(outtake.update(), intake.update());
-        storage.update();
+        updatePath(outtake.update(), intake.update(), storage.update());
 
 
 
@@ -232,7 +231,7 @@ public class RobotAutonFarRed extends OpMode {
 
 
     // shootpreloaded-->gotoppg-->pickupppg-->shootppg-->park
-    public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished) {
+    public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished, boolean storageRFTFinished) {
         switch (pathState) {
             case 0:
                 outtake.run(0.5);
@@ -283,17 +282,23 @@ public class RobotAutonFarRed extends OpMode {
                         follower.holdPoint(paths.poses.farShootPose);
                         previousTime = hardware.timer.milliseconds();
                         gate.setGateState("open");
-                        intake.run(1); storage.cycle(3);
+                        intake.run(1); storage.cycle(true);
                         shooting = true;
                         rampingUp = false;
                     }
                     else if (shooting) {
-                        if (!storage.isBusy()) {
+                        if ((hardware.timer.milliseconds() >= previousTime + 7250)) {
                             gate.setGateState("close");
                             rampingUp = false; shooting = false;
                             pathState = nextState;
                             intake.run(0); storage.cycle(false);
                             follower.breakFollowing();
+                        }
+                        else if (Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
+                            intake.run(1); storage.cycle(true);
+                        }
+                        else {
+                            intake.run(0); storage.cycle(false);
                         }
                     }
                 }
@@ -304,20 +309,22 @@ public class RobotAutonFarRed extends OpMode {
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         previousTime = hardware.timer.milliseconds();
                         gate.setGateState("open");
-                        intake.run(1); storage.cycle(3);
+                        intake.run(1); storage.cycle(true);
                         shooting = true;
                         rampingUp = false;
                     }
                     else if (shooting) {
-                        if (!storage.isBusy()) {
+                        if ((hardware.timer.milliseconds() >= previousTime + 100000 )) {
                             gate.setGateState("close");
-                            shooting = false;
-
-                            intake.run(0);
-                            storage.cycle(false);
-
+                            rampingUp = false; shooting = false;
                             pathState = nextState;
-                            follower.breakFollowing();
+                            intake.run(0); storage.cycle(false);
+                        }
+                        else if (Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
+                            intake.run(1); storage.cycle(true);
+                        }
+                        else {
+                            intake.run(0); storage.cycle(false);
                         }
                     }
                 }
@@ -325,17 +332,17 @@ public class RobotAutonFarRed extends OpMode {
 
             case 12: // shoot
                 if (!follower.isBusy()) {
-                    if (!storage.isBusy() && !rampingUp && !shooting) {rampingUp = true; outtake.run(0.53);}
+                    if (!rampingUp && !shooting) {rampingUp = true; outtake.run(0.53);}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         follower.holdPoint(paths.poses.farShootPose);
                         previousTime = hardware.timer.milliseconds();
                         gate.setGateState("open");
-                        intake.run(1); storage.cycle(3);
+                        intake.run(1); storage.cycle(true);
                         shooting = true;
                         rampingUp = false;
                     }
                     else if (shooting) {
-                        if (!storage.isBusy()) {
+                        if ((hardware.timer.milliseconds() >= previousTime + 7250)) {
                             gate.setGateState("close");
                             rampingUp = false; shooting = false;
                             pathState = nextState;
