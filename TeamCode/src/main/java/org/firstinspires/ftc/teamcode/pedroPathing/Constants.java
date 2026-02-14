@@ -43,7 +43,7 @@ public class Constants {
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD);
 
     public static ThreeWheelConstants localizerConstants = new ThreeWheelConstants()
-            .forwardTicksToInches(0.0030181211171833945833)
+            .forwardTicksToInches(0.00303159999713800063)
             .strafeTicksToInches(0.00299472692945746415)
             .turnTicksToInches(0.00269519038878365556)
             .leftPodY(5.25) // offset from center of rotation INCHES

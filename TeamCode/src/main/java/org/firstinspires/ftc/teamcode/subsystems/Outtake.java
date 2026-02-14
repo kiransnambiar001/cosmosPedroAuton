@@ -2,6 +2,9 @@ package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.teamcode.pedroPathing.PresetPoses;
+
 @Configurable
 public class Outtake {
 
@@ -26,6 +29,8 @@ public class Outtake {
     public Outtake(Hardware hardware, double p, double i, double d, double f) {
         hardware.outtakeMotor.setVelocityPIDFCoefficients(p,i,d,f);
         robotHardware = hardware;
+        //PresetPoses poses;
+        //Pose goalPose;
         timer = robotHardware.timer;
     }
     public void tuneActivePreset(double tuneAmount) {
@@ -40,7 +45,9 @@ public class Outtake {
     /** power percentage from 0.0-1.0, and the function turns the percentage into tps**/
     public void run(double power)
     {
-        double targetRpm = power * Hardware.OUTTAKE_MAX_RPM;
+        //ouble distance = currentPose.distanceFrom(goalPose) + powerDistOffset;
+        //double dampingFactor = 1.0- (distance * 0.002);
+        double targetRpm = power   * Hardware.OUTTAKE_MAX_RPM;
         targetTps = (targetRpm / 60.0) * Hardware.OUTTAKE_TPR;
         robotHardware.outtakeMotor.setVelocity(targetTps);
 

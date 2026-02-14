@@ -148,8 +148,9 @@ public class RobotAutonGoalSideRed3Pair extends OpMode {
             ShootPGP = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(
+                            new BezierCurve(
                                     poses.pgpEndPose,
+                                    poses.closeShootPgpEndMidCurvePose,
                                     poses.closeShootOffLinePose
                             )
                     )

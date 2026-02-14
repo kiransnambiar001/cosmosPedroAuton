@@ -234,7 +234,7 @@ public class RobotAutonFarRed extends OpMode {
     public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished, boolean storageRFTFinished) {
         switch (pathState) {
             case 0:
-                outtake.run(0.5);
+                outtake.run(paths.poses.getOptimalShooterPowerPercentage(follower.getPose(), true));
                 follower.followPath(paths.ShootPreloaded, true);
                 nextState = 1;
                 pathState = 10; // shoot
@@ -263,7 +263,7 @@ public class RobotAutonFarRed extends OpMode {
                     storage.setPos(0);
                     follower.followPath(paths.ShootPPG);
                     nextState = 4;
-                    pathState = 12; // shoot
+                    pathState = 10; // shoot
                 }
                 break;
 
@@ -276,8 +276,10 @@ public class RobotAutonFarRed extends OpMode {
                 break;
 
             case 10: // shoot
+
+            case 12:
                 if (!follower.isBusy()) {
-                    if (!rampingUp && !shooting) {rampingUp = true; outtake.run(0.5);}
+                    if (!rampingUp && !shooting) {rampingUp = true; outtake.run(paths.poses.getOptimalShooterPowerPercentage(follower.getPose(), true));}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         follower.holdPoint(paths.poses.farShootPose);
                         previousTime = hardware.timer.milliseconds();
@@ -305,7 +307,7 @@ public class RobotAutonFarRed extends OpMode {
                 break;
             case 11: // shoot
                 if (!follower.isBusy()) {
-                    if (!rampingUp && !shooting) {rampingUp = true;}
+                    if (!rampingUp && !shooting) {rampingUp = true; outtake.run(paths.poses.getOptimalShooterPowerPercentage(follower.getPose(), true));}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         previousTime = hardware.timer.milliseconds();
                         gate.setGateState("open");
@@ -319,35 +321,6 @@ public class RobotAutonFarRed extends OpMode {
                             rampingUp = false; shooting = false;
                             pathState = nextState;
                             intake.run(0); storage.cycle(false);
-                        }
-                        else if (Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
-                            intake.run(1); storage.cycle(true);
-                        }
-                        else {
-                            intake.run(0); storage.cycle(false);
-                        }
-                    }
-                }
-                break;
-
-            case 12: // shoot
-                if (!follower.isBusy()) {
-                    if (!rampingUp && !shooting) {rampingUp = true; outtake.run(0.53);}
-                    else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
-                        follower.holdPoint(paths.poses.farShootPose);
-                        previousTime = hardware.timer.milliseconds();
-                        gate.setGateState("open");
-                        intake.run(1); storage.cycle(true);
-                        shooting = true;
-                        rampingUp = false;
-                    }
-                    else if (shooting) {
-                        if ((hardware.timer.milliseconds() >= previousTime + 7250)) {
-                            gate.setGateState("close");
-                            rampingUp = false; shooting = false;
-                            pathState = nextState;
-                            intake.run(0); storage.cycle(false);
-                            follower.breakFollowing();
                         }
                         else if (Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                             intake.run(1); storage.cycle(true);

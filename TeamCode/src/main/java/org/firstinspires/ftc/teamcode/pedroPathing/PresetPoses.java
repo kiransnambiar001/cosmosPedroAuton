@@ -31,9 +31,10 @@ public class PresetPoses {
     // robot poses
     public static double shootAngle = 317.66; // original 320
     public static double offLineShootAngle = 337.8;
-    public static double farShootAngle = 290;
+    public static double farShootAngle = 295;
     public static double powerDistOffset = 2;
-//    public static double farShootAngle = 312.73;
+    public static double pwr = 0.675;
+    //    public static double farShootAngle = 312.73;
     public boolean isRed = true;
     public static Pose lastAutonPosition;
 
@@ -42,7 +43,7 @@ public class PresetPoses {
     public Pose closeShootPose = new Pose(50, 95, Math.toRadians(shootAngle));
     public Pose closeShootOffLinePose = new Pose(60.590434782608696, 118.94347826086954, Math.toRadians(offLineShootAngle));
     public Pose farShootPose = new Pose(56.000, 13.0750, Math.toRadians(farShootAngle));;
-//    public Pose farShootPose = new Pose(62.09304347826088,82.63043478260869, Math.toRadians(farShootAngle));
+    //    public Pose farShootPose = new Pose(62.09304347826088,82.63043478260869, Math.toRadians(farShootAngle));
     public Pose gppStartPose = new Pose(50, 83.33217391304348, Math.toRadians(180)); // org y=83.750
     public Pose closeShootGppStartMidCurvePose = new Pose(61.918, 94.181);
     public Pose gppEndPose = new Pose(15.001757469244293, 83.33217391304348, Math.toRadians(180)); // org y=83.750
@@ -93,7 +94,7 @@ public class PresetPoses {
             {80.48, 0.5},
             {90.8514, 0.525},
             {112.78, 0.595},
-            {137.9374, 0.68}
+            {137.9374, pwr}
     };
 
     public PresetPoses(Pose startPose, boolean isRed) {
@@ -125,7 +126,7 @@ public class PresetPoses {
             this.leverIntakeCurvePose = leverIntakeCurvePose.mirror();
         } else {this.startPose = startPose;}
 
-            // power table
+        // power table
     }
 
     public Pose findClosestLaunchPose(Pose currentPose) {

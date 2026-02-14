@@ -193,7 +193,7 @@ public class RobotAutonGoalSideRedPreloaded extends OpMode {
                 outtake.run(0.445);
                 follower.followPath(paths.ShootPreloaded);
                 nextState = 1;
-                pathState = 10; // shoot
+                pathState = 11; // shoot
                 break;
 
             case 1:
