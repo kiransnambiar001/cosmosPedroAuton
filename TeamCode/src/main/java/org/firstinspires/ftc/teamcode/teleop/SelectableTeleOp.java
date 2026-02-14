@@ -406,10 +406,8 @@ abstract class BaseTeleop extends OpMode {
             gate.setGateState("open");
             if (follower.getVelocity().getMagnitude() > 5 && Math.abs(follower.getAngularVelocity()) >  1.5){
                 robotStorage.cycle(false);
-                wasMovingStopShooting = true;
-            } else if (wasMovingStopShooting) {
+            } else {
                 robotStorage.cycle(true);
-                wasMovingStopShooting = false;
             }
 
             if(robotOuttake.isUpToSpeed()){robotStorage.cycle(true);robotIntake.run(-1);}
