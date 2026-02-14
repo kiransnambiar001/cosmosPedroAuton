@@ -404,13 +404,13 @@ abstract class BaseTeleop extends OpMode {
             ballCamToggle = true;
             robotOuttake.run(initialPower + powerOffset);
             gate.setGateState("open");
-//            if (follower.getVelocity().getMagnitude() > 3 && follower.getAngularVelocity().getMagnitude() >  4{
-//                robotStorage.cycle(false);
-//                wasMovingStopShooting = true;
-//            } else if (wasMovingStopShooting) {
-//                robotStorage.cycle(true);
-//                wasMovingStopShooting = false;
-//            }
+            if (follower.getVelocity().getMagnitude() > 5 && Math.abs(follower.getAngularVelocity()) >  1.5){
+                robotStorage.cycle(false);
+                wasMovingStopShooting = true;
+            } else if (wasMovingStopShooting) {
+                robotStorage.cycle(true);
+                wasMovingStopShooting = false;
+            }
 
             if(robotOuttake.isUpToSpeed()){robotStorage.cycle(true);robotIntake.run(-1);}
             if (dpu2wP) {powerOffset += 0.01;}
