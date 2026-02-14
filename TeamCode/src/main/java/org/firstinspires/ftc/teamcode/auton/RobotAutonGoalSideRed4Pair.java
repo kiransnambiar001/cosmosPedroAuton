@@ -13,16 +13,10 @@ import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.pedropathing.paths.HeadingInterpolator;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.PresetPoses;
-import org.firstinspires.ftc.teamcode.subsystems.CRServoStorage;
 import org.firstinspires.ftc.teamcode.subsystems.Drawing;
 import org.firstinspires.ftc.teamcode.subsystems.FileController;
 import org.firstinspires.ftc.teamcode.subsystems.Gate;
@@ -33,17 +27,19 @@ import org.firstinspires.ftc.teamcode.subsystems.ServoStorage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
-@Autonomous(name="GOAL SIDE RED - Gate Auton", group="Autonomous", preselectTeleOp = "SELECTABLE - PedroPathingTeleOp")
+@Autonomous(name="GOAL SIDE RED - 4 Pair", group="Autonomous", preselectTeleOp = "SELECTABLE - PedroPathingTeleOp")
 @Configurable // for Panels
 @SuppressWarnings("FieldCanBeLocal") // android studio bugging
-public class RobotAutonGoalSideRed3PairGate extends OpMode {
+public class RobotAutonGoalSideRed4Pair extends OpMode {
 
     public Hardware hardware;
     public Outtake outtake;
     public Intake intake;
     public Gate gate;
     public ServoStorage storage;
+    private Supplier<PathChain> toParkPosePath;
 
 
     private final ElapsedTime timer = new ElapsedTime(); // runtime
@@ -79,6 +75,9 @@ public class RobotAutonGoalSideRed3PairGate extends OpMode {
         public PathChain GotoGPP;
         public PathChain PickupGPP;
         public PathChain ShootGPP;
+        public PathChain GotoPPG;
+        public PathChain PickupPPG;
+        public PathChain ShootPPG;
         public PathChain GotoLever;
 
         private Pose startPose = new Pose(28.5, 136, Math.toRadians(270));
@@ -140,14 +139,6 @@ public class RobotAutonGoalSideRed3PairGate extends OpMode {
                             new BezierLine(poses.pgpStartPose, poses.pgpEndPose)
                     )
                     .setTangentHeadingInterpolation()
-                    .addPath(
-                            new BezierCurve(
-                                    poses.pgpEndPose,
-                                    poses.leverPoseppgEndPoseCurvePose,
-                                    poses.leverPose
-                            )
-                    )
-                    .setLinearHeadingInterpolation(poses.pgpEndPose.getHeading(), poses.leverPose.getHeading())
                     .build();
 
 
@@ -155,11 +146,40 @@ public class RobotAutonGoalSideRed3PairGate extends OpMode {
                     .pathBuilder()
                     .addPath(
                             new BezierLine(
-                                    poses.leverPose,
-                                    poses.closeShootOffLinePose
+                                    poses.pgpEndPose,
+                                    poses.closeShootPose
                             )
                     )
-                    .setLinearHeadingInterpolation(poses.leverPose.getHeading(), poses.closeShootOffLinePose.getHeading())
+                    .setLinearHeadingInterpolation(poses.pgpEndPose.getHeading(), poses.closeShootPose.getHeading())
+                    .build();
+
+            GotoPPG = follower
+                    .pathBuilder()
+                    .addPath(
+                            new BezierLine(
+                                    poses.closeShootPose,
+                                    poses.ppgStartPose
+                            )
+                    )
+                    .setLinearHeadingInterpolation(poses.closeShootPose.getHeading(), poses.ppgStartPose.getHeading())
+                    .build();
+
+
+            PickupPPG = follower
+                    .pathBuilder()
+                    .addPath(
+                            new BezierLine(poses.ppgStartPose, poses.ppgEndPose)
+                    )
+                    .setTangentHeadingInterpolation()
+                    .build();
+
+
+            ShootPPG = follower
+                    .pathBuilder()
+                    .addPath(
+                            new BezierLine(poses.ppgEndPose, poses.closeShootOffLinePose)
+                    )
+                    .setLinearHeadingInterpolation(poses.ppgEndPose.getHeading(), poses.closeShootOffLinePose.getHeading())
                     .build();
 
 
@@ -220,6 +240,12 @@ public class RobotAutonGoalSideRed3PairGate extends OpMode {
 
         Drawing.init();
 
+
+        toParkPosePath = () -> follower.pathBuilder()
+                .addPath(new Path(new BezierLine(follower::getPose, paths.poses.closeShootOffLinePose)))
+                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, paths.poses.closeShootOffLinePose.getHeading(), 0.8))
+                .build();
+
         drawOnlyCurrent();
         log("Status", "INITIALIZED");
         panelsTelemetry.update(telemetry);
@@ -242,6 +268,7 @@ public class RobotAutonGoalSideRed3PairGate extends OpMode {
         currentPose = follower.getPose();
         // update subsystems
         updatePath(outtake.update(), intake.update(), storage.update());
+
 
         // telemetry
         log("Status", "RUNNING");
@@ -269,6 +296,8 @@ public class RobotAutonGoalSideRed3PairGate extends OpMode {
     // shootpreloaded-->gotoppg-->pickupppg-->shootppg-->park
     public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished, boolean storageRFTFinished) {
         switch (pathState) {
+            case -2:
+                follower.followPath(toParkPosePath.get());
             case 0:
                 outtake.run("close");
                 follower.followPath(paths.ShootPreloaded);
@@ -278,56 +307,71 @@ public class RobotAutonGoalSideRed3PairGate extends OpMode {
 
             case 1:
                 if (follower.getCurrentTValue() > 0.97) {
-                    follower.followPath(paths.GotoPGP);
+                    follower.followPath(paths.GotoGPP);
+                    intake.run(1); storage.setPos(-1);
                     pathState = 2;
                 }
                 break;
 
             case 2:
                 if (follower.getCurrentTValue() > 0.97) {
-                    follower.followPath(paths.PickupPGP);
+                    follower.followPath(paths.PickupGPP);
                     gate.setGateState("close");
-                    intake.run(1); storage.setPos(-1);
                     pathState = 3;
-                    previousTime = timer.milliseconds();
                 }
                 break;
+
             case 3:
-                if (timer.milliseconds() + 3000 <= previousTime) {
-                    pathState = 4;
-                }
-            case 4:
                 if (follower.getCurrentTValue() > 0.97) {
-                    intake.run(0); storage.setPos(0);
-                    follower.followPath(paths.ShootPGP);
-                    nextState = 5;
+                    follower.followPath(paths.ShootGPP);
+                    nextState = 4;
                     pathState = 10; // shoot
                 }
                 break;
 
+            case 4:
+                if (follower.getCurrentTValue() > 0.97) {
+                    follower.followPath(paths.GotoPGP);
+                    outtake.run(0.445);
+                    intake.run(1); storage.setPos(-1);
+                    pathState = 5;
+                }
             case 5:
                 if (follower.getCurrentTValue() > 0.97) {
-                    follower.followPath(paths.GotoGPP);
-                    outtake.run(0.445);
+                    follower.followPath(paths.PickupPGP);
+                    gate.setGateState("close");
                     pathState = 6;
                 }
+                break;
             case 6:
                 if (follower.getCurrentTValue() > 0.97) {
-                    follower.followPath(paths.PickupGPP);
-                    gate.setGateState("close");
-                    intake.run(1); storage.setPos(-1);
-                    pathState = 7;
+                    follower.followPath(paths.ShootPGP);
+                    nextState = 7;
+                    pathState = 11; // shoot
                 }
                 break;
             case 7:
                 if (follower.getCurrentTValue() > 0.97) {
-                    intake.run(0); storage.setPos(0);
-                    follower.followPath(paths.ShootGPP);
-                    nextState = 8;
+                    follower.followPath(paths.GotoPPG);
+                    outtake.run(0.445);
+                    intake.run(1); storage.setPos(-1);
+                    pathState = 5;
+                }
+            case 8:
+                if (follower.getCurrentTValue() > 0.97) {
+                    follower.followPath(paths.PickupPPG);
+                    gate.setGateState("close");
+                    pathState = 6;
+                }
+                break;
+            case 9:
+                if (follower.getCurrentTValue() > 0.97) {
+                    follower.followPath(paths.PickupPPG);
+                    nextState = 7;
                     pathState = 11; // shoot
                 }
                 break;
-            case 8:
+            case 12:
                 if(follower.getCurrentTValue() > 0.97) {
                     pathState = -1;
                     outtake.run(0);
@@ -371,11 +415,11 @@ public class RobotAutonGoalSideRed3PairGate extends OpMode {
 
             case 10: // shoot
                 if (follower.getCurrentTValue() > 0.97) {
-                    if (!rampingUp && !shooting) {rampingUp = true;}
+                    if (!rampingUp && !shooting) {rampingUp = true; intake.run(0); storage.setPos(0);}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         previousTime = hardware.timer.milliseconds();
                         gate.setGateState("open");
-                        intake.run(1); storage.cycle(3);
+                        intake.run(1); storage.cycle(4);
                         shooting = true;
                         rampingUp = false;
                     }
@@ -393,7 +437,7 @@ public class RobotAutonGoalSideRed3PairGate extends OpMode {
                 break;
             case 11: // shoot
                 if (follower.getCurrentTValue() > 0.97) {
-                    if (!rampingUp && !shooting) {rampingUp = true;}
+                    if (!rampingUp && !shooting) {rampingUp = true; intake.run(0); storage.setPos(0);}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         previousTime = hardware.timer.milliseconds();
                         gate.setGateState("open");

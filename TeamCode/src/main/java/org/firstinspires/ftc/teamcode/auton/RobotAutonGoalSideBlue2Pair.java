@@ -83,7 +83,7 @@ public class RobotAutonGoalSideBlue2Pair extends OpMode {
         public PathChain GotoLever;
 
         private Pose startPose = new Pose(28.5, 136, Math.toRadians(270));
-        private PresetPoses poses = new PresetPoses(startPose, false);
+        private PresetPoses poses = new PresetPoses(startPose, true);
 
 
         public Paths(Follower follower) {
@@ -237,8 +237,7 @@ public class RobotAutonGoalSideBlue2Pair extends OpMode {
     public void loop() {
         currentPose = follower.getPose();
         // update subsystems
-        updatePath(outtake.update(), intake.update());
-        storage.update();
+        updatePath(outtake.update(), intake.update(), storage.update());
 
 
 
@@ -268,7 +267,7 @@ public class RobotAutonGoalSideBlue2Pair extends OpMode {
     }
 
     // shootpreloaded-->gotoppg-->pickupppg-->shootppg-->park
-    public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished) {
+    public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished, boolean storageRFTFinished) {
         switch (pathState) {
             case 0:
                 follower.followPath(paths.ShootPreloaded);
@@ -347,14 +346,15 @@ public class RobotAutonGoalSideBlue2Pair extends OpMode {
                     if (!rampingUp && !shooting) {outtake.run("close"); rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         gate.setGateState("open");
-                        intake.runForTime(1, 7000); storage.cycle(true);
+                        intake.run(0.8); storage.cycle(5);
                         shooting = true;
                         rampingUp = false;
                     }
-                    else if (shooting && (intakeRFTFinished)) {
+                    else if (shooting && (storageRFTFinished)) {
                         gate.setGateState("close");
                         storage.cycle(false);
                         rampingUp = false; shooting = false;
+                        intake.run(0);
                         outtake.run("idle");
                         pathState = nextState;
                     }

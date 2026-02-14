@@ -24,8 +24,16 @@ public class Intake {
     }
 
     public void run(double power) {
+        if (0.8 <= power && power <= 1) {
+            robotHardware.intakeMotor.setPower(0.8);
+        }
+        else if (-1 <= power && power <= -0.8) {
+            robotHardware.intakeMotor.setPower(-0.8);
+        }
+        else {
+            robotHardware.intakeMotor.setPower(power);
+        }
         isTimedRunActive = false;
-        robotHardware.intakeMotor.setPower(power);
     }
 
     public boolean update()

@@ -31,9 +31,9 @@ public class PresetPoses {
     // robot poses
     public static double shootAngle = 317.66; // original 320
     public static double offLineShootAngle = 337.8;
-//    public static double farShootAngle = 290;
+    public static double farShootAngle = 290;
     public static double powerDistOffset = 2;
-    public static double farShootAngle = 312.73;
+//    public static double farShootAngle = 312.73;
     public boolean isRed = true;
     public static Pose lastAutonPosition;
 
@@ -41,11 +41,11 @@ public class PresetPoses {
     public Pose goalPose = new Pose(9.168695652173914, 139.9304347826087);
     public Pose closeShootPose = new Pose(50, 95, Math.toRadians(shootAngle));
     public Pose closeShootOffLinePose = new Pose(60.590434782608696, 118.94347826086954, Math.toRadians(offLineShootAngle));
-//    public Pose farShootPose = new Pose(56.000, 13.0750, Math.toRadians(farShootAngle));;
-    public Pose farShootPose = new Pose(62.09304347826088,82.63043478260869, Math.toRadians(farShootAngle));
-    public Pose gppStartPose = new Pose(50, 72.06260869565217, Math.toRadians(180)); // org y=83.750
+    public Pose farShootPose = new Pose(56.000, 13.0750, Math.toRadians(farShootAngle));;
+//    public Pose farShootPose = new Pose(62.09304347826088,82.63043478260869, Math.toRadians(farShootAngle));
+    public Pose gppStartPose = new Pose(50, 83.33217391304348, Math.toRadians(180)); // org y=83.750
     public Pose closeShootGppStartMidCurvePose = new Pose(61.918, 94.181);
-    public Pose gppEndPose = new Pose(15.001757469244293, 72.06260869565217, Math.toRadians(180)); // org y=83.750
+    public Pose gppEndPose = new Pose(15.001757469244293, 83.33217391304348, Math.toRadians(180)); // org y=83.750
     public Pose pgpStartPose = new Pose(48.000, 59.84000000000002, Math.toRadians(180)); // org y=701
     public Pose closeShootPgpEndMidCurvePose = new Pose(54, 59);
     public Pose pgpEndPose = new Pose(9.419130434782593, 59.84000000000002, Math.toRadians(180)); // org y=70 // org x=20
@@ -55,8 +55,10 @@ public class PresetPoses {
     public Pose farShootPpgStartMidCurvePose = new Pose(52.74173913043478, 43.31478260869564);
     public Pose ppgEndPose = new Pose(9.419130434782593, 35.54782608695653, Math.toRadians(180));
     public Pose leverPoseppgEndPoseCurvePose = new Pose(57.50782608695652,52.549565217391304);
-    public Pose leverPose = new Pose(56,36,Math.toRadians(135));
-    public Pose parkPose = new Pose(60.5904347826087, 49.823478260869564, Math.toRadians(90));
+    public Pose leverPose = new Pose(15.777391304347825,69.87130434782608, Math.toRadians(90));
+    public Pose leverIntakeCurvePose = new Pose(18.77652173913043, 61.43826086956523);
+    public Pose leverIntakePose = new Pose(8.667826086956525, 51.02956521739131, Math.toRadians(90));
+    public Pose parkPose = new Pose(36.563478260869566, 8.765217391304345, Math.toRadians(90));
     public Pose hpStartPose = new Pose(26.280869565217387, 13.25999999999999, Math.toRadians(180));
     public Pose hpEndPose = new Pose(9.503043478260869, 13.25999999999999, Math.toRadians(180));
     public Pose closeMoveOutOfWayPose = new Pose(55, 134.17565, Math.toRadians(270));
@@ -117,6 +119,9 @@ public class PresetPoses {
             this.closeShootOffLinePose = closeShootOffLinePose.mirror();
             this.hpEndPose = hpEndPose.mirror();
             this.hpStartPose = hpStartPose.mirror();
+            this.leverIntakePose = leverIntakePose.mirror();
+            this.leverIntakePose = leverIntakePose.mirror();
+            this.leverIntakeCurvePose = leverIntakeCurvePose.mirror();
         } else {this.startPose = startPose;}
 
             // power table

@@ -205,8 +205,7 @@ public class RobotAutonFarBlue extends OpMode {
     public void loop() {
         currentPose = follower.getPose();
         // update subsystems
-        updatePath(outtake.update(), intake.update());
-        storage.update();
+        updatePath(outtake.update(), intake.update(), storage.update());
 
 
 
@@ -232,7 +231,7 @@ public class RobotAutonFarBlue extends OpMode {
 
 
     // shootpreloaded-->gotoppg-->pickupppg-->shootppg-->park
-    public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished) {
+    public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished, boolean storageRFTFinished) {
         switch (pathState) {
             case 0:
                 outtake.run(0.5);

@@ -376,9 +376,10 @@ abstract class BaseTeleop extends OpMode {
         robotIntake.update();
         robotStorage.update();
 
-        if (ly2 <= -0.3) {robotIntake.run(-0.8);}
-        else if(ly2 >0.3) {robotIntake.run(0.8); robotStorage.setPos(-1);}
-        else {
+        if (Math.abs(ly2) > 0.3) {
+            robotIntake.run(ly2 <= -0.3 ? -0.8 : 0.8); // handles intake direction
+            robotStorage.setPos(-1);
+        } else {
             robotIntake.run(0);
         }
 
@@ -387,19 +388,26 @@ abstract class BaseTeleop extends OpMode {
         else if (x2state)
         {
             shootingMode = "CONSTANT (CLOSE)";
+            robotIntake.run(1);
             robotOuttake.run("close");
             gate.setGateState("open");
             if (robotOuttake.isUpToSpeed()) {robotStorage.cycle(true);}
         }
-        else if (x2prevState) {gate.setGateState("close");}
-        else if (b2state)
-        {
-            shootingMode = "CONSTANT (FAR)";
-            robotOuttake.run("far");
+        else if (x2prevState) {gate.setGateState("close"); robotIntake.run(0);}
+        else if (b2state && !isAutoDriving) {
+            shootingMode = "VARIABLE (Ball Cam)";
+            isAutoShooting = true;
+            initialPower = poses.getOptimalShooterPowerPercentage(follower.getPose(), true);
+            ballCamToggle = true;
+            robotOuttake.run(initialPower + powerOffset);
             gate.setGateState("open");
-            if(robotOuttake.isUpToSpeed()) {robotStorage.cycle(true);}
+            if(robotOuttake.isUpToSpeed()){robotStorage.cycle(true);robotIntake.run(-1);}
+            if (dpu2wP) {powerOffset += 0.01;}
+            else if (dpd2wP) {powerOffset -= 0.01;}
+            if(a2state){powerOffset = 0;}
+            robotIntake.run(1);
         }
-        else if (b2prevState) {gate.setGateState("close");}
+        else if (b2prevState) {gate.setGateState("close"); robotIntake.run(0); ballCamToggle = false;}
         else if (y2state && !isAutoDriving) {
             shootingMode = "VARIABLE";
             isAutoShooting = true;
@@ -407,12 +415,13 @@ abstract class BaseTeleop extends OpMode {
 //            ballCamToggle = true;
             robotOuttake.run(initialPower + powerOffset);
             gate.setGateState("open");
-            if(robotOuttake.isUpToSpeed()){robotStorage.cycle(true);}
+            if(robotOuttake.isUpToSpeed()){robotStorage.cycle(true);robotIntake.run(-1);}
             if (dpu2wP) {powerOffset += 0.01;}
             else if (dpd2wP) {powerOffset -= 0.01;}
             if(a2state){powerOffset = 0;}
+            robotIntake.run(1);
         }
-        else if (y2prevState) {gate.setGateState("close");}
+        else if (y2prevState) {gate.setGateState("close"); robotIntake.run(0);}
         else {
             if (!isRobotBusy && !x2state && !b2state && !y2state && !(ly2 > 0.3)) {
                 robotOuttake.run("idle");
@@ -440,7 +449,7 @@ abstract class BaseTeleop extends OpMode {
             isHoldingPose = false;
         }
 
-        if (!x2state && !y2state && !(ly2 > 0.3)) {
+        if (!x2state && !y2state && !(ly2 > 0.3) && !(ly2 < -0.3)) {
             robotStorage.setPos(0);
             robotStorage.cycle(false);
         }

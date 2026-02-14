@@ -84,23 +84,10 @@ public class RobotAutonGoalSideRedPreloaded extends OpMode {
             ShootPreloaded = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(poses.startPose, poses.closeShootPose)
+                            new BezierLine(poses.startPose, poses.closeShootOffLinePose)
                     )
-                    .setLinearHeadingInterpolation(startPose.getHeading(), poses.closeShootPose.getHeading())
+                    .setLinearHeadingInterpolation(startPose.getHeading(), poses.closeShootOffLinePose.getHeading())
                     .build();
-
-
-            MoveOutOfWay = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(
-                                    poses.closeShootPose,
-                                    poses.closeMoveOutOfWayPose
-                            )
-                    )
-                    .setLinearHeadingInterpolation(poses.closeShootPose.getHeading(), poses.gppStartPose.getHeading())
-                    .build();
-
         }
     }
 
@@ -203,6 +190,7 @@ public class RobotAutonGoalSideRedPreloaded extends OpMode {
     public void updatePath(boolean outtakeRFTFinished, boolean intakeRFTFinished) {
         switch (pathState) {
             case 0:
+                outtake.run(0.445);
                 follower.followPath(paths.ShootPreloaded);
                 nextState = 1;
                 pathState = 10; // shoot
@@ -210,7 +198,6 @@ public class RobotAutonGoalSideRedPreloaded extends OpMode {
 
             case 1:
                 if (!follower.isBusy()) {
-                    follower.followPath(paths.MoveOutOfWay);
                     pathState = -1;
                 }
                 break;
@@ -221,6 +208,7 @@ public class RobotAutonGoalSideRedPreloaded extends OpMode {
                     if (!rampingUp && !shooting) {outtake.run("close"); rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         gate.setGateState("open");
+                        storage.cycle(true);
                         intake.runForTime(1, 6500);
                         shooting = true;
                         rampingUp = false;
@@ -230,12 +218,13 @@ public class RobotAutonGoalSideRedPreloaded extends OpMode {
                         rampingUp = false; shooting = false;
                         outtake.run("idle");
                         pathState = nextState;
+                        storage.cycle(false);
                     }
                 }
                 break;
             case 11: // shoot
                 if (!follower.isBusy()) {
-                    if (!rampingUp && !shooting) {outtake.run("close"); rampingUp = true;}
+                    if (!rampingUp && !shooting) {outtake.run(0.445); rampingUp = true;}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         gate.setGateState("open");
                         intake.runForTime(1, 100000); storage.cycle(true);

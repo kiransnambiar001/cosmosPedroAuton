@@ -243,10 +243,6 @@ public class RobotAutonGoalSideBlue3Pair extends OpMode {
         // update subsystems
         updatePath(outtake.update(), intake.update(), storage.update());
 
-        if (timer.milliseconds() > 28000) {
-            pathState = -2;
-        }
-
 
         // telemetry
         log("Status", "RUNNING");
@@ -286,22 +282,21 @@ public class RobotAutonGoalSideBlue3Pair extends OpMode {
             case 1:
                 if (follower.getCurrentTValue() > 0.97) {
                     follower.followPath(paths.GotoGPP);
+                    intake.run(1); storage.setPos(-1);
                     pathState = 2;
                 }
                 break;
 
             case 2:
                 if (follower.getCurrentTValue() > 0.97) {
-                    follower.followPath(paths.PickupGPP);
+                    follower.followPath(paths.PickupGPP, 0.7, true);
                     gate.setGateState("close");
-                    intake.run(1); storage.setPos(-1);
                     pathState = 3;
                 }
                 break;
 
             case 3:
                 if (follower.getCurrentTValue() > 0.97) {
-                    intake.run(0); storage.setPos(0);
                     follower.followPath(paths.ShootGPP);
                     nextState = 4;
                     pathState = 10; // shoot
@@ -312,19 +307,18 @@ public class RobotAutonGoalSideBlue3Pair extends OpMode {
                 if (follower.getCurrentTValue() > 0.97) {
                     follower.followPath(paths.GotoPGP);
                     outtake.run(0.445);
+                    intake.run(1); storage.setPos(-1);
                     pathState = 5;
                 }
             case 5:
                 if (follower.getCurrentTValue() > 0.97) {
-                    follower.followPath(paths.PickupPGP);
+                    follower.followPath(paths.PickupPGP, 0.7, true);
                     gate.setGateState("close");
-                    intake.run(1); storage.setPos(-1);
                     pathState = 6;
                 }
                 break;
             case 6:
                 if (follower.getCurrentTValue() > 0.97) {
-                    intake.run(0); storage.setPos(0);
                     follower.followPath(paths.ShootPGP);
                     nextState = 7;
                     pathState = 11; // shoot
@@ -374,11 +368,11 @@ public class RobotAutonGoalSideBlue3Pair extends OpMode {
 
             case 10: // shoot
                 if (follower.getCurrentTValue() > 0.97) {
-                    if (!rampingUp && !shooting) {rampingUp = true;}
+                    if (!rampingUp && !shooting) {rampingUp = true; intake.run(0); storage.setPos(0);}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         previousTime = hardware.timer.milliseconds();
                         gate.setGateState("open");
-                        intake.run(1); storage.cycle(3);
+                        intake.run(1); storage.cycle(4);
                         shooting = true;
                         rampingUp = false;
                     }
@@ -396,7 +390,7 @@ public class RobotAutonGoalSideBlue3Pair extends OpMode {
                 break;
             case 11: // shoot
                 if (follower.getCurrentTValue() > 0.97) {
-                    if (!rampingUp && !shooting) {rampingUp = true;}
+                    if (!rampingUp && !shooting) {rampingUp = true; intake.run(0); storage.setPos(0);}
                     else if (rampingUp && Math.abs(hardware.outtakeMotor.getVelocity() - outtake.getTargetTps()) < 40) {
                         previousTime = hardware.timer.milliseconds();
                         gate.setGateState("open");
